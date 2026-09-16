@@ -21,7 +21,7 @@ services:
       - coneza_backend_data:/data
       - coneza_backend_docs:/app/backend/stored_documents
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/devices"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

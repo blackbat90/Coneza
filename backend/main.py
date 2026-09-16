@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Form
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Form, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,6 +30,7 @@ from backend.auth import (
 )
 from backend.device_manager import fleet_manager
 from backend.gemini_analyzer import gemini_analyzer
+from backend.continuous_improver import continuous_improver
 from edge.ocr_engine import ocr_engine
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -64,6 +65,11 @@ app.add_middleware(
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+@app.get("/api/health")
+async def health_check():
+    """Unauthenticated health check for docker healthchecks and load balancers."""
+    return {"status": "ok", "service": "coneza-backend"}
 
 def seed_default_users():
     """Seeds default Super User, Engineer, and Viewer accounts if DB is fresh."""
@@ -212,12 +218,13 @@ async def superuser_provision_device(payload: DeviceRegister):
 
 @app.post("/api/documents/upload")
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     device_id: Optional[str] = Form(None),
     doc_type: Optional[str] = Form(None),
     ocr_summary: Optional[str] = Form(None)
 ):
-    """Receives and parses E8, E9, or SLD PDF files."""
+    """Receives and parses E8, E9, or SLD PDF files, triggering unattended continuous improvement."""
     try:
         content = await file.read()
         filename = file.filename or "grid_doc.pdf"
@@ -249,12 +256,20 @@ async def upload_document(
         conn.commit()
         conn.close()
 
+        # Autonomous unattended continuous improvement triggered immediately in background
+        background_tasks.add_task(
+            continuous_improver.process_uploaded_document_unattended,
+            doc_id,
+            device_id
+        )
+
         return {
             "id": doc_id,
             "filename": filename,
             "detected_type": ocr_result["detected_type"],
             "total_pages": ocr_result["total_pages"],
-            "extracted_entities": ocr_result["extracted_entities"]
+            "extracted_entities": ocr_result["extracted_entities"],
+            "pipeline_status": "UNATTENDED_PROCESSING_TRIGGERED"
         }
     except Exception as e:
         logger.error(f"Failed to process document upload: {e}")
@@ -444,6 +459,19 @@ async def deploy_configuration(
         "config_id": payload.config_id,
         "authorized_by": user["username"]
     }
+
+# ----------------- Unattended Continuous Improvement Engine ----------------- #
+
+@app.get("/api/improver/status")
+async def get_improver_status(user: Dict[str, Any] = Depends(require_viewer)):
+    """Returns real-time telemetry from the unattended continuous improvement engine."""
+    return continuous_improver.get_telemetry()
+
+@app.post("/api/improver/trigger-relearning", dependencies=[Depends(require_engineer)])
+async def trigger_relearning(background_tasks: BackgroundTasks):
+    """Triggers an unattended batch relearning pass across all stored grid documents."""
+    background_tasks.add_task(continuous_improver.reprocess_all_unattended)
+    return {"status": "BATCH_RELEARNING_TRIGGERED", "message": "Autonomous evaluation scheduled in background"}
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_backend_ui():

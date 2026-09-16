@@ -94,5 +94,28 @@ def init_db():
     );
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS knowledge_items (
+        id TEXT PRIMARY KEY,
+        category TEXT NOT NULL, -- 'DSO_PROFILE', 'LAYOUT_PATTERN', 'EZA_OPTIMIZATION', 'PLANT_BENCHMARK'
+        pattern_key TEXT NOT NULL,
+        data_json TEXT NOT NULL DEFAULT '{}',
+        confidence_score REAL DEFAULT 0.85,
+        observations_count INTEGER DEFAULT 1,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS pipeline_events (
+        id TEXT PRIMARY KEY,
+        event_type TEXT NOT NULL, -- 'UNATTENDED_INGEST', 'KNOWLEDGE_LEARNED', 'CONFIG_AUTO_OPTIMIZED'
+        doc_id TEXT,
+        device_id TEXT,
+        details_json TEXT DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     conn.commit()
     conn.close()

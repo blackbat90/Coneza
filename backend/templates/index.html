@@ -499,6 +499,9 @@
             <button class="tab-btn" onclick="switchTab('ezaTab', this)">
                 ⚡ Phoenix Contact EZA Controller
             </button>
+            <button class="tab-btn" onclick="switchTab('learningTab', this); loadImproverTelemetry();">
+                🧠 Continuous Learning (<span id="optimCountBadge">0</span>)
+            </button>
         </nav>
 
         <!-- Tab 1: Multi-Device Fleet Management -->
@@ -677,6 +680,123 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tab 5: Continuous Learning & Unattended Pipeline -->
+        <div id="learningTab" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <h2 style="font-size: 1.5rem; font-weight: 700;">🧠 Unattended Continuous Learning Pipeline</h2>
+                        <span class="badge badge-online">
+                            <span class="status-dot"></span> AUTONOMOUS ACTIVE
+                        </span>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.25rem;">
+                        Automatically analyzes incoming E.8, E.9, and SLD documents in the background, builds an empirical DSO knowledge graph, and continuously fine-tunes Phoenix Contact EZA Controller parameter sets.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn" onclick="loadImproverTelemetry()">🔄 Refresh Telemetry</button>
+                    <button class="btn btn-primary" id="btnRelearn" onclick="triggerRelearning()">⚡ Trigger Batch Relearning</button>
+                </div>
+            </div>
+
+            <!-- KPI Metric Tiles -->
+            <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 2rem;">
+                <div class="card" style="border-left: 4px solid var(--primary-glow);">
+                    <div class="metric-label">Unattended Documents Ingested</div>
+                    <div class="metric-value" id="statIngests" style="color: var(--primary-glow); font-size: 2rem;">0</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">Triggered on PDF upload</div>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--emerald-glow);">
+                    <div class="metric-label">Auto-Tuned EZA Configurations</div>
+                    <div class="metric-value" id="statOptimizations" style="color: var(--emerald-glow); font-size: 2rem;">0</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">Synthesized & refined</div>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--accent-glow);">
+                    <div class="metric-label">Knowledge Confidence Score</div>
+                    <div class="metric-value" id="statConfidence" style="color: var(--accent-glow); font-size: 2rem;">92.4%</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">Empirical confidence average</div>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--amber);">
+                    <div class="metric-label">Learned Patterns & Benchmarks</div>
+                    <div class="metric-value" id="statPatternsCount" style="color: var(--amber); font-size: 2rem;">0</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">DSOs, schemas & ratios</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <!-- Left Column: Learned Knowledge Base & Auto-tuning rules -->
+                <div>
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="card-header">
+                            <span class="card-title">📚 Regional DSO Profiles & Empirical Graph</span>
+                            <span class="badge badge-super" id="kItemsCount">0 items</span>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+                            Empirical patterns learned across German Distribution System Operators (Bayernwerk, Netze BW, Westnetz, Avacon, MITNETZ, E.DIS).
+                        </p>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Key Pattern</th>
+                                        <th>Observations</th>
+                                        <th>Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="knowledgeItemsBody">
+                                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No knowledge items yet. Upload an E.8 or E.9 document.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">⚙️ Unattended Self-Tuning Safeguards</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;">
+                            <div style="padding: 0.75rem; background: rgba(2, 132, 199, 0.1); border-left: 3px solid var(--primary-glow); border-radius: 6px;">
+                                <div style="font-weight: 600; color: #ffffff;">Q(U) Dynamic Deadband Optimization</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">
+                                    Auto-inserts standard VDE-AR-N 4110 deadband breakpoints (U2=97%, U3=103%) if omitted by DSO, preventing hunting oscillations between inverters.
+                                </div>
+                            </div>
+                            <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--emerald-glow); border-radius: 6px;">
+                                <div style="font-weight: 600; color: #ffffff;">Active Power Gradient Soft-Starting</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">
+                                    Smooths P ramp-rate to 100 kW/s on medium-voltage grid connection points, mitigating MV/LV transformer inrush stress.
+                                </div>
+                            </div>
+                            <div style="padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-left: 3px solid var(--accent-glow); border-radius: 6px;">
+                                <div style="font-weight: 600; color: #ffffff;">Primary Frequency Droop P(f)</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">
+                                    Configures symmetrical 4.0% droop (s=4.0%) with deadbands at 50.20 Hz (overfrequency) and 49.80 Hz (underfrequency) conforming to ENTSO-E.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Real-Time Event Stream -->
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">📡 Unattended Pipeline Event Stream</span>
+                            <span class="badge badge-online">LIVE STREAM</span>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+                            Chronological execution log of autonomous document extraction, knowledge updates, and EZA parameter syntheses.
+                        </p>
+                        <div id="pipelineEventsStream" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 600px; overflow-y: auto;">
+                            <div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No background events yet. Uploading a document triggers the unattended engine automatically.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Provision Device Modal -->
@@ -730,6 +850,7 @@
                     document.getElementById("roleBadge").innerText = `${currentRole} (${data.user.username})`;
                     loadDevices();
                     loadDocuments();
+                    loadImproverTelemetry();
                 }
             } catch (err) {
                 console.error("Auto login error:", err);
@@ -863,8 +984,9 @@
                     body: formData
                 });
                 if (res.ok) {
-                    alert(`Uploaded and processed ${file.name}!`);
+                    alert(`Uploaded and processed ${file.name}! Unattended learning pipeline activated.`);
                     loadDocuments();
+                    loadImproverTelemetry();
                 } else {
                     alert(`Upload failed: ${await res.text()}`);
                 }
@@ -1094,9 +1216,124 @@
             }
         }
 
+        async function loadImproverTelemetry() {
+            try {
+                const res = await fetch(`${API_BASE}/api/improver/status`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+
+                const statIng = document.getElementById("statIngests");
+                if (statIng) statIng.innerText = data.total_unattended_ingests;
+                const statOpt = document.getElementById("statOptimizations");
+                if (statOpt) statOpt.innerText = data.total_optimizations_generated;
+                const statConf = document.getElementById("statConfidence");
+                if (statConf) statConf.innerText = `${data.overall_knowledge_confidence_percent}%`;
+                const statPatt = document.getElementById("statPatternsCount");
+                if (statPatt) statPatt.innerText = data.learned_knowledge_items.length;
+                const optBadge = document.getElementById("optimCountBadge");
+                if (optBadge) optBadge.innerText = data.total_optimizations_generated;
+                const kCount = document.getElementById("kItemsCount");
+                if (kCount) kCount.innerText = `${data.learned_knowledge_items.length} items`;
+
+                // Render Knowledge Items Table
+                const kBody = document.getElementById("knowledgeItemsBody");
+                if (kBody) {
+                    kBody.innerHTML = "";
+                    if (!data.learned_knowledge_items || data.learned_knowledge_items.length === 0) {
+                        kBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No knowledge items yet. Upload an E.8 or E.9 document.</td></tr>`;
+                    } else {
+                        data.learned_knowledge_items.forEach(item => {
+                            const tr = document.createElement("tr");
+                            const confPercent = Math.round((item.confidence_score || 0.85) * 100);
+                            tr.innerHTML = `
+                                <td><span class="badge badge-super" style="font-size: 0.72rem;">${item.category}</span></td>
+                                <td style="font-family: var(--font-mono); font-weight: 600; font-size: 0.8rem; color: var(--primary-glow);">${item.pattern_key}</td>
+                                <td style="text-align: center; font-family: var(--font-mono);">${item.observations_count}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div style="flex: 1; height: 6px; background: rgba(148, 163, 184, 0.2); border-radius: 3px; overflow: hidden;">
+                                            <div style="width: ${confPercent}%; height: 100%; background: var(--emerald-glow);"></div>
+                                        </div>
+                                        <span style="font-family: var(--font-mono); font-size: 0.75rem;">${confPercent}%</span>
+                                    </div>
+                                </td>
+                            `;
+                            kBody.appendChild(tr);
+                        });
+                    }
+                }
+
+                // Render Event Stream
+                const evStream = document.getElementById("pipelineEventsStream");
+                if (evStream) {
+                    evStream.innerHTML = "";
+                    if (!data.recent_pipeline_events || data.recent_pipeline_events.length === 0) {
+                        evStream.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No background events yet. Uploading a document triggers the unattended engine automatically.</div>`;
+                    } else {
+                        data.recent_pipeline_events.forEach(ev => {
+                            const div = document.createElement("div");
+                            const isOpt = ev.event_type === 'CONFIG_AUTO_OPTIMIZED';
+                            div.style.cssText = `padding: 0.85rem; border-radius: 8px; background: ${isOpt ? 'rgba(16, 185, 129, 0.08)' : 'rgba(15, 23, 42, 0.6)'}; border: 1px solid ${isOpt ? 'rgba(52, 211, 153, 0.3)' : 'var(--border-subtle)'}; font-size: 0.85rem;`;
+                            
+                            const timeStr = new Date(ev.created_at).toLocaleTimeString();
+                            let detailText = "";
+                            if (isOpt) {
+                                const imps = (ev.details?.improvements || []).map(i => `• ${i}`).join("<br>");
+                                detailText = `<div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">${imps || 'Parameters fine-tuned to VDE-AR-N 4110 standard.'}</div>`;
+                            } else {
+                                detailText = `<div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">File: <b>${ev.details?.filename || 'grid document'}</b> (${ev.details?.doc_type || 'PDF'})</div>`;
+                            }
+
+                            div.innerHTML = `
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span class="badge ${isOpt ? 'badge-online' : 'badge-super'}" style="font-size: 0.72rem;">${ev.event_type}</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">${timeStr}</span>
+                                </div>
+                                <div style="margin-top: 0.4rem; font-weight: 500;">Device: <span style="font-family: var(--font-mono); color: var(--primary-glow);">${ev.device_id || 'Global'}</span></div>
+                                ${detailText}
+                            `;
+                            evStream.appendChild(div);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Telemetry error:", err);
+            }
+        }
+
+        async function triggerRelearning() {
+            const btn = document.getElementById("btnRelearn");
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "⏳ Running Relearning...";
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/improver/trigger-relearning`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    alert("Batch relearning scheduled! The background engine is re-evaluating all documents and optimizing configurations.");
+                    setTimeout(loadImproverTelemetry, 1500);
+                } else {
+                    alert(`Relearning failed: ${await res.text()}`);
+                }
+            } catch (err) {
+                alert(`Relearning error: ${err}`);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "⚡ Trigger Batch Relearning";
+                }
+            }
+        }
+
         // Initialize on page load
         window.addEventListener("DOMContentLoaded", () => {
             autoLogin();
+            setInterval(loadImproverTelemetry, 15000);
         });
     </script>
 </body>
