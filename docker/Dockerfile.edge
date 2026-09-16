@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    poppler-utils \
+    curl \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV PYTHONPATH=/app
+ENV EZA_CONTROLLER_HOST=127.0.0.1
+ENV EZA_CONTROLLER_PORT=5502
+ENV CONEZA_BACKEND_URL=http://backend:8080
+ENV START_EMBEDDED_SIMULATOR=true
+
+EXPOSE 8000 5502
+
+CMD ["python", "edge/main.py"]

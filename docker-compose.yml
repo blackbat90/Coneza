@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: coneza-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CONEZA_JWT_SECRET=coneza-super-secret-jwt-key-2026-vde4110
+    volumes:
+      - coneza_data:/app/backend/stored_documents
+    restart: unless-stopped
+
+  edge-solar-01:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.edge
+    container_name: coneza-edge-solar-01
+    ports:
+      - "8000:8000"
+      - "5502:5502"
+    environment:
+      - CONEZA_BACKEND_URL=http://backend:8080
+      - EZA_CONTROLLER_HOST=127.0.0.1
+      - EZA_CONTROLLER_PORT=5502
+      - START_EMBEDDED_SIMULATOR=true
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  edge-bess-02:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.edge
+    container_name: coneza-edge-bess-02
+    ports:
+      - "8001:8000"
+      - "5503:5502"
+    environment:
+      - CONEZA_BACKEND_URL=http://backend:8080
+      - EZA_CONTROLLER_HOST=127.0.0.1
+      - EZA_CONTROLLER_PORT=5502
+      - START_EMBEDDED_SIMULATOR=true
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  coneza_data:

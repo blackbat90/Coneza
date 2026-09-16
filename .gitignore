@@ -1,0 +1,35 @@
+# Python Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+.coverage
+htmlcov/
+
+# Local SQLite databases & test databases
+*.db
+*.sqlite
+*.sqlite3
+backend/coneza_backend.db
+tests/test_backend.db
+
+# Storage directory for uploaded user documents
+backend/stored_documents/*
+!backend/stored_documents/.gitkeep
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+
+# IDE & OS Metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
