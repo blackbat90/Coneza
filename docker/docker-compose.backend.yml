@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  coneza-backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    image: coneza-backend:latest
+    container_name: coneza-backend-server
+    restart: unless-stopped
+    ports:
+      # Maps external port (default 9080, avoiding 80, 443, 8080) to container port 8080
+      - "${BACKEND_PORT:-9080}:8080"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - CONEZA_JWT_SECRET=${CONEZA_JWT_SECRET:-coneza-super-secret-jwt-key-2026-vde4110}
+      - CONEZA_DB_PATH=/data/coneza_backend.db
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Persistent storage for SQLite database and uploaded documents
+      - coneza_backend_data:/data
+      - coneza_backend_docs:/app/backend/stored_documents
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/devices"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  coneza_backend_data:
+    name: coneza_backend_data
+  coneza_backend_docs:
+    name: coneza_backend_docs
