@@ -713,11 +713,12 @@
         let currentRole = "SUPER_ADMIN";
         let activeConfigId = null;
         let activeJobId = null;
+        const API_BASE = window.location.pathname.startsWith('/portal') ? '/portal' : '';
 
         // Auto login as default Super User
         async function autoLogin() {
             try {
-                const res = await fetch("/api/auth/login", {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ username: "admin", password: "conezaAdmin2026!" })
@@ -744,7 +745,7 @@
 
         async function loadDevices() {
             try {
-                const res = await fetch("/api/devices", {
+                const res = await fetch(`${API_BASE}/api/devices`, {
                     headers: { "Authorization": `Bearer ${authToken}` }
                 });
                 if (!res.ok) return;
@@ -810,7 +811,7 @@
 
         async function loadDocuments() {
             try {
-                const res = await fetch("/api/documents", {
+                const res = await fetch(`${API_BASE}/api/documents`, {
                     headers: { "Authorization": `Bearer ${authToken}` }
                 });
                 if (!res.ok) return;
@@ -844,10 +845,7 @@
             // Fetch sample file directly
             try {
                 const fetchRes = await fetch(`/samples/${filename}`);
-                // If static routing allows or direct upload
-                // We'll trigger an upload
             } catch(e) {}
-            // Fallback trigger standard mock document
             loadDocuments();
         }
 
@@ -860,7 +858,7 @@
             formData.append("device_id", "coneza-edge-solar-park-01");
 
             try {
-                const res = await fetch("/api/documents/upload", {
+                const res = await fetch(`${API_BASE}/api/documents/upload`, {
                     method: "POST",
                     body: formData
                 });
@@ -882,11 +880,11 @@
 
             try {
                 // Get all doc IDs
-                const docRes = await fetch("/api/documents", { headers: { "Authorization": `Bearer ${authToken}` } });
+                const docRes = await fetch(`${API_BASE}/api/documents`, { headers: { "Authorization": `Bearer ${authToken}` } });
                 const docs = await docRes.json();
                 const docIds = docs.map(d => d.id);
 
-                const res = await fetch("/api/analysis/run", {
+                const res = await fetch(`${API_BASE}/api/analysis/run`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -983,7 +981,7 @@
                 return;
             }
             try {
-                const res = await fetch(`/api/configs/${activeConfigId}/approve`, {
+                const res = await fetch(`${API_BASE}/api/configs/${activeConfigId}/approve`, {
                     method: "POST",
                     headers: { "Authorization": `Bearer ${authToken}` }
                 });
@@ -1003,7 +1001,7 @@
                 return;
             }
             try {
-                const res = await fetch(`/api/configs/deploy`, {
+                const res = await fetch(`${API_BASE}/api/configs/deploy`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -1076,7 +1074,7 @@
             };
 
             try {
-                const res = await fetch("/api/devices/provision", {
+                const res = await fetch(`${API_BASE}/api/devices/provision`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

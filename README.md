@@ -140,12 +140,13 @@ This produces:
   ```
   Access Dashboard: [http://localhost:8080](http://localhost:8080)
 
-- **Production Docker Container (e.g. on your public webserver)**:
+- **Production Docker Container (on your public webserver)**:
   ```bash
+  cd /srv/coneza-backend
   docker compose -f docker/docker-compose.backend.yml up -d
   ```
-  Accessible publicly on port **`9080`** (avoiding 80, 443, 8080):
-  - **Live URL**: `http://195.90.215.204:9080`
+  - **Secure HTTPS URL**: **[https://coneza.de/portal/](https://coneza.de/portal/)** (Protected with Let's Encrypt SSL)
+  - **Direct Port URL**: `http://195.90.215.204:9080`
   - **Super User**: `admin` / `conezaAdmin2026!`
   - **Engineer**: `engineer` / `engineer2026!`
 
