@@ -134,14 +134,20 @@ This produces:
 - `samples/sample_SLD_schematic.pdf` (Single Line Diagram vector drawing)
 
 ### 4. Running the Central Backend
-```bash
-python backend/main.py
-```
-- Access Dashboard: [http://localhost:8080](http://localhost:8080)
-- Default Super User Credentials:
-  - Username: `admin`
-  - Password: `conezaAdmin2026!`
-- Engineer Credentials: `engineer` / `engineer2026!`
+- **Local Dev**:
+  ```bash
+  python backend/main.py
+  ```
+  Access Dashboard: [http://localhost:8080](http://localhost:8080)
+
+- **Production Docker Container (e.g. on your public webserver)**:
+  ```bash
+  docker compose -f docker/docker-compose.backend.yml up -d
+  ```
+  Accessible publicly on port **`9080`** (avoiding 80, 443, 8080):
+  - **Live URL**: `http://195.90.215.204:9080`
+  - **Super User**: `admin` / `conezaAdmin2026!`
+  - **Engineer**: `engineer` / `engineer2026!`
 
 ### 5. Running the Linux Edge Node
 In a separate terminal:
