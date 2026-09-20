@@ -8,7 +8,7 @@ Listens on Modbus TCP (default port 5502 for unprivileged testing, or 502 for re
 import asyncio
 import logging
 import struct
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from edge.phoenix_eza.register_map import HOLDING_REGISTERS, INPUT_REGISTERS
 
 logger = logging.getLogger("phoenix_eza_simulator")

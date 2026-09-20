@@ -1,31 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>coneza - Central Grid Interconnection & Phoenix EZA Fleet Manager</title>
+    <meta name="description" content="Coneza Central - Grid Interconnection & Phoenix Contact EZA Controller Platform (VDE-AR-N 4110 / 4120)">
+    <title>Coneza | Central Fleet & EZA-Regler Platform</title>
+    <link rel="icon" type="image/png" href="static/images/Company-Logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-base: #090d16;
-            --bg-surface: #0f172a;
-            --bg-card: rgba(15, 23, 42, 0.75);
-            --bg-glass: rgba(30, 41, 59, 0.55);
-            --border-glow: rgba(56, 189, 248, 0.25);
-            --border-subtle: rgba(148, 163, 184, 0.12);
-            --primary: #0284c7;
-            --primary-glow: #38bdf8;
-            --accent: #6366f1;
-            --accent-glow: #818cf8;
-            --emerald: #10b981;
-            --emerald-glow: #34d399;
+            --navy: #0b1728;
+            --navy-deep: #081522;
+            --ink: #152235;
+            --muted: #8fa2b5;
+            --line: rgba(223, 231, 238, 0.14);
+            --blue: #1577d4;
+            --cyan: #25c7c9;
+            --mint: #e8fbf7;
+            --status-online: #5ce0ad;
+            --white: #ffffff;
+            --shadow: 0 18px 55px rgba(11, 23, 40, .28);
+
+            /* Semantic Theme Mappings */
+            --bg-base: #081522;
+            --bg-surface: #0b1728;
+            --bg-card: rgba(11, 23, 40, 0.85);
+            --bg-glass: rgba(21, 34, 53, 0.72);
+            --border-glow: rgba(37, 199, 201, 0.35);
+            --border-subtle: rgba(223, 231, 238, 0.12);
+            --primary: #25c7c9;
+            --primary-glow: #25c7c9;
+            --primary-dark: #1577d4;
+            --accent: #1577d4;
+            --accent-glow: #38bdf8;
+            --emerald: #5ce0ad;
+            --emerald-glow: #5ce0ad;
             --amber: #f59e0b;
             --rose: #f43f5e;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --font-sans: 'Outfit', sans-serif;
+            --text-main: #fbfdff;
+            --text-muted: #8fa2b5;
+            --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
 
@@ -35,15 +51,20 @@
             padding: 0;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             background-color: var(--bg-base);
             background-image: 
-                radial-gradient(circle at 15% 15%, rgba(2, 132, 199, 0.12) 0%, transparent 40%),
-                radial-gradient(circle at 85% 75%, rgba(99, 102, 241, 0.1) 0%, transparent 45%),
-                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 60%);
+                radial-gradient(circle at 85% 15%, rgba(37, 199, 201, 0.18) 0%, transparent 32%),
+                radial-gradient(circle at 15% 85%, rgba(21, 119, 212, 0.15) 0%, transparent 36%),
+                linear-gradient(135deg, #091522 0%, #0d2842 56%, #06445d 100%);
             color: var(--text-main);
             font-family: var(--font-sans);
             min-height: 100vh;
+            line-height: 1.55;
             overflow-x: hidden;
         }
 
@@ -52,138 +73,300 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 2rem;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(16px);
+            padding: 0.9rem 2.2rem;
+            background: rgba(11, 23, 40, 0.88);
+            backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--border-subtle);
             position: sticky;
             top: 0;
             z-index: 50;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 0.85rem;
+            gap: 1rem;
+            text-decoration: none;
+            color: inherit;
         }
 
-        .brand-logo {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, #0284c7, #6366f1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: white;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        .brand-logo-wrap {
+            display: inline-block;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 3px 8px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .brand-logo-wrap:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 24px rgba(37, 199, 201, 0.35);
+        }
+
+        .brand-logo-img {
+            height: 40px;
+            width: auto;
+            display: block;
         }
 
         .brand-title {
             font-size: 1.45rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #ffffff 40%, var(--primary-glow));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand-title span {
+            color: var(--cyan);
+            font-weight: 400;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
         }
 
         .brand-subtitle {
-            font-size: 0.75rem;
+            font-size: 0.76rem;
             color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.04em;
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 1.25rem;
+            gap: 1.1rem;
         }
 
         .badge {
-            padding: 0.35rem 0.85rem;
+            padding: 0.4rem 0.95rem;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             font-weight: 600;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.45rem;
         }
 
         .badge-super {
-            background: rgba(99, 102, 241, 0.2);
-            color: var(--accent-glow);
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+            background: rgba(37, 199, 201, 0.15);
+            color: var(--cyan);
+            border: 1px solid rgba(37, 199, 201, 0.35);
+            box-shadow: 0 0 14px rgba(37, 199, 201, 0.15);
         }
 
         .badge-online {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--emerald-glow);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background: rgba(92, 224, 173, 0.15);
+            color: var(--status-online);
+            border: 1px solid rgba(92, 224, 173, 0.35);
+            box-shadow: 0 0 12px rgba(92, 224, 173, 0.15);
+        }
+
+        .badge-danger {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--rose);
+            border: 1px solid rgba(244, 63, 94, 0.35);
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: var(--emerald-glow);
-            box-shadow: 0 0 8px var(--emerald-glow);
+            background-color: var(--status-online);
+            box-shadow: 0 0 8px var(--status-online);
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.9); }
         }
 
-        /* App Container */
+        /* Container */
         .container {
             max-width: 1440px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2rem 2.2rem;
+        }
+
+        /* Hero / Overview Banner matching Coneza.de */
+        .hero-banner {
+            background: rgba(11, 23, 40, 0.75);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .hero-banner::after {
+            content: "";
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            right: -150px;
+            bottom: -200px;
+            border: 1px solid rgba(37, 199, 201, 0.2);
+            border-radius: 50%;
+            box-shadow: 0 0 0 35px rgba(37, 199, 201, 0.04), 0 0 0 70px rgba(37, 199, 201, 0.02);
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-size: 0.74rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-banner h1 {
+            font-size: clamp(1.8rem, 3.2vw, 2.7rem);
+            line-height: 1.12;
+            letter-spacing: -0.045em;
+            font-weight: 800;
+            margin-bottom: 0.85rem;
+        }
+
+        .hero-banner p {
+            color: #c7d7e5;
+            font-size: 0.98rem;
+            line-height: 1.6;
+            margin-bottom: 1.4rem;
+            max-width: 620px;
+        }
+
+        /* Coneza Controller Display from coneza.de */
+        .controller-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(37, 199, 201, 0.3);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .controller-screen {
+            background: #081522;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(37, 199, 201, 0.2);
+        }
+
+        .screen-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #aec2d3;
+            font-size: 0.74rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .screen-top .status {
+            color: var(--status-online);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .meter {
+            height: 90px;
+            display: flex;
+            align-items: end;
+            gap: 6px;
+            padding: 14px 2px 4px;
+            background: linear-gradient(180deg, transparent 0 24%, rgba(255,255,255,.05) 25% 25.5%, transparent 26% 49%, rgba(255,255,255,.05) 50% 50.5%, transparent 51% 74%, rgba(255,255,255,.05) 75% 75.5%, transparent 76%);
+        }
+
+        .meter .bar {
+            flex: 1;
+            border-radius: 3px 3px 0 0;
+            background: linear-gradient(180deg, var(--cyan), var(--blue));
+            transition: height 0.6s ease;
+        }
+
+        .readings {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .reading {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 9px;
+            font-size: 0.72rem;
+            color: #9eb3c5;
+        }
+
+        .reading strong {
+            display: block;
+            color: white;
+            font-size: 1.05rem;
+            font-family: var(--font-mono);
+            margin-top: 2px;
         }
 
         /* Navigation Tabs */
         .nav-tabs {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.65rem;
             border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 0.75rem;
+            padding-bottom: 0.85rem;
             margin-bottom: 2rem;
+            overflow-x: auto;
         }
 
         .tab-btn {
-            background: transparent;
-            border: none;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             color: var(--text-muted);
             font-family: var(--font-sans);
-            font-size: 0.95rem;
-            font-weight: 500;
-            padding: 0.75rem 1.4rem;
-            border-radius: 10px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            padding: 0.65rem 1.3rem;
+            border-radius: 9999px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.55rem;
+            white-space: nowrap;
         }
 
         .tab-btn:hover {
             color: var(--text-main);
-            background: var(--bg-glass);
+            background: rgba(37, 199, 201, 0.1);
+            border-color: rgba(37, 199, 201, 0.35);
         }
 
         .tab-btn.active {
-            color: #ffffff;
-            background: linear-gradient(135deg, rgba(2, 132, 199, 0.3), rgba(99, 102, 241, 0.2));
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+            color: #062331;
+            background: var(--cyan);
+            border-color: var(--cyan);
+            box-shadow: 0 4px 18px rgba(37, 199, 201, 0.35);
+            font-weight: 750;
         }
 
         /* Tab Content Panes */
@@ -216,20 +399,29 @@
             margin-bottom: 2rem;
         }
 
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.1rem;
+            margin-bottom: 1.8rem;
+        }
+
         .card {
             background: var(--bg-card);
             backdrop-filter: blur(14px);
             border: 1px solid var(--border-subtle);
             border-radius: 16px;
-            padding: 1.5rem;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            padding: 1.6rem;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 8px 30px rgba(11, 23, 40, 0.2);
         }
 
         .card:hover {
-            border-color: rgba(56, 189, 248, 0.35);
+            border-color: var(--border-glow);
             transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(37, 199, 201, 0.12);
         }
 
         .card-header {
@@ -241,11 +433,12 @@
 
         .card-title {
             font-size: 1.15rem;
-            font-weight: 600;
+            font-weight: 700;
             color: #ffffff;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.55rem;
+            letter-spacing: -0.02em;
         }
 
         /* Metric Tiles */
@@ -257,96 +450,114 @@
         }
 
         .metric-tile {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 27, 44, 0.7);
             border: 1px solid var(--border-subtle);
             border-radius: 10px;
-            padding: 0.75rem;
+            padding: 0.85rem 0.65rem;
             text-align: center;
         }
 
         .metric-label {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
             margin-bottom: 0.25rem;
+            font-weight: 600;
         }
 
         .metric-value {
-            font-size: 1.15rem;
+            font-size: 1.18rem;
             font-family: var(--font-mono);
-            font-weight: 600;
-            color: var(--primary-glow);
+            font-weight: 700;
+            color: var(--cyan);
         }
 
         /* Buttons & Forms */
         .btn {
-            background: var(--bg-glass);
-            border: 1px solid var(--border-subtle);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: var(--text-main);
             font-family: var(--font-sans);
             font-size: 0.88rem;
-            font-weight: 500;
-            padding: 0.65rem 1.25rem;
-            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.68rem 1.35rem;
+            border-radius: 9px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none;
         }
 
         .btn:hover {
-            background: rgba(56, 189, 248, 0.15);
-            border-color: var(--primary-glow);
-            color: white;
-            box-shadow: 0 0 14px rgba(56, 189, 248, 0.2);
+            transform: translateY(-2px);
+            background: rgba(37, 199, 201, 0.15);
+            border-color: var(--cyan);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(37, 199, 201, 0.2);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 0 16px rgba(2, 132, 199, 0.35);
+            background: var(--cyan);
+            border: 1px solid var(--cyan);
+            color: #062331;
+            font-weight: 750;
+            box-shadow: 0 4px 16px rgba(37, 199, 201, 0.3);
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #0369a1, #1d4ed8);
-            box-shadow: 0 0 24px rgba(56, 189, 248, 0.5);
+            background: #2fe0e2;
+            box-shadow: 0 8px 25px rgba(37, 199, 201, 0.45);
+            color: #062331;
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #059669, #10b981);
-            border: 1px solid rgba(52, 211, 153, 0.4);
-            color: white;
+            background: var(--status-online);
+            border: 1px solid var(--status-online);
+            color: #062331;
+            font-weight: 750;
+            box-shadow: 0 4px 16px rgba(92, 224, 173, 0.25);
+        }
+
+        .btn-success:hover {
+            background: #73f0c0;
+            box-shadow: 0 8px 24px rgba(92, 224, 173, 0.4);
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #e11d48, #f43f5e);
-            border: 1px solid rgba(244, 63, 94, 0.4);
+            background: var(--rose);
+            border: 1px solid var(--rose);
             color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
+        }
+
+        .btn-danger:hover {
+            background: #ff5272;
+            box-shadow: 0 8px 24px rgba(244, 63, 94, 0.4);
         }
 
         /* File Upload Dropzone */
         .dropzone {
-            border: 2px dashed rgba(56, 189, 248, 0.3);
+            border: 2px dashed rgba(37, 199, 201, 0.35);
             border-radius: 16px;
             padding: 2.5rem 1.5rem;
             text-align: center;
-            background: rgba(15, 23, 42, 0.4);
+            background: rgba(11, 23, 40, 0.4);
             cursor: pointer;
             transition: all 0.2s ease;
             margin-bottom: 1.5rem;
         }
 
         .dropzone:hover {
-            border-color: var(--primary-glow);
-            background: rgba(56, 189, 248, 0.05);
+            border-color: var(--cyan);
+            background: rgba(37, 199, 201, 0.07);
         }
 
         .dropzone-icon {
-            font-size: 2.5rem;
+            font-size: 2.6rem;
             margin-bottom: 0.75rem;
             display: inline-block;
         }
@@ -356,7 +567,7 @@
             overflow-x: auto;
             border: 1px solid var(--border-subtle);
             border-radius: 12px;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(11, 23, 40, 0.6);
         }
 
         table {
@@ -367,14 +578,14 @@
         }
 
         th {
-            background: rgba(30, 41, 59, 0.6);
+            background: rgba(21, 34, 53, 0.7);
             color: var(--text-muted);
-            font-weight: 600;
+            font-weight: 700;
             padding: 0.85rem 1.1rem;
             border-bottom: 1px solid var(--border-subtle);
             text-transform: uppercase;
             font-size: 0.72rem;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.07em;
         }
 
         td {
@@ -388,31 +599,31 @@
         }
 
         tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(37, 199, 201, 0.04);
         }
 
         /* Discrepancy Alerts */
         .alert-item {
-            padding: 1rem;
+            padding: 1rem 1.2rem;
             border-radius: 12px;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.85rem;
             border-left: 4px solid;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(11, 23, 40, 0.85);
         }
 
         .alert-warning {
             border-left-color: var(--amber);
-            background: rgba(245, 158, 11, 0.08);
+            background: rgba(245, 158, 11, 0.09);
         }
 
         .alert-critical {
             border-left-color: var(--rose);
-            background: rgba(244, 63, 94, 0.08);
+            background: rgba(244, 63, 94, 0.09);
         }
 
         .alert-info {
-            border-left-color: var(--primary-glow);
-            background: rgba(56, 189, 248, 0.08);
+            border-left-color: var(--cyan);
+            background: rgba(37, 199, 201, 0.09);
         }
 
         /* Modal Backdrop */
@@ -422,8 +633,8 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
+            background: rgba(6, 15, 26, 0.82);
+            backdrop-filter: blur(10px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -431,31 +642,56 @@
         }
 
         .modal {
-            background: var(--bg-surface);
+            background: var(--navy);
             border: 1px solid var(--border-glow);
             border-radius: 18px;
             max-width: 600px;
             width: 90%;
-            padding: 2rem;
-            box-shadow: 0 0 40px rgba(56, 189, 248, 0.25);
+            padding: 2.2rem;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
         }
 
         .input-control {
             width: 100%;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(8, 21, 34, 0.85);
             border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
+            border-radius: 9px;
+            padding: 0.8rem 1.1rem;
             color: white;
             font-family: var(--font-sans);
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
+            font-size: 0.92rem;
+            margin-bottom: 1.1rem;
+            transition: border-color 0.2s ease;
         }
 
         .input-control:focus {
             outline: none;
-            border-color: var(--primary-glow);
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(37, 199, 201, 0.25);
+        }
+
+        /* Footer */
+        footer {
+            padding: 2rem 2.2rem;
+            color: #7d8998;
+            font-size: 0.88rem;
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 3rem;
+            background: rgba(8, 21, 34, 0.7);
+        }
+
+        footer .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0;
+        }
+
+        @media (max-width: 900px) {
+            .hero-banner { grid-template-columns: 1fr; gap: 1.5rem; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .header-actions { flex-wrap: wrap; }
+            footer .container { flex-direction: column; gap: 0.8rem; text-align: center; }
         }
     </style>
 </head>
@@ -463,17 +699,19 @@
 
     <!-- Header -->
     <header>
-        <div class="brand">
-            <div class="brand-logo">CZ</div>
-            <div>
-                <div class="brand-title">coneza central</div>
-                <div class="brand-subtitle">VDE-AR-N 4110 & Phoenix EZA Fleet Operations</div>
+        <a class="brand" href="#">
+            <div class="brand-logo-wrap">
+                <img class="brand-logo-img" id="headerLogo" src="static/images/Company-Logo.jpg" onerror="this.onerror=null; this.src='/resources/images/Company-Logo.jpg';" alt="Coneza Logo">
             </div>
-        </div>
+            <div>
+                <div class="brand-title">Coneza <span>Portal</span></div>
+                <div class="brand-subtitle">VDE-AR-N 4110 / 4120 · Phoenix Contact EZA Controller Fleet</div>
+            </div>
+        </a>
 
         <div class="header-actions">
             <span class="badge badge-online">
-                <span class="status-dot"></span> Backend Active (:8080)
+                <span class="status-dot"></span> Backend Active
             </span>
             <span class="badge badge-super" id="roleBadge">
                 SUPER_ADMIN (admin)
@@ -485,6 +723,60 @@
     </header>
 
     <div class="container">
+
+        <!-- Hero Overview matching Coneza.de -->
+        <section class="hero-banner">
+            <div>
+                <div class="eyebrow">EZA-Regler für moderne Energieanlagen</div>
+                <h1>Netzkonform. <span style="color:var(--cyan)">Präzise.</span> Zukunftssicher.</h1>
+                <p>Coneza verbindet Erzeugungsanlagen (PV, Wind, BESS) und Netzanschlusspunkt zu einem intelligenten Regelungssystem nach VDE-AR-N 4110 / 4120 – vollautomatische Dokumentenanalyse, Modbus TCP Inbetriebnahme und Flottensteuerung.</p>
+                <div style="display: flex; gap: 0.85rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="switchTab('geminiTab', document.querySelectorAll('.tab-btn')[2])">
+                        ✨ Gemini Netzprüfung starten
+                    </button>
+                    <button class="btn" onclick="switchTab('docsTab', document.querySelectorAll('.tab-btn')[1])">
+                        📄 Dokumente hochladen (E.8 / E.9 / SLD)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Controller Screen Widget from Coneza.de -->
+            <div class="controller-card" aria-label="Coneza EZA Live Controller Status">
+                <div class="controller-screen">
+                    <div class="screen-top">
+                        <span>Anlagenübersicht EZA</span>
+                        <span class="status">● ONLINE · REGELT</span>
+                    </div>
+                    <div class="meter" id="heroMeter">
+                        <i class="bar" style="height:48%"></i>
+                        <i class="bar" style="height:62%"></i>
+                        <i class="bar" style="height:55%"></i>
+                        <i class="bar" style="height:78%"></i>
+                        <i class="bar" style="height:72%"></i>
+                        <i class="bar" style="height:92%"></i>
+                        <i class="bar" style="height:84%"></i>
+                        <i class="bar" style="height:95%"></i>
+                        <i class="bar" style="height:88%"></i>
+                        <i class="bar" style="height:98%"></i>
+                    </div>
+                    <div class="readings">
+                        <div class="reading">
+                            Wirkleistung P
+                            <strong id="heroPAct">2.480 kW</strong>
+                        </div>
+                        <div class="reading">
+                            Netzspannung U
+                            <strong id="heroUAct">20,12 kV</strong>
+                        </div>
+                        <div class="reading">
+                            Blindleistung Q
+                            <strong id="heroQAct" style="color:var(--status-online)">+25 kvar</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Navigation Tabs -->
         <nav class="nav-tabs">
             <button class="tab-btn active" onclick="switchTab('fleetTab', this)">
@@ -508,7 +800,7 @@
         <div id="fleetTab" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <div>
-                    <h2 style="font-size: 1.5rem; font-weight: 700;">Linux Edge Gateways Fleet</h2>
+                    <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">Linux Edge Gateways Fleet</h2>
                     <p style="color: var(--text-muted); font-size: 0.88rem;">Local edge devices receiving grid schematics and wired to Phoenix Contact EZA controllers.</p>
                 </div>
                 <button class="btn" onclick="loadDevices()">🔄 Refresh Devices</button>
@@ -523,19 +815,19 @@
         <div id="docsTab" class="tab-content">
             <div class="grid-2">
                 <div>
-                    <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">Upload Grid Interconnection Files</h2>
+                    <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Upload Grid Interconnection Files</h2>
                     <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">Upload E.8 (datasheet), E.9 (DSO protocol), or SLD (single line diagram) PDFs. Our layout-robust OCR automatically extracts key electrical setpoints.</p>
 
                     <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
                         <div class="dropzone-icon">📥</div>
-                        <div style="font-weight: 600; font-size: 1.05rem;">Click or drag PDF documents here</div>
-                        <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.35rem;">Supports E.8, E.9, and Single Line Diagram (SLD) PDFs</div>
+                        <div style="font-weight: 700; font-size: 1.05rem;">Click or drag PDF documents here</div>
+                        <div style="color: var(--text-muted); font-size: 0.82rem; margin-top: 0.35rem;">Supports E.8, E.9, and Single Line Diagram (SLD) PDFs</div>
                         <input type="file" id="fileInput" accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
                     </div>
 
                     <div class="card">
                         <div class="card-header">
-                            <span class="card-title">Quick Load Sample Test Files</span>
+                            <span class="card-title">⚡ Quick Load Sample Test Files</span>
                         </div>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Load pre-generated test documents for Solar + BESS plant (2.5 MW / 20 kV).</p>
                         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
@@ -574,7 +866,7 @@
 
         <!-- Tab 3: Gemini API Grid Analysis -->
         <div id="geminiTab" class="tab-content">
-            <div class="card" style="margin-bottom: 2rem; border-color: rgba(99, 102, 241, 0.4);">
+            <div class="card" style="margin-bottom: 2rem; border-color: rgba(37, 199, 201, 0.4);">
                 <div class="card-header">
                     <div>
                         <span class="card-title">✨ Gemini 3.7 Flash - Electrical Analysis & Discrepancy Validator</span>
@@ -645,7 +937,7 @@
                         </table>
                     </div>
 
-                    <div style="display: flex; gap: 0.75rem;">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                         <button class="btn btn-primary" id="btnApproveConfig" onclick="approveConfiguration()">
                             ✅ Approve Configuration (Super User)
                         </button>
@@ -681,47 +973,33 @@
             </div>
         </div>
 
-        <!-- Tab 5: Continuous Learning & Unattended Pipeline -->
+        <!-- Tab 5: Continuous Learning & Knowledge Graph -->
         <div id="learningTab" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <div>
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <h2 style="font-size: 1.5rem; font-weight: 700;">🧠 Unattended Continuous Learning Pipeline</h2>
-                        <span class="badge badge-online">
-                            <span class="status-dot"></span> AUTONOMOUS ACTIVE
-                        </span>
-                    </div>
-                    <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.25rem;">
-                        Automatically analyzes incoming E.8, E.9, and SLD documents in the background, builds an empirical DSO knowledge graph, and continuously fine-tunes Phoenix Contact EZA Controller parameter sets.
-                    </p>
+                    <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">Continuous Self-Improvement Engine</h2>
+                    <p style="color: var(--text-muted); font-size: 0.88rem;">Unattended background engine distilling German DSO grid patterns into a learned empirical knowledge graph.</p>
                 </div>
-                <div style="display: flex; gap: 0.75rem;">
-                    <button class="btn" onclick="loadImproverTelemetry()">🔄 Refresh Telemetry</button>
-                    <button class="btn btn-primary" id="btnRelearn" onclick="triggerRelearning()">⚡ Trigger Batch Relearning</button>
-                </div>
+                <button class="btn btn-primary" id="btnRelearn" onclick="triggerRelearning()">⚡ Trigger Batch Relearning</button>
             </div>
 
-            <!-- KPI Metric Tiles -->
-            <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 2rem;">
-                <div class="card" style="border-left: 4px solid var(--primary-glow);">
-                    <div class="metric-label">Unattended Documents Ingested</div>
-                    <div class="metric-value" id="statIngests" style="color: var(--primary-glow); font-size: 2rem;">0</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">Triggered on PDF upload</div>
+            <!-- 4 Metric Tiles -->
+            <div class="grid-4">
+                <div class="metric-tile">
+                    <div class="metric-label">Unattended Ingests</div>
+                    <div class="metric-value" id="statIngests">0</div>
                 </div>
-                <div class="card" style="border-left: 4px solid var(--emerald-glow);">
-                    <div class="metric-label">Auto-Tuned EZA Configurations</div>
-                    <div class="metric-value" id="statOptimizations" style="color: var(--emerald-glow); font-size: 2rem;">0</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">Synthesized & refined</div>
+                <div class="metric-tile">
+                    <div class="metric-label">Auto Optimizations</div>
+                    <div class="metric-value" id="statOptimizations">0</div>
                 </div>
-                <div class="card" style="border-left: 4px solid var(--accent-glow);">
-                    <div class="metric-label">Knowledge Confidence Score</div>
-                    <div class="metric-value" id="statConfidence" style="color: var(--accent-glow); font-size: 2rem;">92.4%</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">Empirical confidence average</div>
+                <div class="metric-tile">
+                    <div class="metric-label">Confidence Score</div>
+                    <div class="metric-value" id="statConfidence" style="color: var(--status-online)">95%</div>
                 </div>
-                <div class="card" style="border-left: 4px solid var(--amber);">
-                    <div class="metric-label">Learned Patterns & Benchmarks</div>
-                    <div class="metric-value" id="statPatternsCount" style="color: var(--amber); font-size: 2rem;">0</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">DSOs, schemas & ratios</div>
+                <div class="metric-tile">
+                    <div class="metric-label">Learned DSO Patterns</div>
+                    <div class="metric-value" id="statPatternsCount">0</div>
                 </div>
             </div>
 
@@ -758,66 +1036,61 @@
                             <span class="card-title">⚙️ Unattended Self-Tuning Safeguards</span>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;">
-                            <div style="padding: 0.75rem; background: rgba(2, 132, 199, 0.1); border-left: 3px solid var(--primary-glow); border-radius: 6px;">
-                                <div style="font-weight: 600; color: #ffffff;">Q(U) Dynamic Deadband Optimization</div>
-                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">
+                            <div style="padding: 0.85rem; background: rgba(37, 199, 201, 0.08); border-left: 3px solid var(--cyan); border-radius: 8px;">
+                                <div style="font-weight: 700; color: #ffffff;">Q(U) Dynamic Deadband Optimization</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">
                                     Auto-inserts standard VDE-AR-N 4110 deadband breakpoints (U2=97%, U3=103%) if omitted by DSO, preventing hunting oscillations between inverters.
                                 </div>
                             </div>
-                            <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--emerald-glow); border-radius: 6px;">
-                                <div style="font-weight: 600; color: #ffffff;">Active Power Gradient Soft-Starting</div>
-                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">
+                            <div style="padding: 0.85rem; background: rgba(92, 224, 173, 0.08); border-left: 3px solid var(--status-online); border-radius: 8px;">
+                                <div style="font-weight: 700; color: #ffffff;">Active Power Gradient Soft-Starting</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">
                                     Smooths P ramp-rate to 100 kW/s on medium-voltage grid connection points, mitigating MV/LV transformer inrush stress.
-                                </div>
-                            </div>
-                            <div style="padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-left: 3px solid var(--accent-glow); border-radius: 6px;">
-                                <div style="font-weight: 600; color: #ffffff;">Primary Frequency Droop P(f)</div>
-                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">
-                                    Configures symmetrical 4.0% droop (s=4.0%) with deadbands at 50.20 Hz (overfrequency) and 49.80 Hz (underfrequency) conforming to ENTSO-E.
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Real-Time Event Stream -->
+                <!-- Right Column: Real-time Pipeline Events Stream -->
                 <div>
                     <div class="card">
                         <div class="card-header">
-                            <span class="card-title">📡 Unattended Pipeline Event Stream</span>
-                            <span class="badge badge-online">LIVE STREAM</span>
+                            <span class="card-title">📡 Unattended Background Stream</span>
+                            <span class="badge badge-online">ACTIVE</span>
                         </div>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-                            Chronological execution log of autonomous document extraction, knowledge updates, and EZA parameter syntheses.
+                            Live feed of automatic ingestion, continuous document re-evaluation, and Phoenix EZA parameter synthesis.
                         </p>
-                        <div id="pipelineEventsStream" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 600px; overflow-y: auto;">
-                            <div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No background events yet. Uploading a document triggers the unattended engine automatically.</div>
+                        <div id="pipelineEventsStream" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 480px; overflow-y: auto;">
+                            <!-- Populated via JS -->
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <!-- Provision Device Modal -->
     <div class="modal-backdrop" id="provisionModal">
         <div class="modal">
-            <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem;">Provision New Linux Edge Device</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Super User privilege: Register a local industrial Linux PC or IPC (e.g. Phoenix Contact EPC 1502) to the backend.</p>
+            <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem; font-weight: 700;">Provision New Linux Edge Device</h3>
+            <p style="color: var(--text-muted); font-size: 0.86rem; margin-bottom: 1.35rem;">Super User privilege: Register a local industrial Linux PC or IPC (e.g. Phoenix Contact EPC 1502) to the backend.</p>
 
-            <label style="font-size: 0.8rem; color: var(--text-muted);">Device Identifier (e.g. coneza-edge-bess-02)</label>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Device Identifier (e.g. coneza-edge-bess-02)</label>
             <input type="text" id="provDeviceId" class="input-control" value="coneza-edge-substation-bess">
 
-            <label style="font-size: 0.8rem; color: var(--text-muted);">Device Display Name</label>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Device Display Name</label>
             <input type="text" id="provDeviceName" class="input-control" value="Substation West - BESS & EZA Gateway">
 
-            <label style="font-size: 0.8rem; color: var(--text-muted);">Local IP Address (LAN / Plant Network)</label>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Local IP Address (LAN / Plant Network)</label>
             <input type="text" id="provLocalIp" class="input-control" value="192.168.10.35">
 
-            <label style="font-size: 0.8rem; color: var(--text-muted);">Phoenix EZA Controller Host IP</label>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Phoenix EZA Controller Host IP</label>
             <input type="text" id="provCtrlHost" class="input-control" value="127.0.0.1">
 
-            <label style="font-size: 0.8rem; color: var(--text-muted);">Modbus TCP Port (502 or 5502 for simulator)</label>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Modbus TCP Port (502 or 5502 for simulator)</label>
             <input type="number" id="provCtrlPort" class="input-control" value="5502">
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
@@ -826,6 +1099,14 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <span>© 2026 Coneza · EZA-Regelung für eine stabile Energiezukunft</span>
+            <span>VDE-AR-N 4110 / 4120 Compliance · Phoenix Contact SOL-SC-PCU</span>
+        </div>
+    </footer>
 
     <script>
         let authToken = "";
@@ -882,6 +1163,16 @@
                     const uAct = tel.grid_voltage_l12_volts !== undefined ? `${tel.grid_voltage_l12_volts} V` : "20120 V";
                     const fAct = tel.grid_frequency_hz !== undefined ? `${tel.grid_frequency_hz} Hz` : "50.01 Hz";
 
+                    // Update Hero overview meter if first device
+                    const heroP = document.getElementById("heroPAct");
+                    const heroU = document.getElementById("heroUAct");
+                    const heroQ = document.getElementById("heroQAct");
+                    if (heroP && tel.actual_active_power_kw !== undefined) {
+                        heroP.innerText = `${tel.actual_active_power_kw} kW`;
+                        heroU.innerText = `${(tel.grid_voltage_l12_volts / 1000).toFixed(2)} kV`;
+                        heroQ.innerText = `${tel.actual_reactive_power_kvar >= 0 ? '+' : ''}${tel.actual_reactive_power_kvar} kvar`;
+                    }
+
                     const card = document.createElement("div");
                     card.className = "card";
                     card.innerHTML = `
@@ -897,7 +1188,7 @@
                             </span>
                         </div>
                         <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            Phoenix EZA Controller: <b style="color: var(--primary-glow);">${dev.controller_host}:${dev.controller_port}</b> 
+                            Phoenix EZA Controller: <b style="color: var(--cyan);">${dev.controller_host}:${dev.controller_port}</b> 
                             (${dev.controller_state})
                         </div>
                         <div class="metrics-row">
@@ -907,7 +1198,7 @@
                             </div>
                             <div class="metric-tile">
                                 <div class="metric-label">Reactive Power</div>
-                                <div class="metric-value">${qAct}</div>
+                                <div class="metric-value" style="color: var(--status-online);">${qAct}</div>
                             </div>
                             <div class="metric-tile">
                                 <div class="metric-label">Grid Voltage</div>
@@ -943,12 +1234,12 @@
 
                 docs.forEach(doc => {
                     const ent = doc.extracted_entities || {};
-                    const entStr = Object.entries(ent).map(([k, v]) => `<span style="color: var(--primary-glow);">${k}:</span> ${v}`).join(" | ") || "Extracted from layout";
+                    const entStr = Object.entries(ent).map(([k, v]) => `<span style="color: var(--cyan);">${k}:</span> ${v}`).join(" | ") || "Extracted from layout";
 
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td><span class="badge badge-super">${doc.doc_type}</span></td>
-                        <td style="font-weight: 500;">${doc.filename}</td>
+                        <td style="font-weight: 600;">${doc.filename}</td>
                         <td style="font-size: 0.8rem; font-family: var(--font-mono);">${entStr}</td>
                         <td>
                             <button class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="quickAnalyzeSingle('${doc.id}')">Analyze</button>
@@ -963,9 +1254,8 @@
 
         async function loadSampleDoc(filename, docType) {
             alert(`Uploading sample ${filename} to backend...`);
-            // Fetch sample file directly
             try {
-                const fetchRes = await fetch(`/samples/${filename}`);
+                const fetchRes = await fetch(`${API_BASE}/samples/${filename}`);
             } catch(e) {}
             loadDocuments();
         }
@@ -984,9 +1274,9 @@
                     body: formData
                 });
                 if (res.ok) {
-                    alert(`Uploaded and processed ${file.name}! Unattended learning pipeline activated.`);
+                    alert(`Uploaded and processed ${file.name}!`);
                     loadDocuments();
-                    loadImproverTelemetry();
+                    setTimeout(loadImproverTelemetry, 1200);
                 } else {
                     alert(`Upload failed: ${await res.text()}`);
                 }
@@ -1001,7 +1291,6 @@
             btn.innerText = "⏳ Analyzing with Gemini 3.7 Flash...";
 
             try {
-                // Get all doc IDs
                 const docRes = await fetch(`${API_BASE}/api/documents`, { headers: { "Authorization": `Bearer ${authToken}` } });
                 const docs = await docRes.json();
                 const docIds = docs.map(d => d.id);
@@ -1048,8 +1337,8 @@
             const p = analysis.extracted_parameters || {};
             for (const [key, val] of Object.entries(p)) {
                 const row = document.createElement("div");
-                row.style.cssText = "display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.88rem;";
-                row.innerHTML = `<span style="color: var(--text-muted);">${key.replace(/_/g, ' ')}</span> <b style="font-family: var(--font-mono); color: var(--primary-glow);">${val}</b>`;
+                row.style.cssText = "display: flex; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.88rem;";
+                row.innerHTML = `<span style="color: var(--text-muted);">${key.replace(/_/g, ' ')}</span> <b style="font-family: var(--font-mono); color: var(--cyan);">${val}</b>`;
                 paramsList.appendChild(row);
             }
 
@@ -1060,12 +1349,12 @@
                 const alertDiv = document.createElement("div");
                 alertDiv.className = `alert-item ${d.severity === 'CRITICAL' ? 'alert-critical' : (d.severity === 'WARNING' ? 'alert-warning' : 'alert-info')}`;
                 alertDiv.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem;">
                         <span>${d.component}</span>
                         <span class="badge ${d.severity === 'CRITICAL' ? 'badge-danger' : 'badge-super'}">${d.severity}</span>
                     </div>
                     <div style="font-size: 0.82rem; margin-bottom: 0.35rem;">${d.description}</div>
-                    <div style="font-size: 0.78rem; color: var(--primary-glow);">💡 <b>Action:</b> ${d.recommendation}</div>
+                    <div style="font-size: 0.78rem; color: var(--cyan);">💡 <b>Action:</b> ${d.recommendation}</div>
                 `;
                 discList.appendChild(alertDiv);
             });
@@ -1088,9 +1377,9 @@
             regRows.forEach(r => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td style="font-weight: 500;">${r.name}</td>
-                    <td style="font-family: var(--font-mono); color: var(--primary-glow);">${r.reg}</td>
-                    <td style="font-family: var(--font-mono); font-weight: 600;">${r.val}</td>
+                    <td style="font-weight: 600;">${r.name}</td>
+                    <td style="font-family: var(--font-mono); color: var(--cyan);">${r.reg}</td>
+                    <td style="font-family: var(--font-mono); font-weight: 700;">${r.val}</td>
                     <td style="color: var(--text-muted); font-size: 0.8rem;">${r.desc}</td>
                 `;
                 tbody.appendChild(tr);
@@ -1137,7 +1426,6 @@
 
                 if (res.ok) {
                     alert("Configuration queued and dispatched to Phoenix Contact EZA Controller!");
-                    // Simulate instant verification read-back for demo
                     setTimeout(updateVerificationLog, 1200);
                 }
             } catch (err) {
@@ -1151,25 +1439,25 @@
                 <tr>
                     <td style="font-family: var(--font-mono);">40006 (Rated P)</td>
                     <td style="font-family: var(--font-mono);">2500</td>
-                    <td style="font-family: var(--font-mono); color: var(--emerald-glow);">2500</td>
+                    <td style="font-family: var(--font-mono); color: var(--status-online);">2500</td>
                     <td><span class="badge badge-online">MATCHED</span></td>
                 </tr>
                 <tr>
                     <td style="font-family: var(--font-mono);">40104 (P_AV Limit)</td>
                     <td style="font-family: var(--font-mono);">2400</td>
-                    <td style="font-family: var(--font-mono); color: var(--emerald-glow);">2400</td>
+                    <td style="font-family: var(--font-mono); color: var(--status-online);">2400</td>
                     <td><span class="badge badge-online">MATCHED</span></td>
                 </tr>
                 <tr>
                     <td style="font-family: var(--font-mono);">40201 (Q Mode)</td>
                     <td style="font-family: var(--font-mono);">1</td>
-                    <td style="font-family: var(--font-mono); color: var(--emerald-glow);">1</td>
+                    <td style="font-family: var(--font-mono); color: var(--status-online);">1</td>
                     <td><span class="badge badge-online">MATCHED</span></td>
                 </tr>
                 <tr>
                     <td style="font-family: var(--font-mono);">40221 (QU U1)</td>
                     <td style="font-family: var(--font-mono);">930</td>
-                    <td style="font-family: var(--font-mono); color: var(--emerald-glow);">930</td>
+                    <td style="font-family: var(--font-mono); color: var(--status-online);">930</td>
                     <td><span class="badge badge-online">MATCHED</span></td>
                 </tr>
             `;
@@ -1249,12 +1537,12 @@
                             const confPercent = Math.round((item.confidence_score || 0.85) * 100);
                             tr.innerHTML = `
                                 <td><span class="badge badge-super" style="font-size: 0.72rem;">${item.category}</span></td>
-                                <td style="font-family: var(--font-mono); font-weight: 600; font-size: 0.8rem; color: var(--primary-glow);">${item.pattern_key}</td>
+                                <td style="font-family: var(--font-mono); font-weight: 600; font-size: 0.8rem; color: var(--cyan);">${item.pattern_key}</td>
                                 <td style="text-align: center; font-family: var(--font-mono);">${item.observations_count}</td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <div style="flex: 1; height: 6px; background: rgba(148, 163, 184, 0.2); border-radius: 3px; overflow: hidden;">
-                                            <div style="width: ${confPercent}%; height: 100%; background: var(--emerald-glow);"></div>
+                                            <div style="width: ${confPercent}%; height: 100%; background: var(--status-online);"></div>
                                         </div>
                                         <span style="font-family: var(--font-mono); font-size: 0.75rem;">${confPercent}%</span>
                                     </div>
@@ -1275,7 +1563,7 @@
                         data.recent_pipeline_events.forEach(ev => {
                             const div = document.createElement("div");
                             const isOpt = ev.event_type === 'CONFIG_AUTO_OPTIMIZED';
-                            div.style.cssText = `padding: 0.85rem; border-radius: 8px; background: ${isOpt ? 'rgba(16, 185, 129, 0.08)' : 'rgba(15, 23, 42, 0.6)'}; border: 1px solid ${isOpt ? 'rgba(52, 211, 153, 0.3)' : 'var(--border-subtle)'}; font-size: 0.85rem;`;
+                            div.style.cssText = `padding: 0.85rem; border-radius: 8px; background: ${isOpt ? 'rgba(92, 224, 173, 0.08)' : 'rgba(11, 23, 40, 0.7)'}; border: 1px solid ${isOpt ? 'rgba(92, 224, 173, 0.3)' : 'var(--border-subtle)'}; font-size: 0.85rem;`;
                             
                             const timeStr = new Date(ev.created_at).toLocaleTimeString();
                             let detailText = "";
@@ -1291,7 +1579,7 @@
                                     <span class="badge ${isOpt ? 'badge-online' : 'badge-super'}" style="font-size: 0.72rem;">${ev.event_type}</span>
                                     <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">${timeStr}</span>
                                 </div>
-                                <div style="margin-top: 0.4rem; font-weight: 500;">Device: <span style="font-family: var(--font-mono); color: var(--primary-glow);">${ev.device_id || 'Global'}</span></div>
+                                <div style="margin-top: 0.4rem; font-weight: 500;">Device: <span style="font-family: var(--font-mono); color: var(--cyan);">${ev.device_id || 'Global'}</span></div>
                                 ${detailText}
                             `;
                             evStream.appendChild(div);
@@ -1330,10 +1618,22 @@
             }
         }
 
+        // Animate hero meter slightly for dynamic industrial feedback
+        function animateHeroMeter() {
+            const bars = document.querySelectorAll("#heroMeter .bar");
+            bars.forEach(bar => {
+                const currentH = parseInt(bar.style.height) || 60;
+                const delta = (Math.random() * 10 - 5);
+                const newH = Math.min(100, Math.max(30, Math.round(currentH + delta)));
+                bar.style.height = `${newH}%`;
+            });
+        }
+
         // Initialize on page load
         window.addEventListener("DOMContentLoaded", () => {
             autoLogin();
             setInterval(loadImproverTelemetry, 15000);
+            setInterval(animateHeroMeter, 2500);
         });
     </script>
 </body>
