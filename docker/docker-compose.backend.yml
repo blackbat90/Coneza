@@ -16,6 +16,9 @@ services:
       - CONEZA_JWT_SECRET=${CONEZA_JWT_SECRET:-coneza-super-secret-jwt-key-2026-vde4110}
       - CONEZA_DB_PATH=/data/coneza_backend.db
       - PYTHONUNBUFFERED=1
+    networks:
+      - default
+      - coneza-web-fe_default
     volumes:
       # Persistent storage for SQLite database and uploaded documents
       - coneza_backend_data:/data
@@ -37,3 +40,8 @@ volumes:
     name: coneza_backend_data
   coneza_backend_docs:
     name: coneza_backend_docs
+
+networks:
+  default:
+  coneza-web-fe_default:
+    external: true
