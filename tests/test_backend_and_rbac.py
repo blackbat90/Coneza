@@ -122,5 +122,60 @@ class TestBackendAndRBAC(unittest.TestCase):
         self.assertEqual(res_deploy.status_code, 200)
         self.assertEqual(res_deploy.json()["status"], "QUEUED_FOR_DEPLOYMENT")
 
+    def test_08_admin_requires_password(self):
+        # Incorrect password must be rejected
+        res_wrong = self.client.post("/api/auth/login", json={"username": "admin", "password": "wrongPassword123!"})
+        self.assertEqual(res_wrong.status_code, 401)
+        self.assertIn("Invalid username or password", res_wrong.json()["detail"])
+
+        # Correct password succeeds
+        res_correct = self.client.post("/api/auth/login", json={"username": "admin", "password": "conezaAdmin2026!"})
+        self.assertEqual(res_correct.status_code, 200)
+
+    def test_09_user_registration(self):
+        # Register new user
+        reg_payload = {
+            "username": "solar_engineer_new",
+            "email": "solar.engineer@example.com",
+            "password": "securePassword2026!",
+            "role": "ENGINEER"
+        }
+        res_reg = self.client.post("/api/auth/register", json=reg_payload)
+        self.assertEqual(res_reg.status_code, 200)
+        data = res_reg.json()
+        self.assertIn("access_token", data)
+        self.assertEqual(data["user"]["username"], "solar_engineer_new")
+        self.assertEqual(data["user"]["role"], "ENGINEER")
+        TestBackendAndRBAC.new_user_id = data["user"]["id"]
+
+        # Duplicate registration rejected
+        res_dup = self.client.post("/api/auth/register", json=reg_payload)
+        self.assertEqual(res_dup.status_code, 400)
+
+    def test_10_user_management_rbac(self):
+        # Viewer cannot list all users (403)
+        res_view = self.client.get("/api/auth/users", headers={"Authorization": f"Bearer {self.viewer_token}"})
+        self.assertEqual(res_view.status_code, 403)
+
+        # Super admin can list users (200)
+        res_admin = self.client.get("/api/auth/users", headers={"Authorization": f"Bearer {self.super_token}"})
+        self.assertEqual(res_admin.status_code, 200)
+        users = res_admin.json()
+        self.assertTrue(len(users) >= 4)
+
+        # Super admin can update user role
+        res_role = self.client.patch(
+            f"/api/auth/users/{self.new_user_id}/role",
+            json={"role": "VIEWER"},
+            headers={"Authorization": f"Bearer {self.super_token}"}
+        )
+        self.assertEqual(res_role.status_code, 200)
+        self.assertEqual(res_role.json()["new_role"], "VIEWER")
+
+        # Super admin can delete user
+        res_del = self.client.delete(f"/api/auth/users/{self.new_user_id}", headers={"Authorization": f"Bearer {self.super_token}"})
+        self.assertEqual(res_del.status_code, 200)
+
 if __name__ == "__main__":
     unittest.main()
+

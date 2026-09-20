@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.database import init_db, get_connection
 from backend.models import (
-    UserCreate, UserLogin, UserResponse,
+    UserCreate, UserLogin, UserResponse, UserRoleUpdate,
     DeviceRegister, DeviceHeartbeat, DeviceResponse,
     AnalysisTrigger, ConfigDeployRequest
 )
@@ -140,6 +140,58 @@ async def login(credentials: UserLogin):
         }
     }
 
+@app.post("/api/auth/register")
+async def register(payload: UserCreate):
+    """Public registration endpoint for new users."""
+    username = payload.username.strip()
+    email = payload.email.strip()
+    password = payload.password
+
+    if not username or not email or not password:
+        raise HTTPException(status_code=400, detail="Username, email, and password are required")
+
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    # Self-registration cannot create SUPER_ADMIN directly; must be ENGINEER or VIEWER
+    role = payload.role if payload.role in ("ENGINEER", "VIEWER") else "VIEWER"
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    try:
+        cursor.execute("""
+            INSERT INTO users (username, email, hashed_password, role)
+            VALUES (?, ?, ?, ?)
+        """, (username, email, hash_password(password), role))
+        user_id = cursor.lastrowid
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=400, detail=f"Registration failed: {e}")
+    conn.close()
+
+    token = create_access_token(user_id, username, role)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user_id,
+            "username": username,
+            "email": email,
+            "role": role
+        }
+    }
+
 @app.get("/api/auth/me")
 async def get_me(user: Dict[str, Any] = Depends(get_current_user)):
     return user
@@ -165,10 +217,32 @@ async def create_user(payload: UserCreate):
 async def list_users():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, email, role, created_at FROM users")
+    cursor.execute("SELECT id, username, email, role, created_at FROM users ORDER BY id ASC")
     users = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return users
+
+@app.delete("/api/auth/users/{user_id}", dependencies=[Depends(require_super_user)])
+async def delete_user(user_id: int, current_user: Dict[str, Any] = Depends(get_current_user)):
+    if int(current_user["id"]) == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own active admin account")
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": f"User {user_id} deleted"}
+
+@app.patch("/api/auth/users/{user_id}/role", dependencies=[Depends(require_super_user)])
+async def update_user_role(user_id: int, payload: UserRoleUpdate, current_user: Dict[str, Any] = Depends(get_current_user)):
+    if payload.role not in ("SUPER_ADMIN", "ENGINEER", "VIEWER"):
+        raise HTTPException(status_code=400, detail="Invalid role. Must be SUPER_ADMIN, ENGINEER, or VIEWER")
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET role = ? WHERE id = ?", (payload.role, user_id))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "user_id": user_id, "new_role": payload.role}
 
 # ----------------- Multi-Device Fleet Endpoints ----------------- #
 

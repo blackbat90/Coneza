@@ -138,7 +138,8 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 1.1rem;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .badge {
@@ -151,6 +152,9 @@
             display: inline-flex;
             align-items: center;
             gap: 0.45rem;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .badge-super {
@@ -158,6 +162,12 @@
             color: var(--cyan);
             border: 1px solid rgba(37, 199, 201, 0.35);
             box-shadow: 0 0 14px rgba(37, 199, 201, 0.15);
+        }
+
+        .badge-engineer {
+            background: rgba(21, 119, 212, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(21, 119, 212, 0.4);
         }
 
         .badge-online {
@@ -429,6 +439,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .card-title {
@@ -633,8 +645,8 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(6, 15, 26, 0.82);
-            backdrop-filter: blur(10px);
+            background: rgba(6, 15, 26, 0.86);
+            backdrop-filter: blur(12px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -646,9 +658,11 @@
             border: 1px solid var(--border-glow);
             border-radius: 18px;
             max-width: 600px;
-            width: 90%;
+            width: 92%;
             padding: 2.2rem;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .input-control {
@@ -713,11 +727,17 @@
             <span class="badge badge-online">
                 <span class="status-dot"></span> Backend Active
             </span>
-            <span class="badge badge-super" id="roleBadge">
-                SUPER_ADMIN (admin)
+            <span class="badge" id="roleBadge">
+                Nicht angemeldet
             </span>
-            <button class="btn btn-primary" id="btnProvisionDevice" onclick="openProvisionModal()">
+            <button class="btn" id="btnLoginHeaderBtn" onclick="openAuthModal('login')">
+                🔐 Anmelden
+            </button>
+            <button class="btn btn-primary" id="btnProvisionDevice" style="display: none;" onclick="openProvisionModal()">
                 + Provision Linux Device
+            </button>
+            <button class="btn" id="btnLogoutBtn" style="display: none;" onclick="logout()">
+                Abmelden
             </button>
         </div>
     </header>
@@ -793,6 +813,9 @@
             </button>
             <button class="tab-btn" onclick="switchTab('learningTab', this); loadImproverTelemetry();">
                 🧠 Continuous Learning (<span id="optimCountBadge">0</span>)
+            </button>
+            <button class="tab-btn" id="usersTabBtn" style="display: none;" onclick="switchTab('usersTab', this); loadUsers();">
+                👥 Benutzerverwaltung (<span id="userCount">0</span>)
             </button>
         </nav>
 
@@ -1070,6 +1093,146 @@
             </div>
         </div>
 
+        <!-- Tab 6: User Management (SUPER_ADMIN only) -->
+        <div id="usersTab" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">Benutzerverwaltung & Rollen-RBAC</h2>
+                    <p style="color: var(--text-muted); font-size: 0.88rem;">Verwalten Sie autorisierte Ingenieure, Beobachter und Administratoren.</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn" onclick="loadUsers()">🔄 Aktualisieren</button>
+                    <button class="btn btn-primary" onclick="openCreateUserModal()">+ Neuer Benutzer</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Registrierte Benutzerkonten</span>
+                    <span class="badge badge-super" id="usersTableCountBadge">0 Konten</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Benutzername</th>
+                                <th>E-Mail</th>
+                                <th>Rolle</th>
+                                <th>Erstellt am</th>
+                                <th>Rolle ändern</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Populated via JS loadUsers() -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Auth Modal (Login / Register) -->
+    <div class="modal-backdrop" id="authModal" style="display: none;">
+        <div class="modal" style="max-width: 480px; padding: 2.2rem;">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div class="brand-logo-wrap" style="display: inline-block; margin-bottom: 0.65rem;">
+                    <img class="brand-logo-img" src="static/images/Company-Logo.jpg" onerror="this.onerror=null; this.src='/resources/images/Company-Logo.jpg';" alt="Coneza" style="height: 48px;">
+                </div>
+                <h3 id="authModalTitle" style="font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Coneza Portal Zugang</h3>
+                <p id="authModalSubtitle" style="color: var(--text-muted); font-size: 0.84rem;">Bitte melden Sie sich mit Ihren Benutzerdaten an.</p>
+            </div>
+
+            <!-- Tab switcher: Login vs Register -->
+            <div style="display: flex; background: rgba(8, 21, 34, 0.9); border: 1px solid var(--border-subtle); border-radius: 9999px; padding: 4px; margin-bottom: 1.5rem;">
+                <button type="button" id="tabLoginBtn" class="tab-btn active" style="flex: 1; justify-content: center; padding: 0.5rem 1rem; font-size: 0.86rem;" onclick="showAuthView('login')">
+                    Anmelden
+                </button>
+                <button type="button" id="tabRegisterBtn" class="tab-btn" style="flex: 1; justify-content: center; padding: 0.5rem 1rem; font-size: 0.86rem;" onclick="showAuthView('register')">
+                    Registrieren
+                </button>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="authErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;">
+            </div>
+
+            <!-- Success Banner -->
+            <div id="authSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(92, 224, 173, 0.15); border: 1px solid var(--status-online); color: #a7f3d0; font-size: 0.84rem; margin-bottom: 1.2rem;">
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Benutzername</label>
+                <input type="text" id="loginUsername" class="input-control" placeholder="z. B. admin oder engineer" required autofocus>
+
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Passwort</label>
+                <input type="password" id="loginPassword" class="input-control" placeholder="••••••••••••" required>
+
+                <button type="submit" id="btnLoginSubmit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.82rem; font-size: 0.95rem; margin-top: 0.3rem;">
+                    🔐 Anmelden
+                </button>
+
+                <div style="background: rgba(37, 199, 201, 0.07); border: 1px solid rgba(37, 199, 201, 0.2); border-radius: 10px; padding: 0.85rem; margin-top: 1.3rem; font-size: 0.8rem; color: var(--text-muted);">
+                    <div style="font-weight: 700; color: #ffffff; margin-bottom: 0.25rem;">Standardkonten (Passwort erforderlich):</div>
+                    <div>• <b>Admin:</b> <span style="font-family: var(--font-mono); color: var(--cyan);">admin</span> / <span style="font-family: var(--font-mono); color: var(--cyan);">conezaAdmin2026!</span></div>
+                    <div>• <b>Ingenieur:</b> <span style="font-family: var(--font-mono); color: var(--cyan);">engineer</span> / <span style="font-family: var(--font-mono); color: var(--cyan);">engineer2026!</span></div>
+                </div>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="registerForm" style="display: none;" onsubmit="handleRegisterSubmit(event)">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Benutzername</label>
+                <input type="text" id="regUsername" class="input-control" placeholder="z. B. max.mustermann" required>
+
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">E-Mail-Adresse</label>
+                <input type="email" id="regEmail" class="input-control" placeholder="name@energieversorger.de" required>
+
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Passwort (mind. 6 Zeichen)</label>
+                <input type="password" id="regPassword" class="input-control" placeholder="••••••••••••" minlength="6" required>
+
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Gewünschte Rolle</label>
+                <select id="regRole" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                    <option value="ENGINEER">ENGINEER (Netzprüfung, Dokumentenanalyse & EZA-Konfiguration)</option>
+                    <option value="VIEWER">VIEWER (Nur Lesezugriff auf Telemetrie & Audit-Logs)</option>
+                </select>
+
+                <button type="submit" id="btnRegSubmit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.82rem; font-size: 0.95rem; margin-top: 0.3rem;">
+                    ✨ Konto erstellen & Anmelden
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create User Modal (Super Admin only) -->
+    <div class="modal-backdrop" id="createUserModal" style="display: none;">
+        <div class="modal" style="max-width: 500px;">
+            <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem; font-weight: 700;">Neues Benutzerkonto anlegen</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Super-User-Recht: Legen Sie autorisierte Mitarbeiter oder Administratoren an.</p>
+
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Benutzername</label>
+            <input type="text" id="adminNewUsername" class="input-control" placeholder="z. B. johann.schmidt" required>
+
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">E-Mail</label>
+            <input type="email" id="adminNewEmail" class="input-control" placeholder="johann@netzbetreiber.de" required>
+
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Initiales Passwort</label>
+            <input type="password" id="adminNewPassword" class="input-control" placeholder="••••••••••••" minlength="6" required>
+
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Systemrolle</label>
+            <select id="adminNewRole" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                <option value="ENGINEER">ENGINEER (Netzprüfung & EZA-Konfiguration)</option>
+                <option value="VIEWER">VIEWER (Lesezugriff)</option>
+                <option value="SUPER_ADMIN">SUPER_ADMIN (Volle System- und Geräteverwaltung)</option>
+            </select>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+                <button type="button" class="btn" onclick="closeCreateUserModal()">Abbrechen</button>
+                <button type="button" class="btn btn-primary" onclick="submitCreateUserAdmin()">Benutzer anlegen</button>
+            </div>
+        </div>
     </div>
 
     <!-- Provision Device Modal -->
@@ -1109,32 +1272,332 @@
     </footer>
 
     <script>
-        let authToken = "";
-        let currentUserId = 1;
-        let currentRole = "SUPER_ADMIN";
+        let authToken = localStorage.getItem("coneza_token") || "";
+        let currentUser = null;
+        let currentRole = "";
         let activeConfigId = null;
         let activeJobId = null;
         const API_BASE = window.location.pathname.startsWith('/portal') ? '/portal' : '';
 
-        // Auto login as default Super User
-        async function autoLogin() {
+        // Authentication & Session Management
+        async function checkAuthOnLoad() {
+            if (!authToken) {
+                openAuthModal('login');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    currentUser = await res.json();
+                    currentRole = currentUser.role;
+                    updateUserUI();
+                    loadDevices();
+                    loadDocuments();
+                    loadImproverTelemetry();
+                } else {
+                    logout();
+                }
+            } catch (e) {
+                console.warn("Auth check failed:", e);
+                logout();
+            }
+        }
+
+        function openAuthModal(mode = 'login') {
+            document.getElementById("authModal").style.display = "flex";
+            showAuthView(mode);
+        }
+
+        function closeAuthModal() {
+            document.getElementById("authModal").style.display = "none";
+        }
+
+        function showAuthView(view) {
+            const tabLog = document.getElementById("tabLoginBtn");
+            const tabReg = document.getElementById("tabRegisterBtn");
+            const logForm = document.getElementById("loginForm");
+            const regForm = document.getElementById("registerForm");
+            const errBanner = document.getElementById("authErrorBanner");
+            const succBanner = document.getElementById("authSuccessBanner");
+
+            errBanner.style.display = "none";
+            succBanner.style.display = "none";
+
+            if (view === 'login') {
+                tabLog.classList.add("active");
+                tabReg.classList.remove("active");
+                logForm.style.display = "block";
+                regForm.style.display = "none";
+                document.getElementById("authModalSubtitle").innerText = "Melden Sie sich mit Ihrem Benutzerkonto an.";
+            } else {
+                tabReg.classList.add("active");
+                tabLog.classList.remove("active");
+                logForm.style.display = "none";
+                regForm.style.display = "block";
+                document.getElementById("authModalSubtitle").innerText = "Erstellen Sie ein neues Benutzerkonto.";
+            }
+        }
+
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById("loginUsername").value.trim();
+            const password = document.getElementById("loginPassword").value;
+            const btn = document.getElementById("btnLoginSubmit");
+            const errBanner = document.getElementById("authErrorBanner");
+            errBanner.style.display = "none";
+            btn.disabled = true;
+            btn.innerText = "⏳ Prüfe Anmeldedaten...";
+
             try {
                 const res = await fetch(`${API_BASE}/api/auth/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username: "admin", password: "conezaAdmin2026!" })
+                    body: JSON.stringify({ username, password })
                 });
+                const data = await res.json();
                 if (res.ok) {
-                    const data = await res.json();
                     authToken = data.access_token;
+                    currentUser = data.user;
                     currentRole = data.user.role;
-                    document.getElementById("roleBadge").innerText = `${currentRole} (${data.user.username})`;
+                    localStorage.setItem("coneza_token", authToken);
+                    closeAuthModal();
+                    updateUserUI();
                     loadDevices();
                     loadDocuments();
                     loadImproverTelemetry();
+                } else {
+                    errBanner.innerText = data.detail || "Ungültiger Benutzername oder Passwort.";
+                    errBanner.style.display = "block";
                 }
             } catch (err) {
-                console.error("Auto login error:", err);
+                errBanner.innerText = `Verbindungsfehler: ${err.message}`;
+                errBanner.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🔐 Anmelden";
+            }
+        }
+
+        async function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById("regUsername").value.trim();
+            const email = document.getElementById("regEmail").value.trim();
+            const password = document.getElementById("regPassword").value;
+            const role = document.getElementById("regRole").value;
+            const btn = document.getElementById("btnRegSubmit");
+            const errBanner = document.getElementById("authErrorBanner");
+            const succBanner = document.getElementById("authSuccessBanner");
+            errBanner.style.display = "none";
+            succBanner.style.display = "none";
+            btn.disabled = true;
+            btn.innerText = "⏳ Erstelle Konto...";
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, email, password, role })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    authToken = data.access_token;
+                    currentUser = data.user;
+                    currentRole = data.user.role;
+                    localStorage.setItem("coneza_token", authToken);
+                    succBanner.innerText = `Konto für ${username} erfolgreich erstellt!`;
+                    succBanner.style.display = "block";
+                    setTimeout(() => {
+                        closeAuthModal();
+                        updateUserUI();
+                        loadDevices();
+                        loadDocuments();
+                        loadImproverTelemetry();
+                    }, 600);
+                } else {
+                    errBanner.innerText = data.detail || "Registrierung fehlgeschlagen.";
+                    errBanner.style.display = "block";
+                }
+            } catch (err) {
+                errBanner.innerText = `Fehler: ${err.message}`;
+                errBanner.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "✨ Konto erstellen & Anmelden";
+            }
+        }
+
+        function logout() {
+            authToken = "";
+            currentUser = null;
+            currentRole = "";
+            localStorage.removeItem("coneza_token");
+            
+            const roleBadge = document.getElementById("roleBadge");
+            roleBadge.innerText = "Nicht angemeldet";
+            roleBadge.className = "badge";
+
+            const uTabBtn = document.getElementById("usersTabBtn");
+            if (uTabBtn) uTabBtn.style.display = "none";
+            const pBtn = document.getElementById("btnProvisionDevice");
+            if (pBtn) pBtn.style.display = "none";
+            const logoutBtn = document.getElementById("btnLogoutBtn");
+            if (logoutBtn) logoutBtn.style.display = "none";
+            const loginHeaderBtn = document.getElementById("btnLoginHeaderBtn");
+            if (loginHeaderBtn) loginHeaderBtn.style.display = "inline-flex";
+
+            openAuthModal('login');
+        }
+
+        function updateUserUI() {
+            if (!currentUser) return;
+            const roleBadge = document.getElementById("roleBadge");
+            roleBadge.innerText = `${currentUser.role} (${currentUser.username})`;
+            roleBadge.className = currentUser.role === 'SUPER_ADMIN' ? 'badge badge-super' : (currentUser.role === 'ENGINEER' ? 'badge badge-engineer' : 'badge badge-online');
+
+            const logoutBtn = document.getElementById("btnLogoutBtn");
+            if (logoutBtn) logoutBtn.style.display = "inline-flex";
+            const loginHeaderBtn = document.getElementById("btnLoginHeaderBtn");
+            if (loginHeaderBtn) loginHeaderBtn.style.display = "none";
+
+            const pBtn = document.getElementById("btnProvisionDevice");
+            if (pBtn) {
+                pBtn.style.display = currentUser.role === 'SUPER_ADMIN' ? 'inline-flex' : 'none';
+            }
+
+            const uTabBtn = document.getElementById("usersTabBtn");
+            if (uTabBtn) {
+                uTabBtn.style.display = currentUser.role === 'SUPER_ADMIN' ? 'flex' : 'none';
+                if (currentUser.role === 'SUPER_ADMIN') {
+                    loadUsers();
+                }
+            }
+        }
+
+        // User Management (Super Admin)
+        async function loadUsers() {
+            if (!authToken || currentRole !== "SUPER_ADMIN") return;
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/users`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (!res.ok) return;
+                const users = await res.json();
+                document.getElementById("userCount").innerText = users.length;
+                document.getElementById("usersTableCountBadge").innerText = `${users.length} Konten`;
+
+                const tbody = document.getElementById("usersTableBody");
+                tbody.innerHTML = "";
+
+                users.forEach(u => {
+                    const tr = document.createElement("tr");
+                    const roleBadgeClass = u.role === 'SUPER_ADMIN' ? 'badge badge-super' : (u.role === 'ENGINEER' ? 'badge badge-engineer' : 'badge badge-online');
+                    const isSelf = currentUser && currentUser.id === u.id;
+
+                    tr.innerHTML = `
+                        <td style="font-family: var(--font-mono); color: var(--text-muted);">${u.id}</td>
+                        <td style="font-weight: 700; color: #ffffff;">${u.username} ${isSelf ? '<span style="color:var(--cyan); font-size:0.75rem;">(Sie)</span>' : ''}</td>
+                        <td style="color: var(--text-muted); font-size: 0.82rem;">${u.email}</td>
+                        <td><span class="${roleBadgeClass}" style="font-size: 0.72rem;">${u.role}</span></td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">${u.created_at || 'Standard'}</td>
+                        <td>
+                            <select class="input-control" style="padding: 0.3rem 0.6rem; font-size: 0.78rem; margin: 0; width: auto; display: inline-block;" onchange="changeUserRole(${u.id}, this.value)">
+                                <option value="VIEWER" ${u.role === 'VIEWER' ? 'selected' : ''}>VIEWER</option>
+                                <option value="ENGINEER" ${u.role === 'ENGINEER' ? 'selected' : ''}>ENGINEER</option>
+                                <option value="SUPER_ADMIN" ${u.role === 'SUPER_ADMIN' ? 'selected' : ''}>SUPER_ADMIN</option>
+                            </select>
+                        </td>
+                        <td>
+                            ${isSelf ? '<span style="color:var(--text-muted); font-size:0.75rem;">Aktiv</span>' : `<button class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.76rem;" onclick="deleteUser(${u.id}, '${u.username}')">Löschen</button>`}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Load users failed:", err);
+            }
+        }
+
+        async function changeUserRole(userId, newRole) {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/users/${userId}/role`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ role: newRole })
+                });
+                if (res.ok) {
+                    alert(`Rolle erfolgreich auf ${newRole} aktualisiert!`);
+                    loadUsers();
+                } else {
+                    alert(`Fehler: ${await res.text()}`);
+                    loadUsers();
+                }
+            } catch (e) {
+                alert(`Fehler: ${e.message}`);
+            }
+        }
+
+        async function deleteUser(userId, username) {
+            if (!confirm(`Möchten Sie das Benutzerkonto "${username}" (ID: ${userId}) wirklich unwiderruflich löschen?`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/users/${userId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    alert(`Benutzer "${username}" erfolgreich gelöscht.`);
+                    loadUsers();
+                } else {
+                    alert(`Löschen fehlgeschlagen: ${await res.text()}`);
+                }
+            } catch (e) {
+                alert(`Fehler: ${e.message}`);
+            }
+        }
+
+        function openCreateUserModal() {
+            document.getElementById("createUserModal").style.display = "flex";
+        }
+
+        function closeCreateUserModal() {
+            document.getElementById("createUserModal").style.display = "none";
+        }
+
+        async function submitCreateUserAdmin() {
+            const username = document.getElementById("adminNewUsername").value.trim();
+            const email = document.getElementById("adminNewEmail").value.trim();
+            const password = document.getElementById("adminNewPassword").value;
+            const role = document.getElementById("adminNewRole").value;
+
+            if (!username || !email || !password) {
+                alert("Bitte füllen Sie alle Pflichtfelder aus.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/users`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ username, email, password, role })
+                });
+                if (res.ok) {
+                    alert(`Benutzer "${username}" erfolgreich als ${role} angelegt!`);
+                    closeCreateUserModal();
+                    loadUsers();
+                } else {
+                    alert(`Erstellung fehlgeschlagen: ${await res.text()}`);
+                }
+            } catch (e) {
+                alert(`Fehler: ${e.message}`);
             }
         }
 
@@ -1271,6 +1734,7 @@
             try {
                 const res = await fetch(`${API_BASE}/api/documents/upload`, {
                     method: "POST",
+                    headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {},
                     body: formData
                 });
                 if (res.ok) {
@@ -1629,10 +2093,14 @@
             });
         }
 
-        // Initialize on page load
+        // Initialize on page load: check auth without bypassing admin password
         window.addEventListener("DOMContentLoaded", () => {
-            autoLogin();
-            setInterval(loadImproverTelemetry, 15000);
+            checkAuthOnLoad();
+            setInterval(() => {
+                if (authToken) {
+                    loadImproverTelemetry();
+                }
+            }, 15000);
             setInterval(animateHeroMeter, 2500);
         });
     </script>

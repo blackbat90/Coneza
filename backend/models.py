@@ -15,6 +15,9 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+class UserRoleUpdate(BaseModel):
+    role: str
+
 class UserResponse(BaseModel):
     id: int
     username: str
