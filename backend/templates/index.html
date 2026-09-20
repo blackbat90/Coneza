@@ -840,7 +840,7 @@
                 </div>
                 <div style="display: flex; gap: 0.75rem; align-items: center;">
                     <button class="btn" onclick="loadPlants()">🔄 Aktualisieren</button>
-                    <button class="btn btn-primary" id="btnCreatePlantInTab" style="display: none;" onclick="openCreatePlantModal()">+ Neue Anlage anlegen</button>
+                    <button class="btn btn-primary" id="btnCreatePlantInTab" onclick="openCreatePlantModal()">+ Neue Anlage anlegen</button>
                 </div>
             </div>
 
@@ -1417,7 +1417,7 @@
     </div>
 
     <!-- Provision Device Modal -->
-    <div class="modal-backdrop" id="provisionModal">
+    <div class="modal-backdrop" id="provisionModal" style="display: none;">
         <div class="modal">
             <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem; font-weight: 700;">Provision New Linux Edge Device</h3>
             <p style="color: var(--text-muted); font-size: 0.86rem; margin-bottom: 1.35rem;">Super User privilege: Register a local industrial Linux PC or IPC (e.g. Phoenix Contact EPC 1502) to the backend.</p>
@@ -1441,6 +1441,9 @@
                 <button class="btn" onclick="closeProvisionModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="submitProvisionDevice()">Save & Provision</button>
             </div>
+        </div>
+    </div>
+
     <!-- Create Plant Modal (Engineers & Super Admin) -->
     <div class="modal-backdrop" id="createPlantModal" style="display: none;">
         <div class="modal" style="max-width: 640px; padding: 2.2rem; max-height: 90vh; overflow-y: auto;">
@@ -2173,7 +2176,7 @@
             const plantBtn = document.getElementById("btnCreatePlantHeader");
             if (plantBtn) plantBtn.style.display = "none";
             const plantTabBtn = document.getElementById("btnCreatePlantInTab");
-            if (plantTabBtn) plantTabBtn.style.display = "none";
+            if (plantTabBtn) plantTabBtn.style.display = "inline-flex";
             const logoutBtn = document.getElementById("btnLogoutBtn");
             if (logoutBtn) logoutBtn.style.display = "none";
             const btn2fa = document.getElementById("btn2faHeaderBtn");
@@ -2205,7 +2208,7 @@
             const plantBtn = document.getElementById("btnCreatePlantHeader");
             if (plantBtn) plantBtn.style.display = canManagePlants ? 'inline-flex' : 'none';
             const plantTabBtn = document.getElementById("btnCreatePlantInTab");
-            if (plantTabBtn) plantTabBtn.style.display = canManagePlants ? 'inline-flex' : 'none';
+            if (plantTabBtn) plantTabBtn.style.display = 'inline-flex';
 
             const pBtn = document.getElementById("btnProvisionDevice");
             if (pBtn) {
@@ -2382,6 +2385,17 @@
         }
 
         async function openCreatePlantModal() {
+            if (!authToken || !currentUser) {
+                alert("Bitte melden Sie sich an, um eine neue Energieanlage anzulegen.");
+                openAuthModal('login');
+                return;
+            }
+
+            if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'ENGINEER') {
+                alert("Berechtigung erforderlich: Nur Benutzer mit der Rolle 'ENGINEER' oder 'SUPER_ADMIN' können neue Erzeugungsanlagen registrieren. Bitte wenden Sie sich an Ihren Administrator.");
+                return;
+            }
+
             document.getElementById("createPlantErrorBanner").style.display = "none";
             document.getElementById("createPlantForm").reset();
             document.getElementById("plantGridOperator").value = "Bayernwerk Netz GmbH";
