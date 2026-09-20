@@ -23,6 +23,11 @@ services:
       - JIRA_PROJECT_KEY=${JIRA_PROJECT_KEY:-EEP}
       - JIRA_DEFAULT_ASSIGNEE_ID=${JIRA_DEFAULT_ASSIGNEE_ID:-}
       - JIRA_AI_ACCOUNT_ID=${JIRA_AI_ACCOUNT_ID:-}
+      # Confluence Integration
+      - CONFLUENCE_URL=${CONFLUENCE_URL:-}
+      - CONFLUENCE_EMAIL=${CONFLUENCE_EMAIL:-}
+      - CONFLUENCE_API_TOKEN=${CONFLUENCE_API_TOKEN:-}
+      - CONFLUENCE_SPACE=${CONFLUENCE_SPACE:-EEPD}
     networks:
       - default
       - coneza-web-fe_default

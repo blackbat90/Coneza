@@ -162,3 +162,10 @@ class JiraTicketResponse(BaseModel):
     created_at: str
     synced_with_jira: int = 0
 
+class ConfluenceImprovementLog(BaseModel):
+    feature_title: str
+    details: str
+    jira_key: Optional[str] = None
+    commit_hash: Optional[str] = None
+    status: Optional[str] = "Live in Production"
+

@@ -886,6 +886,12 @@
             <span class="badge" id="roleBadge">
                 Nicht angemeldet
             </span>
+            <a href="https://easy-eza.atlassian.net/wiki/spaces/EEPD" target="_blank" rel="noopener" class="btn" style="background:#f0f7ff; border-color:#bae0ff; color:#0052cc; font-size:0.82rem; padding:0.45rem 0.85rem;" title="Confluence System-Dokumentation">
+                📘 Confluence
+            </a>
+            <a href="https://easy-eza.atlassian.net/jira/your-work" target="_blank" rel="noopener" class="btn" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534; font-size:0.82rem; padding:0.45rem 0.85rem;" title="Jira Board">
+                🎯 Jira
+            </a>
             <button class="btn" id="btnLoginHeaderBtn" onclick="openAuthModal('login')">
                 🔐 Anmelden
             </button>
@@ -1127,8 +1133,8 @@
             <button class="tab-btn" id="usersTabBtn" style="display: none;" onclick="switchTab('usersTab', this); loadUsers();">
                 👥 Benutzerverwaltung (<span id="userCount">0</span>)
             </button>
-            <button class="tab-btn" id="jiraTabBtn" onclick="switchTab('jiraTab', this); loadJiraTickets();">
-                📋 Jira &amp; Roadmap (<span id="jiraTicketCount">4</span>)
+            <button class="tab-btn" id="jiraTabBtn" onclick="switchTab('jiraTab', this); loadJiraTickets(); loadConfluenceDocs();">
+                📋 Jira &amp; Confluence Docs (<span id="jiraTicketCount">4</span>)
             </button>
         </nav>
 
@@ -1540,6 +1546,36 @@
                         </thead>
                         <tbody id="jiraTicketsTableBody">
                             <!-- Populated via JS loadJiraTickets() -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Confluence Documentation Section -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <div>
+                        <span class="card-title">📘 Atlassian Confluence System-Dokumentation &amp; Changelog</span>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Space: <strong>EEPD</strong> (Easy EZA Prototype Docs) · Kontinuierlich synchronisiert durch AI Assistant</div>
+                    </div>
+                    <div style="display: flex; gap: 0.65rem; align-items: center;">
+                        <button class="btn" onclick="syncConfluenceDocs()" id="btnSyncConfluence">🔄 Mit Confluence abgleichen</button>
+                        <a href="https://easy-eza.atlassian.net/wiki/spaces/EEPD" target="_blank" rel="noopener" class="btn btn-primary" style="text-decoration: none;">Öffnen in Confluence ↗</a>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dokumentationstitel</th>
+                                <th>Bereich (Space)</th>
+                                <th>Version</th>
+                                <th>Status</th>
+                                <th>Direktlink</th>
+                            </tr>
+                        </thead>
+                        <tbody id="confluencePagesTableBody">
+                            <!-- Populated via JS loadConfluenceDocs() -->
                         </tbody>
                     </table>
                 </div>
@@ -4135,11 +4171,70 @@
             }).catch(e => alert("Fehler: " + e));
         }
 
+        // ----------------- Confluence Documentation Center ----------------- //
+        async function loadConfluenceDocs() {
+            const tbody = document.getElementById("confluencePagesTableBody");
+            if (!tbody) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/confluence/pages`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                tbody.innerHTML = "";
+                const pages = data.pages || [];
+                if (pages.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">Keine Confluence-Seiten gefunden oder API nicht konfiguriert.</td></tr>`;
+                    return;
+                }
+                pages.forEach(p => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td style="font-weight: 600; color: var(--navy);">
+                            <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" style="color:var(--blue); text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;">
+                                📄 ${escapeHtml(p.title)}
+                            </a>
+                        </td>
+                        <td><span class="badge badge-super" style="font-size:0.72rem;">EEPD</span></td>
+                        <td style="font-family: var(--font-mono); font-size:0.8rem; font-weight:600;">v${p.version}</td>
+                        <td><span class="badge badge-online" style="font-size:0.7rem;">● ${escapeHtml(p.status || 'current')}</span></td>
+                        <td>
+                            <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" class="btn" style="padding:0.28rem 0.75rem; font-size:0.76rem; text-decoration:none;">
+                                In Confluence öffnen ↗
+                            </a>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.warn("Could not load Confluence docs:", err);
+            }
+        }
+
+        async function syncConfluenceDocs() {
+            const btn = document.getElementById("btnSyncConfluence");
+            if (btn) { btn.disabled = true; btn.innerText = "⏳ Synchronisiere..."; }
+            try {
+                const res = await fetch(`${API_BASE}/api/confluence/sync`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                alert("Dokumentation erfolgreich mit Confluence abgeglichen!");
+                loadConfluenceDocs();
+            } catch (e) {
+                alert("Fehler bei der Synchronisation: " + e.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = "🔄 Mit Confluence abgleichen"; }
+            }
+        }
+
         // Initialize on page load: check auth without bypassing admin password
         window.addEventListener("DOMContentLoaded", () => {
             checkAuthOnLoad();
             updateEnergyFlowUI();
             loadJiraTickets();
+            loadConfluenceDocs();
             setInterval(() => {
                 if (authToken) {
                     loadImproverTelemetry();

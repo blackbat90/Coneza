@@ -22,8 +22,23 @@ logger = logging.getLogger("coneza_jira_service")
 JIRA_URL = os.getenv("JIRA_URL", "").rstrip("/")
 JIRA_EMAIL = os.getenv("JIRA_EMAIL", "")
 JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN", "")
-JIRA_PROJECT_KEY = os.getenv("JIRA_PROJECT_KEY", "CON")
+JIRA_PROJECT_KEY = os.getenv("JIRA_PROJECT_KEY", "EEP")
 JIRA_DEFAULT_ASSIGNEE_ID = os.getenv("JIRA_DEFAULT_ASSIGNEE_ID", "")
+
+# Fallback to local jira_config.json if available
+if not (JIRA_URL and JIRA_EMAIL and JIRA_API_TOKEN):
+    cfg_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "jira_config.json")
+    if os.path.exists(cfg_path):
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+                JIRA_URL = JIRA_URL or cfg.get("JIRA_URL", "").rstrip("/")
+                JIRA_EMAIL = JIRA_EMAIL or cfg.get("JIRA_EMAIL", "")
+                JIRA_API_TOKEN = JIRA_API_TOKEN or cfg.get("JIRA_API_TOKEN", "")
+                JIRA_PROJECT_KEY = os.getenv("JIRA_PROJECT_KEY") or cfg.get("JIRA_PROJECT_KEY", "EEP")
+                JIRA_DEFAULT_ASSIGNEE_ID = JIRA_DEFAULT_ASSIGNEE_ID or cfg.get("JIRA_DEFAULT_ASSIGNEE_ID", "")
+        except Exception:
+            pass
 
 class JiraService:
     """Automates ticket creation, sync, and user assignment for portal enhancements."""

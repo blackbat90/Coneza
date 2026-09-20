@@ -27,6 +27,9 @@ backend/stored_documents/*
 .env
 .env.local
 .env.*.local
+jira_config.json
+*credentials.json
+invite_email_body.txt
 
 # IDE & OS Metadata
 .vscode/

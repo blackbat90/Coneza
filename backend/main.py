@@ -26,7 +26,8 @@ from backend.models import (
     DeviceRegister, DeviceHeartbeat, DeviceResponse,
     PlantCreate, PlantUpdate, PlantAssignDevice, PlantResponse,
     AnalysisTrigger, ConfigDeployRequest,
-    JiraTicketCreate, JiraTicketResponse
+    JiraTicketCreate, JiraTicketResponse,
+    ConfluenceImprovementLog
 )
 from backend.auth import (
     hash_password, verify_password, create_access_token, create_temp_token,
@@ -41,6 +42,7 @@ from backend.device_manager import fleet_manager
 from backend.gemini_analyzer import gemini_analyzer
 from backend.continuous_improver import continuous_improver
 from backend.jira_service import jira_service
+from backend.confluence_service import confluence_service
 from edge.ocr_engine import ocr_engine
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -543,6 +545,40 @@ async def create_jira_ticket(payload: JiraTicketCreate, user: Dict[str, Any] = D
         assignee_id=payload.assignee_id,
         labels=payload.labels,
         plant_id=payload.plant_id
+    )
+
+# ----------------- Confluence Documentation Endpoints ----------------- #
+
+@app.get("/api/confluence/pages")
+async def list_confluence_pages(user: Dict[str, Any] = Depends(require_viewer)):
+    """Lists documentation pages in Atlassian Confluence space EEPD."""
+    pages = confluence_service.get_space_pages()
+    return {
+        "status": "success",
+        "space": confluence_service.space_key,
+        "configured": confluence_service.is_configured(),
+        "pages": pages
+    }
+
+@app.post("/api/confluence/sync")
+async def sync_confluence_docs(user: Dict[str, Any] = Depends(require_engineer)):
+    """Synchronizes core portal architecture, hardware specs, and changelog in Confluence."""
+    return confluence_service.sync_all_documentation()
+
+@app.post("/api/confluence/log-improvement")
+async def log_improvement_confluence(
+    payload: ConfluenceImprovementLog,
+    user: Dict[str, Any] = Depends(require_engineer)
+):
+    """Appends an autonomous improvement entry to the Confluence changelog page."""
+    date_str = datetime.utcnow().strftime("%d.%m.%Y")
+    return confluence_service.log_daily_improvement(
+        date_str=date_str,
+        feature_title=payload.feature_title,
+        details=payload.details,
+        jira_key=payload.jira_key,
+        commit_hash=payload.commit_hash,
+        status=payload.status or "Live in Production"
     )
 
 # ----------------- Multi-Device Fleet Endpoints ----------------- #
