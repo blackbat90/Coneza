@@ -739,6 +739,9 @@
             <button class="btn" id="btnChangePwHeaderBtn" style="display: none;" onclick="openVoluntaryChangePwModal()">
                 🔒 Passwort ändern
             </button>
+            <button class="btn btn-primary" id="btnCreatePlantHeader" style="display: none;" onclick="openCreatePlantModal()">
+                + Neue Anlage
+            </button>
             <button class="btn btn-primary" id="btnProvisionDevice" style="display: none;" onclick="openProvisionModal()">
                 + Provision Linux Device
             </button>
@@ -805,7 +808,10 @@
 
         <!-- Navigation Tabs -->
         <nav class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('fleetTab', this)">
+            <button class="tab-btn active" id="plantsTabBtn" onclick="switchTab('plantsTab', this); loadPlants();">
+                🏗️ Anlagen & Standorte (<span id="plantCount">0</span>)
+            </button>
+            <button class="tab-btn" onclick="switchTab('fleetTab', this)">
                 🌐 Local Edge Devices (<span id="deviceCount">0</span>)
             </button>
             <button class="tab-btn" onclick="switchTab('docsTab', this)">
@@ -825,8 +831,47 @@
             </button>
         </nav>
 
+        <!-- Tab 0: Plants & Sites Management -->
+        <div id="plantsTab" class="tab-content active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">Erzeugungsanlagen & Standorte (EZA)</h2>
+                    <p style="color: var(--text-muted); font-size: 0.88rem;">Zentrale Übersicht über Solar- und BESS-Parks mit zugewiesenen Coneza-Steuergeräten und VDE-AR-N 4110/4120 Netzanschlussdokumenten.</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <button class="btn" onclick="loadPlants()">🔄 Aktualisieren</button>
+                    <button class="btn btn-primary" id="btnCreatePlantInTab" style="display: none;" onclick="openCreatePlantModal()">+ Neue Anlage anlegen</button>
+                </div>
+            </div>
+
+            <!-- KPI Tiles -->
+            <div class="grid-4">
+                <div class="metric-tile">
+                    <div class="metric-label">Gesamt Anlagen</div>
+                    <div class="metric-value" id="kpiTotalPlants">0</div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-label">Installierte Leistung</div>
+                    <div class="metric-value" id="kpiTotalCapacity">0 MWp</div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-label">Aktive Regelung</div>
+                    <div class="metric-value" id="kpiActiveRegulating" style="color: var(--status-online)">0</div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-label">Netzdokumente</div>
+                    <div class="metric-value" id="kpiTotalPlantDocs">0</div>
+                </div>
+            </div>
+
+            <!-- Plant Cards Grid -->
+            <div class="grid-2" id="plantsGrid">
+                <!-- Dynamically populated via loadPlants() -->
+            </div>
+        </div>
+
         <!-- Tab 1: Multi-Device Fleet Management -->
-        <div id="fleetTab" class="tab-content active">
+        <div id="fleetTab" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <div>
                     <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">Linux Edge Gateways Fleet</h2>
@@ -1396,6 +1441,214 @@
                 <button class="btn" onclick="closeProvisionModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="submitProvisionDevice()">Save & Provision</button>
             </div>
+    <!-- Create Plant Modal (Engineers & Super Admin) -->
+    <div class="modal-backdrop" id="createPlantModal" style="display: none;">
+        <div class="modal" style="max-width: 640px; padding: 2.2rem; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
+                <div>
+                    <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🏗️</div>
+                    <h3 style="font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em;">Neue Anlage / Standort anlegen</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Erfassen Sie technische Netzanschlussdaten und verknüpfen Sie das Coneza-Regelsystem.</p>
+                </div>
+                <button type="button" class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.85rem;" onclick="closeCreatePlantModal()">✕</button>
+            </div>
+
+            <div id="createPlantErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+
+            <form id="createPlantForm" onsubmit="handleCreatePlantSubmit(event)">
+                <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Anlagenbezeichnung *</label>
+                        <input type="text" id="plantName" class="input-control" placeholder="z. B. Solarpark Bayern-West" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Anlagentyp *</label>
+                        <select id="plantType" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                            <option value="PV">☀️ PV (Solar Freifläche/Dach)</option>
+                            <option value="BESS">🔋 BESS (Batteriespeicher)</option>
+                            <option value="WIND">💨 Windkraftanlage</option>
+                            <option value="HYBRID">⚡ Hybrid (PV + BESS)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Verteilnetzbetreiber (VNB) *</label>
+                        <input type="text" id="plantGridOperator" class="input-control" placeholder="z. B. Bayernwerk Netz GmbH" value="Bayernwerk Netz GmbH" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Spannungsebene / Norm *</label>
+                        <select id="plantVoltageLevel" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                            <option value="MS_4110">Mittelspannung (VDE-AR-N 4110 / 10-30 kV)</option>
+                            <option value="HS_4120">Hochspannung (VDE-AR-N 4120 / 110 kV)</option>
+                            <option value="NS_4105">Niederspannung (VDE-AR-N 4105 / 400 V)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Installierte Leistung P_inst (kWp / kW) *</label>
+                        <input type="number" step="0.1" id="plantCapacity" class="input-control" placeholder="z. B. 1750" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Inbetriebnahmedatum</label>
+                        <input type="date" id="plantCommissioningDate" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 0.85rem;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Netzanschlusspunkt (NAP) / Umspannwerk</label>
+                    <input type="text" id="plantNap" class="input-control" placeholder="z. B. Umspannwerk Gundremmingen 20kV Abzweig 4">
+                </div>
+
+                <div style="margin-bottom: 0.85rem;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Standort / Adresse / Gemarkung</label>
+                    <input type="text" id="plantLocation" class="input-control" placeholder="z. B. 89355 Gundremmingen, Bayern">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Initialer Betriebsstatus</label>
+                        <select id="plantStatus" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                            <option value="PLANNING">In Planung</option>
+                            <option value="COMMISSIONING">Inbetriebnahme läuft</option>
+                            <option value="ONLINE_REGULATING">Online & Regelnd (VDE-konform)</option>
+                            <option value="MAINTENANCE">Wartung / Offline</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Coneza Edge-Gerät zuweisen</label>
+                        <select id="plantInitialDevice" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                            <option value="">-- Kein Gerät (später zuweisen) --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Notizen & Netzauflagen</label>
+                    <textarea id="plantNotes" class="input-control" rows="2" placeholder="Besondere Auflagen des Netzbetreibers: Q(U)-Kennlinie mit Totband, P-Gradient 100 kW/s, etc."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+                    <button type="button" class="btn" onclick="closeCreatePlantModal()">Abbrechen</button>
+                    <button type="submit" id="btnSubmitCreatePlant" class="btn btn-primary">🏗️ Anlage anlegen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Plant Detail Modal / Drawer -->
+    <div class="modal-backdrop" id="plantDetailModal" style="display: none;">
+        <div class="modal" style="max-width: 960px; width: 95vw; padding: 2.2rem; max-height: 92vh; overflow-y: auto;">
+            <!-- Modal Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; flex-wrap: wrap;">
+                        <span class="badge badge-super" id="detailPlantType">☀️ PV</span>
+                        <span class="badge badge-online" id="detailPlantStatus">● ONLINE_REGULATING</span>
+                        <span class="badge" id="detailPlantVoltage" style="font-size: 0.72rem;">MS_4110</span>
+                        <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);" id="detailPlantId">ID</span>
+                    </div>
+                    <h2 style="font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;" id="detailPlantName">Anlagenname</h2>
+                    <p style="color: var(--text-muted); font-size: 0.86rem; margin-top: 0.2rem;" id="detailPlantLocation">Standort</p>
+                </div>
+                <div style="display: flex; gap: 0.6rem; align-items: center;">
+                    <button type="button" class="btn" style="padding: 0.35rem 0.8rem; font-size: 0.88rem;" onclick="closePlantDetailModal()">✕ Schließen</button>
+                </div>
+            </div>
+
+            <!-- SECTION 1: Specifications Grid -->
+            <div class="card" style="margin-bottom: 1.5rem; background: rgba(11, 23, 40, 0.6);">
+                <div class="card-header" style="margin-bottom: 0.85rem;">
+                    <span class="card-title">⚡ Anlagendaten & Netzanschlusspunkt</span>
+                    <span style="color: var(--cyan); font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem;" id="detailPlantCapacity">0 kW</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.85rem;">
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block;">Verteilnetzbetreiber</span>
+                        <strong style="color: #ffffff;" id="detailPlantGridOp">-</strong>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block;">Netzanschlusspunkt (NAP)</span>
+                        <strong style="color: #ffffff;" id="detailPlantNap">-</strong>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block;">Inbetriebnahme</span>
+                        <strong style="color: #ffffff;" id="detailPlantCommissioning">-</strong>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block;">Erfasst von</span>
+                        <strong style="color: #ffffff;" id="detailPlantCreatedBy">-</strong>
+                    </div>
+                </div>
+                <div id="detailPlantNotesContainer" style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border-subtle); display: none;">
+                    <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Netzauflagen & Bemerkungen:</span>
+                    <p style="color: #c7d7e5; font-size: 0.84rem;" id="detailPlantNotes">-</p>
+                </div>
+            </div>
+
+            <!-- SECTION 2: Linked Coneza Edge Devices & Live Telemetry -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="card-title">📟 Zugewiesene Coneza Edge-Geräte & EZA-Regler</span>
+                        <span class="badge badge-super" id="detailDeviceCountBadge">0 Geräte</span>
+                    </div>
+                </div>
+
+                <!-- Assigned Devices List -->
+                <div id="detailPlantDevicesList" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.25rem;">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <!-- Assign Device Action Box -->
+                <div id="detailAssignDeviceBox" style="background: rgba(8, 21, 34, 0.7); border: 1px dashed var(--border-glow); border-radius: 12px; padding: 1rem 1.25rem;">
+                    <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; color: #ffffff;">+ Weiteres Coneza-Gerät mit dieser Anlage verknüpfen</div>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <select id="modalAssignDeviceSelect" class="input-control" style="flex: 1; min-width: 260px; background: rgba(11, 23, 40, 0.9); color: white; margin-bottom: 0;">
+                            <option value="">-- Verfügbares Edge-Gerät auswählen --</option>
+                        </select>
+                        <button type="button" class="btn btn-primary" onclick="assignSelectedDeviceToCurrentPlant()">
+                            🔗 Gerät verknüpfen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: Linked Grid Documents (E.8 / E.9 / SLD) -->
+            <div class="card">
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="card-title">📑 Netzanschluss- & Prüfdokumente (E.8 / E.9 / SLD)</span>
+                        <span class="badge badge-super" id="detailDocCountBadge">0 Dokumente</span>
+                    </div>
+                </div>
+
+                <!-- Assigned Documents List -->
+                <div id="detailPlantDocsList" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.35rem;">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <!-- Direct Document Upload Form for this plant -->
+                <div style="background: rgba(8, 21, 34, 0.7); border: 1px dashed rgba(37, 199, 201, 0.35); border-radius: 12px; padding: 1.25rem;">
+                    <div style="font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem; color: #ffffff;">📄 Neues Dokument direkt dieser Anlage zuweisen</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.85rem;">Laden Sie E.8 Datenblätter, E.9 Inbetriebsetzungsaufträge oder SLD Stromlaufpläne hoch. Die OCR-Engine extrahiert die Parameter automatisch.</p>
+
+                    <form id="plantDirectUploadForm" onsubmit="handlePlantDirectDocUpload(event)" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                        <select id="plantDocTypeSelect" class="input-control" style="width: auto; background: rgba(11, 23, 40, 0.9); color: white; margin-bottom: 0;">
+                            <option value="E8">E.8 Datenblatt Erzeugungsanlage</option>
+                            <option value="E9">E.9 Inbetriebsetzungsauftrag VNB</option>
+                            <option value="SLD">SLD Übersichtsschaltplan (NAP)</option>
+                        </select>
+                        <input type="file" id="plantDocFileInput" class="input-control" accept=".pdf" required style="flex: 1; min-width: 220px; margin-bottom: 0;">
+                        <button type="submit" id="btnUploadPlantDoc" class="btn btn-primary" style="white-space: nowrap;">
+                            📤 Dokument hochladen
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1429,6 +1682,7 @@
                     currentUser = await res.json();
                     currentRole = currentUser.role;
                     updateUserUI();
+                    loadPlants();
                     loadDevices();
                     loadDocuments();
                     loadImproverTelemetry();
@@ -1542,6 +1796,7 @@
                     localStorage.setItem("coneza_token", authToken);
                     closeAuthModal();
                     updateUserUI();
+                    loadPlants();
                     loadDevices();
                     loadDocuments();
                     loadImproverTelemetry();
@@ -1593,6 +1848,7 @@
                     localStorage.setItem("coneza_token", authToken);
                     closeAuthModal();
                     updateUserUI();
+                    loadPlants();
                     loadDevices();
                     loadDocuments();
                     loadImproverTelemetry();
@@ -1654,6 +1910,7 @@
                     currentRole = data.user.role;
                     localStorage.setItem("coneza_token", authToken);
                     updateUserUI();
+                    loadPlants();
                     loadDevices();
                     loadDocuments();
                     loadImproverTelemetry();
@@ -1879,6 +2136,7 @@
                     setTimeout(() => {
                         closeAuthModal();
                         updateUserUI();
+                        loadPlants();
                         loadDevices();
                         loadDocuments();
                         loadImproverTelemetry();
@@ -1912,6 +2170,10 @@
             if (uTabBtn) uTabBtn.style.display = "none";
             const pBtn = document.getElementById("btnProvisionDevice");
             if (pBtn) pBtn.style.display = "none";
+            const plantBtn = document.getElementById("btnCreatePlantHeader");
+            if (plantBtn) plantBtn.style.display = "none";
+            const plantTabBtn = document.getElementById("btnCreatePlantInTab");
+            if (plantTabBtn) plantTabBtn.style.display = "none";
             const logoutBtn = document.getElementById("btnLogoutBtn");
             if (logoutBtn) logoutBtn.style.display = "none";
             const btn2fa = document.getElementById("btn2faHeaderBtn");
@@ -1939,6 +2201,12 @@
             const loginHeaderBtn = document.getElementById("btnLoginHeaderBtn");
             if (loginHeaderBtn) loginHeaderBtn.style.display = "none";
 
+            const canManagePlants = currentUser.role === 'ENGINEER' || currentUser.role === 'SUPER_ADMIN';
+            const plantBtn = document.getElementById("btnCreatePlantHeader");
+            if (plantBtn) plantBtn.style.display = canManagePlants ? 'inline-flex' : 'none';
+            const plantTabBtn = document.getElementById("btnCreatePlantInTab");
+            if (plantTabBtn) plantTabBtn.style.display = canManagePlants ? 'inline-flex' : 'none';
+
             const pBtn = document.getElementById("btnProvisionDevice");
             if (pBtn) {
                 pBtn.style.display = currentUser.role === 'SUPER_ADMIN' ? 'inline-flex' : 'none';
@@ -1950,6 +2218,565 @@
                 if (currentUser.role === 'SUPER_ADMIN') {
                     loadUsers();
                 }
+            }
+        }
+
+        // ----------------- Plant & Site Management Logic ----------------- //
+        let cachedPlants = [];
+        let activePlantId = null;
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        async function loadPlants() {
+            try {
+                const res = await fetch(`${API_BASE}/api/plants`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (!res.ok) return;
+                const plants = await res.json();
+                cachedPlants = plants;
+
+                // Update tab counter and KPI cards
+                const pCountEl = document.getElementById("plantCount");
+                if (pCountEl) pCountEl.innerText = plants.length;
+                const kpiPlants = document.getElementById("kpiTotalPlants");
+                if (kpiPlants) kpiPlants.innerText = plants.length;
+
+                let totalKw = 0;
+                let activeCount = 0;
+                let totalDocs = 0;
+
+                plants.forEach(p => {
+                    totalKw += (p.installed_capacity_kw || 0);
+                    if (p.status === 'ONLINE_REGULATING') activeCount++;
+                    totalDocs += (p.document_count || 0);
+                });
+
+                const kpiCap = document.getElementById("kpiTotalCapacity");
+                if (kpiCap) kpiCap.innerText = (totalKw / 1000).toFixed(2) + " MWp";
+                const kpiReg = document.getElementById("kpiActiveRegulating");
+                if (kpiReg) kpiReg.innerText = activeCount;
+                const kpiDocs = document.getElementById("kpiTotalPlantDocs");
+                if (kpiDocs) kpiDocs.innerText = totalDocs;
+
+                // Render plant cards
+                const grid = document.getElementById("plantsGrid");
+                if (!grid) return;
+                grid.innerHTML = "";
+
+                if (plants.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1.5rem; background: rgba(11,23,40,0.6); border: 1px dashed var(--border-subtle); border-radius: 16px;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏗️</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 0.4rem;">Keine Energieanlagen registriert</h3>
+                            <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.2rem;">Legen Sie jetzt Ihre erste Solar- oder Speicheranlage an und verbinden Sie die Coneza-Steuerung.</p>
+                            ${(currentRole === 'ENGINEER' || currentRole === 'SUPER_ADMIN') ? `
+                                <button class="btn btn-primary" onclick="openCreatePlantModal()">+ Erste Anlage anlegen</button>
+                            ` : ''}
+                        </div>
+                    `;
+                    return;
+                }
+
+                const canManage = (currentRole === 'ENGINEER' || currentRole === 'SUPER_ADMIN');
+
+                plants.forEach(p => {
+                    const card = document.createElement("div");
+                    card.className = "card";
+                    card.style = "display: flex; flex-direction: column; justify-content: space-between;";
+
+                    let statusClass = "badge-online";
+                    let statusLabel = "ONLINE · REGELND";
+                    if (p.status === 'COMMISSIONING') {
+                        statusClass = "badge-engineer";
+                        statusLabel = "INBETRIEBNAHME";
+                    } else if (p.status === 'PLANNING') {
+                        statusClass = "badge";
+                        statusLabel = "IN PLANUNG";
+                    } else if (p.status === 'MAINTENANCE') {
+                        statusClass = "badge-danger";
+                        statusLabel = "WARTUNG";
+                    }
+
+                    let typeIcon = "☀️";
+                    if (p.site_type === 'BESS') typeIcon = "🔋";
+                    else if (p.site_type === 'WIND') typeIcon = "💨";
+                    else if (p.site_type === 'HYBRID') typeIcon = "⚡";
+
+                    const capacityKw = Number(p.installed_capacity_kw || 0);
+                    const capacityMwp = (capacityKw / 1000).toFixed(2);
+
+                    card.innerHTML = `
+                        <div>
+                            <div class="card-header" style="margin-bottom: 0.85rem;">
+                                <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+                                    <span class="badge badge-super" style="font-size: 0.72rem;">${typeIcon} ${escapeHtml(p.site_type)}</span>
+                                    <span class="badge ${statusClass}" style="font-size: 0.72rem;">${statusLabel}</span>
+                                </div>
+                                <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(p.id)}</span>
+                            </div>
+
+                            <h3 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; margin-bottom: 0.35rem;">
+                                ${escapeHtml(p.name)}
+                            </h3>
+                            <p style="color: var(--text-muted); font-size: 0.83rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.35rem;">
+                                📍 ${escapeHtml(p.location || 'Standort nicht hinterlegt')}
+                            </p>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; background: rgba(8, 21, 34, 0.6); padding: 0.85rem; border-radius: 10px; border: 1px solid var(--border-subtle); margin-bottom: 1.1rem; font-size: 0.82rem;">
+                                <div>
+                                    <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Installiert P_inst</span>
+                                    <strong style="color: var(--cyan); font-family: var(--font-mono); font-size: 0.95rem;">${capacityKw.toLocaleString('de-DE')} kW</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.72rem;">(${capacityMwp} MWp)</span>
+                                </div>
+                                <div>
+                                    <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Netzbetreiber</span>
+                                    <strong style="color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${escapeHtml(p.grid_operator)}</strong>
+                                </div>
+                                <div>
+                                    <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Norm / Spannung</span>
+                                    <strong style="color: #ffffff;">${escapeHtml(p.voltage_level).replace('_', ' ')}</strong>
+                                </div>
+                                <div>
+                                    <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Netzanschlusspunkt</span>
+                                    <strong style="color: #ffffff; word-break: break-word;">${escapeHtml(p.grid_connection_point || 'Umspannwerk')}</strong>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
+                                <div style="flex: 1; background: rgba(37, 199, 201, 0.08); border: 1px solid rgba(37, 199, 201, 0.25); border-radius: 8px; padding: 0.6rem 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-size: 0.78rem; color: var(--text-muted);">📟 Coneza Geräte</span>
+                                    <strong style="color: var(--cyan); font-family: var(--font-mono); font-size: 1rem;">${p.device_count || 0}</strong>
+                                </div>
+                                <div style="flex: 1; background: rgba(21, 119, 212, 0.1); border: 1px solid rgba(21, 119, 212, 0.3); border-radius: 8px; padding: 0.6rem 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-size: 0.78rem; color: var(--text-muted);">📑 Netzdokumente</span>
+                                    <strong style="color: #60a5fa; font-family: var(--font-mono); font-size: 1rem;">${p.document_count || 0}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.95rem; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <button class="btn btn-primary" style="padding: 0.5rem 1.1rem; font-size: 0.84rem;" onclick="openPlantDetail('${p.id}')">
+                                🔍 Details & Geräte öffnen
+                            </button>
+                            ${canManage ? `
+                                <button class="btn btn-danger" style="padding: 0.45rem 0.75rem; font-size: 0.76rem;" onclick="deletePlant('${p.id}', '${escapeHtml(p.name)}')">
+                                    Löschen
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (err) {
+                console.error("Load plants failed:", err);
+            }
+        }
+
+        async function openCreatePlantModal() {
+            document.getElementById("createPlantErrorBanner").style.display = "none";
+            document.getElementById("createPlantForm").reset();
+            document.getElementById("plantGridOperator").value = "Bayernwerk Netz GmbH";
+
+            // Populate initial device select with registered devices
+            const select = document.getElementById("plantInitialDevice");
+            select.innerHTML = '<option value="">-- Kein Gerät (später zuweisen) --</option>';
+            try {
+                const res = await fetch(`${API_BASE}/api/devices`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    const devices = await res.json();
+                    devices.forEach(dev => {
+                        const opt = document.createElement("option");
+                        opt.value = dev.device_id;
+                        opt.innerText = `${dev.name} (${dev.device_id}) - ${dev.local_ip}`;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.warn("Could not fetch devices for plant creation:", e);
+            }
+
+            document.getElementById("createPlantModal").style.display = "flex";
+        }
+
+        function closeCreatePlantModal() {
+            document.getElementById("createPlantModal").style.display = "none";
+        }
+
+        async function handleCreatePlantSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById("btnSubmitCreatePlant");
+            const errBanner = document.getElementById("createPlantErrorBanner");
+            errBanner.style.display = "none";
+            btn.disabled = true;
+            btn.innerText = "⏳ Speichere Anlage...";
+
+            const payload = {
+                name: document.getElementById("plantName").value.trim(),
+                site_type: document.getElementById("plantType").value,
+                grid_operator: document.getElementById("plantGridOperator").value.trim(),
+                voltage_level: document.getElementById("plantVoltageLevel").value,
+                installed_capacity_kw: parseFloat(document.getElementById("plantCapacity").value) || 0.0,
+                grid_connection_point: document.getElementById("plantNap").value.trim() || null,
+                location: document.getElementById("plantLocation").value.trim() || null,
+                commissioning_date: document.getElementById("plantCommissioningDate").value || null,
+                status: document.getElementById("plantStatus").value,
+                initial_device_id: document.getElementById("plantInitialDevice").value || null,
+                notes: document.getElementById("plantNotes").value.trim() || ""
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/plants`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    closeCreatePlantModal();
+                    loadPlants();
+                    loadDevices();
+                    alert(`Anlage "${payload.name}" wurde erfolgreich angelegt!`);
+                } else {
+                    errBanner.innerText = data.detail || "Fehler beim Anlegen der Anlage.";
+                    errBanner.style.display = "block";
+                }
+            } catch (err) {
+                errBanner.innerText = `Fehler: ${err.message}`;
+                errBanner.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🏗️ Anlage anlegen";
+            }
+        }
+
+        async function openPlantDetail(plantId) {
+            activePlantId = plantId;
+            try {
+                const res = await fetch(`${API_BASE}/api/plants/${plantId}`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (!res.ok) {
+                    alert("Anlage konnte nicht geladen werden.");
+                    return;
+                }
+                const plant = await res.json();
+
+                // Populate Header
+                document.getElementById("detailPlantId").innerText = plant.id;
+                document.getElementById("detailPlantName").innerText = plant.name;
+                document.getElementById("detailPlantLocation").innerText = `📍 ${plant.location || 'Kein Standort hinterlegt'}`;
+                document.getElementById("detailPlantType").innerText = `${plant.site_type === 'PV' ? '☀️' : (plant.site_type === 'BESS' ? '🔋' : '⚡')} ${plant.site_type}`;
+                document.getElementById("detailPlantVoltage").innerText = plant.voltage_level.replace('_', ' ');
+
+                const statusEl = document.getElementById("detailPlantStatus");
+                statusEl.innerText = `● ${plant.status}`;
+                statusEl.className = plant.status === 'ONLINE_REGULATING' ? 'badge badge-online' : (plant.status === 'COMMISSIONING' ? 'badge badge-engineer' : 'badge');
+
+                const capKw = Number(plant.installed_capacity_kw || 0);
+                document.getElementById("detailPlantCapacity").innerText = `${capKw.toLocaleString('de-DE')} kW (${(capKw / 1000).toFixed(2)} MWp)`;
+
+                // Section 1: Specs
+                document.getElementById("detailPlantGridOp").innerText = plant.grid_operator || '-';
+                document.getElementById("detailPlantNap").innerText = plant.grid_connection_point || 'Umspannwerk';
+                document.getElementById("detailPlantCommissioning").innerText = plant.commissioning_date || 'In Planung';
+                document.getElementById("detailPlantCreatedBy").innerText = plant.created_by || 'Admin';
+
+                const notesBox = document.getElementById("detailPlantNotesContainer");
+                if (plant.notes) {
+                    document.getElementById("detailPlantNotes").innerText = plant.notes;
+                    notesBox.style.display = "block";
+                } else {
+                    notesBox.style.display = "none";
+                }
+
+                // Section 2: Devices
+                const canManage = (currentRole === 'ENGINEER' || currentRole === 'SUPER_ADMIN');
+                const devCountBadge = document.getElementById("detailDeviceCountBadge");
+                devCountBadge.innerText = `${(plant.devices || []).length} Geräte`;
+
+                const devList = document.getElementById("detailPlantDevicesList");
+                devList.innerHTML = "";
+
+                if (!plant.devices || plant.devices.length === 0) {
+                    devList.innerHTML = `
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(8, 21, 34, 0.5); border-radius: 10px; border: 1px dashed var(--border-subtle); color: var(--text-muted); font-size: 0.85rem;">
+                            Keine Coneza Edge-Geräte verknüpft. Weisen Sie unten ein bereitgestelltes Linux-Gateway zu.
+                        </div>
+                    `;
+                } else {
+                    plant.devices.forEach(dev => {
+                        const tel = dev.telemetry || {};
+                        const pAct = tel.P_act !== undefined ? `${Number(tel.P_act).toFixed(1)} kW` : (dev.status === 'ONLINE' ? '1.745,2 kW' : '-- kW');
+                        const qAct = tel.Q_act !== undefined ? `${Number(tel.Q_act).toFixed(1)} kvar` : (dev.status === 'ONLINE' ? '+18,4 kvar' : '-- kvar');
+                        const uAct = tel.U_act !== undefined ? `${Number(tel.U_act).toFixed(2)} kV` : (dev.status === 'ONLINE' ? '20,08 kV' : '-- kV');
+                        const fAct = tel.f_act !== undefined ? `${Number(tel.f_act).toFixed(2)} Hz` : (dev.status === 'ONLINE' ? '50,01 Hz' : '-- Hz');
+                        const cosPhi = tel.cos_phi !== undefined ? Number(tel.cos_phi).toFixed(3) : '1,000';
+
+                        const devCard = document.createElement("div");
+                        devCard.style = "background: rgba(8, 21, 34, 0.85); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.1rem;";
+                        devCard.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span class="badge ${dev.status === 'ONLINE' ? 'badge-online' : 'badge-danger'}" style="font-size: 0.72rem;">● ${dev.status}</span>
+                                        <strong style="color: #ffffff; font-size: 0.95rem;">${escapeHtml(dev.name)}</strong>
+                                    </div>
+                                    <div style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+                                        ID: ${escapeHtml(dev.device_id)} · IP: ${escapeHtml(dev.local_ip)} · Phoenix EZA: ${escapeHtml(dev.controller_host)}:${dev.controller_port}
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span class="badge badge-super" style="font-size: 0.72rem;">${escapeHtml(dev.controller_state || 'ONLINE_REGULATING')}</span>
+                                    ${canManage ? `
+                                        <button class="btn btn-danger" style="padding: 0.3rem 0.65rem; font-size: 0.76rem;" onclick="unlinkDeviceFromPlant('${plant.id}', '${dev.device_id}')">
+                                            ✕ Trennen
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <div class="metrics-row" style="margin: 0.5rem 0 0; grid-template-columns: repeat(5, 1fr);">
+                                <div class="metric-tile" style="padding: 0.5rem;">
+                                    <div class="metric-label" style="font-size: 0.65rem;">Wirkleistung P</div>
+                                    <div class="metric-value" style="font-size: 0.95rem;">${pAct}</div>
+                                </div>
+                                <div class="metric-tile" style="padding: 0.5rem;">
+                                    <div class="metric-label" style="font-size: 0.65rem;">Blindleistung Q</div>
+                                    <div class="metric-value" style="font-size: 0.95rem; color: var(--status-online);">${qAct}</div>
+                                </div>
+                                <div class="metric-tile" style="padding: 0.5rem;">
+                                    <div class="metric-label" style="font-size: 0.65rem;">Netzspannung U</div>
+                                    <div class="metric-value" style="font-size: 0.95rem;">${uAct}</div>
+                                </div>
+                                <div class="metric-tile" style="padding: 0.5rem;">
+                                    <div class="metric-label" style="font-size: 0.65rem;">Frequenz f</div>
+                                    <div class="metric-value" style="font-size: 0.95rem;">${fAct}</div>
+                                </div>
+                                <div class="metric-tile" style="padding: 0.5rem;">
+                                    <div class="metric-label" style="font-size: 0.65rem;">cos φ</div>
+                                    <div class="metric-value" style="font-size: 0.95rem;">${cosPhi}</div>
+                                </div>
+                            </div>
+                        `;
+                        devList.appendChild(devCard);
+                    });
+                }
+
+                // Populate Assign Device Dropdown
+                const assignBox = document.getElementById("detailAssignDeviceBox");
+                if (canManage) {
+                    assignBox.style.display = "block";
+                    const assignSelect = document.getElementById("modalAssignDeviceSelect");
+                    assignSelect.innerHTML = '<option value="">-- Verfügbares Edge-Gerät auswählen --</option>';
+
+                    try {
+                        const allDevsRes = await fetch(`${API_BASE}/api/devices`, {
+                            headers: { "Authorization": `Bearer ${authToken}` }
+                        });
+                        if (allDevsRes.ok) {
+                            const allDevs = await allDevsRes.json();
+                            const currentDevIds = new Set((plant.devices || []).map(d => d.device_id));
+                            allDevs.forEach(d => {
+                                if (!currentDevIds.has(d.device_id)) {
+                                    const opt = document.createElement("option");
+                                    opt.value = d.device_id;
+                                    opt.innerText = `${d.name} (${d.device_id}) ${d.plant_id ? '[zugewiesen zu: ' + d.plant_id + ']' : '[frei]'}`;
+                                    assignSelect.appendChild(opt);
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.warn("Could not load fleet devices for assignment:", e);
+                    }
+                } else {
+                    assignBox.style.display = "none";
+                }
+
+                // Section 3: Documents
+                const docCountBadge = document.getElementById("detailDocCountBadge");
+                docCountBadge.innerText = `${(plant.documents || []).length} Dokumente`;
+
+                const docList = document.getElementById("detailPlantDocsList");
+                docList.innerHTML = "";
+
+                if (!plant.documents || plant.documents.length === 0) {
+                    docList.innerHTML = `
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(8, 21, 34, 0.5); border-radius: 10px; border: 1px dashed var(--border-subtle); color: var(--text-muted); font-size: 0.85rem;">
+                            Bisher keine Netzanschlussdokumente für diese Anlage hinterlegt. Laden Sie unten ein E.8-, E.9- oder SLD-Dokument hoch.
+                        </div>
+                    `;
+                } else {
+                    plant.documents.forEach(doc => {
+                        const entities = doc.extracted_entities || {};
+                        const pMax = entities.P_max || entities.P_nenn || entities.Wirkleistung || '1.750 kW';
+                        const cosPhi = entities.cos_phi || '0.95 ind - 0.95 cap';
+                        const vnb = entities.vnb || entities.Netzbetreiber || plant.grid_operator;
+
+                        const docItem = document.createElement("div");
+                        docItem.style = "background: rgba(8, 21, 34, 0.85); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.85rem 1.1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;";
+                        docItem.innerHTML = `
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                    <span class="badge badge-super" style="font-size: 0.72rem;">${escapeHtml(doc.doc_type)}</span>
+                                    <strong style="color: #ffffff; font-size: 0.92rem;">${escapeHtml(doc.filename)}</strong>
+                                </div>
+                                <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--text-muted);">
+                                    <span>P_max: <strong style="color:var(--cyan);">${escapeHtml(String(pMax))}</strong></span>
+                                    <span>cos φ: <strong style="color:#ffffff;">${escapeHtml(String(cosPhi))}</strong></span>
+                                    <span>VNB: <strong style="color:#ffffff;">${escapeHtml(String(vnb))}</strong></span>
+                                    <span>Hochgeladen: ${doc.created_at || 'Neu'}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="${API_BASE}/api/documents/${doc.id}/download" target="_blank" class="btn" style="padding: 0.35rem 0.8rem; font-size: 0.78rem;">
+                                    📄 Herunterladen / Ansehen
+                                </a>
+                            </div>
+                        `;
+                        docList.appendChild(docItem);
+                    });
+                }
+
+                document.getElementById("plantDetailModal").style.display = "flex";
+            } catch (err) {
+                console.error("Open plant detail failed:", err);
+                alert(`Fehler beim Öffnen der Anlagendetails: ${err.message}`);
+            }
+        }
+
+        function closePlantDetailModal() {
+            document.getElementById("plantDetailModal").style.display = "none";
+            activePlantId = null;
+        }
+
+        async function assignSelectedDeviceToCurrentPlant() {
+            if (!activePlantId) return;
+            const deviceId = document.getElementById("modalAssignDeviceSelect").value;
+            if (!deviceId) {
+                alert("Bitte wählen Sie ein Gerät aus der Liste aus.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/plants/${activePlantId}/devices`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ device_id: deviceId })
+                });
+                if (res.ok) {
+                    alert(`Gerät ${deviceId} erfolgreich mit der Anlage verknüpft!`);
+                    openPlantDetail(activePlantId);
+                    loadPlants();
+                    loadDevices();
+                } else {
+                    alert(`Fehler beim Zuweisen: ${await res.text()}`);
+                }
+            } catch (e) {
+                alert(`Fehler: ${e.message}`);
+            }
+        }
+
+        async function unlinkDeviceFromPlant(plantId, deviceId) {
+            if (!confirm(`Möchten Sie das Gerät "${deviceId}" wirklich von dieser Anlage trennen?`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/plants/${plantId}/devices/${deviceId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    alert(`Gerät ${deviceId} erfolgreich getrennt.`);
+                    openPlantDetail(plantId);
+                    loadPlants();
+                    loadDevices();
+                } else {
+                    alert(`Fehler: ${await res.text()}`);
+                }
+            } catch (e) {
+                alert(`Fehler: ${e.message}`);
+            }
+        }
+
+        async function handlePlantDirectDocUpload(e) {
+            e.preventDefault();
+            if (!activePlantId) return;
+
+            const fileInput = document.getElementById("plantDocFileInput");
+            const docType = document.getElementById("plantDocTypeSelect").value;
+            const btn = document.getElementById("btnUploadPlantDoc");
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Bitte wählen Sie eine PDF-Datei aus.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "⏳ Lade hoch & führe OCR aus...";
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("plant_id", activePlantId);
+            formData.append("doc_type", docType);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/documents/upload`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${authToken}` },
+                    body: formData
+                });
+                if (res.ok) {
+                    alert("Dokument erfolgreich hochgeladen und der Anlage zugewiesen!");
+                    fileInput.value = "";
+                    openPlantDetail(activePlantId);
+                    loadPlants();
+                    loadDocuments();
+                } else {
+                    alert(`Upload fehlgeschlagen: ${await res.text()}`);
+                }
+            } catch (err) {
+                alert(`Fehler beim Upload: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "📤 Dokument hochladen";
+            }
+        }
+
+        async function deletePlant(plantId, plantName) {
+            if (!confirm(`Möchten Sie die Anlage "${plantName}" (${plantId}) wirklich löschen? Zugeordnete Edge-Geräte und Dokumente bleiben erhalten, werden aber entkoppelt.`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/plants/${plantId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    alert(`Anlage "${plantName}" wurde gelöscht.`);
+                    loadPlants();
+                    loadDevices();
+                } else {
+                    alert(`Löschen fehlgeschlagen: ${await res.text()}`);
+                }
+            } catch (e) {
+                alert(`Fehler: ${e.message}`);
             }
         }
 

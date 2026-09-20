@@ -14,7 +14,7 @@ from typing import Dict, Any, List, Optional
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Form, BackgroundTasks
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -24,6 +24,7 @@ from backend.models import (
     UserCreate, UserLogin, UserResponse, UserRoleUpdate,
     TwoFactorVerifyLogin, TwoFactorEnableRequest, TwoFactorDisableRequest, PasswordChangeRequest,
     DeviceRegister, DeviceHeartbeat, DeviceResponse,
+    PlantCreate, PlantUpdate, PlantAssignDevice, PlantResponse,
     AnalysisTrigger, ConfigDeployRequest
 )
 from backend.auth import (
@@ -127,6 +128,34 @@ def seed_default_users():
             WHERE username IN ('admin', 'engineer', 'viewer') AND (must_change_password IS NULL OR must_change_password = 0)
         """)
         conn.commit()
+
+    # Seed default sample plant if none exists
+    cursor.execute("SELECT COUNT(*) FROM plants")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("""
+            INSERT OR IGNORE INTO plants (
+                id, name, site_type, grid_operator, voltage_level,
+                installed_capacity_kw, grid_connection_point, location,
+                commissioning_date, status, notes, created_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "plant-solar-west-01",
+            "Solarpark Bayern-West (NAP 20kV)",
+            "PV",
+            "Bayernwerk Netz GmbH",
+            "MS_4110",
+            1750.0,
+            "Umspannwerk Gundremmingen 20kV Abzweig 4",
+            "89355 Gundremmingen, Bayern",
+            "2026-03-15",
+            "ONLINE_REGULATING",
+            "VDE-AR-N 4110 zertifizierte EZA-Regelung mit Phoenix Contact AXC F 2152 & Modbus-RTU Inverter Gateway.",
+            "admin"
+        ))
+        cursor.execute("UPDATE devices SET plant_id = ? WHERE device_id = ?", ("plant-solar-west-01", "coneza-edge-solar-park-01"))
+        cursor.execute("UPDATE documents SET plant_id = ? WHERE device_id = ? OR plant_id IS NULL", ("plant-solar-west-01", "coneza-edge-solar-park-01"))
+        conn.commit()
+
     conn.close()
 
 # ----------------- Authentication Endpoints ----------------- #
@@ -545,12 +574,225 @@ async def superuser_provision_device(payload: DeviceRegister):
     device = fleet_manager.register_or_update_device(payload.model_dump())
     return {"status": "provisioned", "device": device}
 
+# ----------------- Plant & Site Management Endpoints ----------------- #
+
+@app.get("/api/plants", response_model=List[PlantResponse])
+async def list_plants(user: Dict[str, Any] = Depends(require_viewer)):
+    """Lists all energy plants and sites with counts of linked devices and documents."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT p.*,
+               (SELECT COUNT(*) FROM devices d WHERE d.plant_id = p.id) as device_count,
+               (SELECT COUNT(*) FROM documents doc WHERE doc.plant_id = p.id) as document_count
+        FROM plants p
+        ORDER BY p.created_at DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.post("/api/plants", response_model=PlantResponse)
+async def create_plant(
+    payload: PlantCreate,
+    user: Dict[str, Any] = Depends(require_engineer)
+):
+    """Allows an engineer or super admin/installer to register a new plant/site."""
+    plant_id = f"plant_{uuid.uuid4().hex[:8]}"
+    now = datetime.utcnow().isoformat()
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO plants (
+                id, name, site_type, grid_operator, voltage_level,
+                installed_capacity_kw, grid_connection_point, location,
+                commissioning_date, status, notes, created_by, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            plant_id,
+            payload.name.strip(),
+            payload.site_type,
+            payload.grid_operator.strip() if payload.grid_operator else "Bayernwerk Netz GmbH",
+            payload.voltage_level,
+            payload.installed_capacity_kw,
+            payload.grid_connection_point.strip() if payload.grid_connection_point else None,
+            payload.location.strip() if payload.location else None,
+            payload.commissioning_date,
+            payload.status or "PLANNING",
+            payload.notes or "",
+            user["username"],
+            now
+        ))
+
+        # If an initial Coneza device was specified, associate it immediately
+        if payload.initial_device_id:
+            cursor.execute("UPDATE devices SET plant_id = ? WHERE device_id = ?", (plant_id, payload.initial_device_id))
+
+        conn.commit()
+
+        cursor.execute("""
+            SELECT p.*,
+                   (SELECT COUNT(*) FROM devices d WHERE d.plant_id = p.id) as device_count,
+                   (SELECT COUNT(*) FROM documents doc WHERE doc.plant_id = p.id) as document_count
+            FROM plants p WHERE p.id = ?
+        """, (plant_id,))
+        created_plant = cursor.fetchone()
+        return dict(created_plant)
+    except Exception as e:
+        logger.error(f"Failed to create plant: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to create plant: {e}")
+    finally:
+        conn.close()
+
+@app.get("/api/plants/{plant_id}")
+async def get_plant_detail(
+    plant_id: str,
+    user: Dict[str, Any] = Depends(require_viewer)
+):
+    """Returns detailed site specifications, all linked Coneza devices with live telemetry, and grid documents."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM plants WHERE id = ?", (plant_id,))
+    plant_row = cursor.fetchone()
+    if not plant_row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    plant_dict = dict(plant_row)
+
+    # Fetch linked devices with parsed telemetry
+    cursor.execute("SELECT * FROM devices WHERE plant_id = ? ORDER BY created_at DESC", (plant_id,))
+    dev_rows = cursor.fetchall()
+    devices = []
+    for dr in dev_rows:
+        d = dict(dr)
+        d["telemetry"] = json.loads(d["telemetry_json"]) if d["telemetry_json"] else {}
+        d["has_pending_config"] = bool(d["pending_config_json"])
+        del d["telemetry_json"]
+        del d["pending_config_json"]
+        devices.append(d)
+
+    # Fetch linked documents
+    cursor.execute("""
+        SELECT id, plant_id, device_id, doc_type, filename, created_at, ocr_data_json
+        FROM documents
+        WHERE plant_id = ? OR (plant_id IS NULL AND device_id IN (SELECT device_id FROM devices WHERE plant_id = ?))
+        ORDER BY created_at DESC
+    """, (plant_id, plant_id))
+    doc_rows = cursor.fetchall()
+    documents = []
+    for r in doc_rows:
+        doc = dict(r)
+        ocr_data = json.loads(doc["ocr_data_json"]) if doc["ocr_data_json"] else {}
+        doc["extracted_entities"] = ocr_data.get("extracted_entities", {})
+        doc["total_pages"] = ocr_data.get("total_pages", 1)
+        del doc["ocr_data_json"]
+        documents.append(doc)
+
+    conn.close()
+
+    plant_dict["device_count"] = len(devices)
+    plant_dict["document_count"] = len(documents)
+    plant_dict["devices"] = devices
+    plant_dict["documents"] = documents
+    return plant_dict
+
+@app.patch("/api/plants/{plant_id}")
+async def update_plant(
+    plant_id: str,
+    payload: PlantUpdate,
+    user: Dict[str, Any] = Depends(require_engineer)
+):
+    """Updates plant parameters (engineer or super admin)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM plants WHERE id = ?", (plant_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    fields = []
+    values = []
+    update_data = payload.model_dump(exclude_unset=True)
+    for k, v in update_data.items():
+        fields.append(f"{k} = ?")
+        values.append(v)
+
+    if fields:
+        values.append(plant_id)
+        cursor.execute(f"UPDATE plants SET {', '.join(fields)} WHERE id = ?", values)
+        conn.commit()
+
+    conn.close()
+    return {"status": "success", "message": f"Plant {plant_id} updated"}
+
+@app.delete("/api/plants/{plant_id}")
+async def delete_plant(
+    plant_id: str,
+    user: Dict[str, Any] = Depends(require_engineer)
+):
+    """Deletes plant record and unlinks its devices and documents."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM plants WHERE id = ?", (plant_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    cursor.execute("UPDATE devices SET plant_id = NULL WHERE plant_id = ?", (plant_id,))
+    cursor.execute("UPDATE documents SET plant_id = NULL WHERE plant_id = ?", (plant_id,))
+    cursor.execute("DELETE FROM plants WHERE id = ?", (plant_id,))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": f"Plant {plant_id} deleted"}
+
+@app.post("/api/plants/{plant_id}/devices")
+async def assign_device_to_plant(
+    plant_id: str,
+    payload: PlantAssignDevice,
+    user: Dict[str, Any] = Depends(require_engineer)
+):
+    """Links a Coneza edge controller/gateway to a plant."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM plants WHERE id = ?", (plant_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    cursor.execute("SELECT device_id FROM devices WHERE device_id = ?", (payload.device_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Device not found")
+
+    cursor.execute("UPDATE devices SET plant_id = ? WHERE device_id = ?", (plant_id, payload.device_id))
+    cursor.execute("UPDATE documents SET plant_id = ? WHERE device_id = ? AND plant_id IS NULL", (plant_id, payload.device_id))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": f"Device {payload.device_id} assigned to plant {plant_id}"}
+
+@app.delete("/api/plants/{plant_id}/devices/{device_id}")
+async def unassign_device_from_plant(
+    plant_id: str,
+    device_id: str,
+    user: Dict[str, Any] = Depends(require_engineer)
+):
+    """Unlinks a Coneza device from a plant."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE devices SET plant_id = NULL WHERE device_id = ? AND plant_id = ?", (device_id, plant_id))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": f"Device {device_id} unlinked from plant {plant_id}"}
+
 # ----------------- Document Management (E8, E9, SLD) ----------------- #
 
 @app.post("/api/documents/upload")
 async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
+    plant_id: Optional[str] = Form(None),
     device_id: Optional[str] = Form(None),
     doc_type: Optional[str] = Form(None),
     ocr_summary: Optional[str] = Form(None)
@@ -573,11 +815,22 @@ async def upload_document(
 
         conn = get_connection()
         cursor = conn.cursor()
+
+        # If plant_id not given but device_id is, try looking up device's plant_id
+        resolved_plant_id = plant_id
+        if not resolved_plant_id and device_id:
+            c2 = conn.cursor()
+            c2.execute("SELECT plant_id FROM devices WHERE device_id = ?", (device_id,))
+            p_row = c2.fetchone()
+            if p_row and p_row[0]:
+                resolved_plant_id = p_row[0]
+
         cursor.execute("""
-            INSERT INTO documents (id, device_id, doc_type, filename, file_path, ocr_data_json)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO documents (id, plant_id, device_id, doc_type, filename, file_path, ocr_data_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             doc_id,
+            resolved_plant_id,
             device_id,
             ocr_result["detected_type"],
             filename,
@@ -596,6 +849,8 @@ async def upload_document(
 
         return {
             "id": doc_id,
+            "plant_id": resolved_plant_id,
+            "device_id": device_id,
             "filename": filename,
             "detected_type": ocr_result["detected_type"],
             "total_pages": ocr_result["total_pages"],
@@ -610,19 +865,34 @@ async def upload_document(
 async def list_documents(user: Dict[str, Any] = Depends(require_viewer)):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, device_id, doc_type, filename, created_at, ocr_data_json FROM documents ORDER BY created_at DESC")
+    cursor.execute("SELECT id, plant_id, device_id, doc_type, filename, created_at, ocr_data_json FROM documents ORDER BY created_at DESC")
     rows = cursor.fetchall()
     conn.close()
 
     result = []
     for r in rows:
         d = dict(r)
-        ocr_data = json.loads(d["ocr_data_json"])
+        ocr_data = json.loads(d["ocr_data_json"]) if d["ocr_data_json"] else {}
         d["extracted_entities"] = ocr_data.get("extracted_entities", {})
         d["total_pages"] = ocr_data.get("total_pages", 1)
         del d["ocr_data_json"]
         result.append(d)
     return result
+
+@app.get("/api/documents/{doc_id}/download")
+async def download_document(
+    doc_id: str,
+    user: Dict[str, Any] = Depends(require_viewer)
+):
+    """Downloads or previews the uploaded document PDF."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT filename, file_path FROM documents WHERE id = ?", (doc_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row or not row["file_path"] or not os.path.exists(row["file_path"]):
+        raise HTTPException(status_code=404, detail="Document file not found")
+    return FileResponse(path=row["file_path"], filename=row["filename"], media_type="application/pdf")
 
 # ----------------- Gemini Analysis & Synthesis ----------------- #
 

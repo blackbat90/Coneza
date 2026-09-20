@@ -48,8 +48,27 @@ def init_db():
 
 
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS plants (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        site_type TEXT NOT NULL DEFAULT 'PV', -- 'PV', 'BESS', 'WIND', 'HYBRID'
+        grid_operator TEXT NOT NULL DEFAULT 'Bayernwerk Netz GmbH',
+        voltage_level TEXT NOT NULL DEFAULT 'MS_4110', -- 'MS_4110', 'HS_4120', 'NS_4105'
+        installed_capacity_kw REAL NOT NULL DEFAULT 0.0,
+        grid_connection_point TEXT,
+        location TEXT,
+        commissioning_date TEXT,
+        status TEXT NOT NULL DEFAULT 'PLANNING', -- 'PLANNING', 'COMMISSIONING', 'ONLINE_REGULATING', 'MAINTENANCE'
+        notes TEXT DEFAULT '',
+        created_by TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS devices (
         device_id TEXT PRIMARY KEY,
+        plant_id TEXT DEFAULT NULL,
         name TEXT NOT NULL,
         local_ip TEXT NOT NULL,
         os_platform TEXT,
@@ -60,22 +79,38 @@ def init_db():
         last_heartbeat TIMESTAMP,
         telemetry_json TEXT DEFAULT '{}',
         pending_config_json TEXT DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (plant_id) REFERENCES plants (id)
     );
     """)
+
+    # Migration for devices.plant_id
+    cursor.execute("PRAGMA table_info(devices)")
+    dev_cols = [r[1] for r in cursor.fetchall()]
+    if "plant_id" not in dev_cols:
+        cursor.execute("ALTER TABLE devices ADD COLUMN plant_id TEXT DEFAULT NULL")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS documents (
         id TEXT PRIMARY KEY,
+        plant_id TEXT DEFAULT NULL,
         device_id TEXT,
         doc_type TEXT NOT NULL, -- 'E8', 'E9', 'SLD'
         filename TEXT NOT NULL,
         file_path TEXT,
         ocr_data_json TEXT NOT NULL DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (plant_id) REFERENCES plants (id),
         FOREIGN KEY (device_id) REFERENCES devices (device_id)
     );
     """)
+
+    # Migration for documents.plant_id
+    cursor.execute("PRAGMA table_info(documents)")
+    doc_cols = [r[1] for r in cursor.fetchall()]
+    if "plant_id" not in doc_cols:
+        cursor.execute("ALTER TABLE documents ADD COLUMN plant_id TEXT DEFAULT NULL")
+
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS analysis_jobs (

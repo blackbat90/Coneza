@@ -271,6 +271,88 @@ class TestBackendAndRBAC(unittest.TestCase):
         res_reset_2fa = self.client.post("/api/auth/users/2/reset-2fa", headers={"Authorization": f"Bearer {self.super_token}"})
         self.assertEqual(res_reset_2fa.status_code, 200)
 
+    def test_13_plant_management_rbac_and_creation(self):
+        plant_payload = {
+            "name": "Solarpark Bayern-Nord",
+            "site_type": "PV",
+            "grid_operator": "Bayernwerk Netz GmbH",
+            "voltage_level": "MS_4110",
+            "installed_capacity_kw": 2500.0,
+            "grid_connection_point": "Umspannwerk Allersberg 20kV",
+            "location": "90584 Allersberg",
+            "status": "PLANNING",
+            "notes": "Q(U) Blindleistungskennlinie mit Totband 97-103% Un"
+        }
+
+        # 1. Viewer cannot create plant (403)
+        res_view = self.client.post("/api/plants", json=plant_payload, headers={"Authorization": f"Bearer {self.viewer_token}"})
+        self.assertEqual(res_view.status_code, 403)
+
+        # 2. Engineer can create plant (200)
+        res_eng = self.client.post("/api/plants", json=plant_payload, headers={"Authorization": f"Bearer {self.engineer_token}"})
+        self.assertEqual(res_eng.status_code, 200)
+        data = res_eng.json()
+        self.assertEqual(data["name"], "Solarpark Bayern-Nord")
+        self.assertEqual(data["installed_capacity_kw"], 2500.0)
+        self.assertEqual(data["created_by"], "engineer")
+        TestBackendAndRBAC.created_plant_id = data["id"]
+
+        # 3. Viewer can list plants (200)
+        res_list = self.client.get("/api/plants", headers={"Authorization": f"Bearer {self.viewer_token}"})
+        self.assertEqual(res_list.status_code, 200)
+        plants = res_list.json()
+        self.assertTrue(any(p["id"] == TestBackendAndRBAC.created_plant_id for p in plants))
+
+    def test_14_plant_device_and_document_association(self):
+        plant_id = TestBackendAndRBAC.created_plant_id
+
+        # 1. Assign device to plant
+        res_assign = self.client.post(
+            f"/api/plants/{plant_id}/devices",
+            json={"device_id": "coneza-edge-substation-bess-test"},
+            headers={"Authorization": f"Bearer {self.engineer_token}"}
+        )
+        self.assertEqual(res_assign.status_code, 200)
+
+        # 2. Upload document directly associated with plant
+        samples_dir = os.path.join(os.path.dirname(__file__), "..", "samples")
+        e8_path = os.path.join(samples_dir, "sample_E8_datasheet.pdf")
+        with open(e8_path, "rb") as f:
+            res_doc = self.client.post(
+                "/api/documents/upload",
+                files={"file": ("site_e8_doc.pdf", f, "application/pdf")},
+                data={"plant_id": plant_id, "doc_type": "E8"}
+            )
+        self.assertEqual(res_doc.status_code, 200)
+        uploaded_doc_id = res_doc.json()["id"]
+
+        # 3. Get full plant details (including devices with telemetry and documents)
+        res_detail = self.client.get(f"/api/plants/{plant_id}", headers={"Authorization": f"Bearer {self.viewer_token}"})
+        self.assertEqual(res_detail.status_code, 200)
+        plant_detail = res_detail.json()
+        self.assertEqual(plant_detail["id"], plant_id)
+        self.assertEqual(len(plant_detail["devices"]), 1)
+        self.assertEqual(plant_detail["devices"][0]["device_id"], "coneza-edge-substation-bess-test")
+        self.assertTrue(len(plant_detail["documents"]) >= 1)
+        self.assertTrue(any(d["id"] == uploaded_doc_id for d in plant_detail["documents"]))
+
+        # 4. Test document download endpoint
+        res_download = self.client.get(f"/api/documents/{uploaded_doc_id}/download", headers={"Authorization": f"Bearer {self.viewer_token}"})
+        self.assertEqual(res_download.status_code, 200)
+        self.assertEqual(res_download.headers["content-type"], "application/pdf")
+
+        # 5. Unassign device from plant
+        res_unlink = self.client.delete(
+            f"/api/plants/{plant_id}/devices/coneza-edge-substation-bess-test",
+            headers={"Authorization": f"Bearer {self.engineer_token}"}
+        )
+        self.assertEqual(res_unlink.status_code, 200)
+
+        # 6. Verify device unlinked
+        res_detail2 = self.client.get(f"/api/plants/{plant_id}", headers={"Authorization": f"Bearer {self.viewer_token}"})
+        self.assertEqual(res_detail2.status_code, 200)
+        self.assertEqual(len(res_detail2.json()["devices"]), 0)
+
 if __name__ == "__main__":
     unittest.main()
 
