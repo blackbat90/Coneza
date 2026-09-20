@@ -139,3 +139,26 @@ class ConfigDeployRequest(BaseModel):
     config_id: str
     target_device_id: str
 
+class JiraTicketCreate(BaseModel):
+    summary: str
+    description: str
+    issue_type: Optional[str] = "Task"
+    priority: Optional[str] = "Medium"
+    assignee_id: Optional[str] = None
+    labels: Optional[List[str]] = None
+    plant_id: Optional[str] = None
+
+class JiraTicketResponse(BaseModel):
+    id: str
+    jira_key: str
+    summary: str
+    description: Optional[str] = None
+    issue_type: str = "Task"
+    priority: str = "Medium"
+    status: str = "OPEN"
+    assignee: Optional[str] = None
+    labels: List[str] = []
+    plant_id: Optional[str] = None
+    created_at: str
+    synced_with_jira: int = 0
+

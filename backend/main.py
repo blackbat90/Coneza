@@ -25,7 +25,8 @@ from backend.models import (
     TwoFactorVerifyLogin, TwoFactorEnableRequest, TwoFactorDisableRequest, PasswordChangeRequest,
     DeviceRegister, DeviceHeartbeat, DeviceResponse,
     PlantCreate, PlantUpdate, PlantAssignDevice, PlantResponse,
-    AnalysisTrigger, ConfigDeployRequest
+    AnalysisTrigger, ConfigDeployRequest,
+    JiraTicketCreate, JiraTicketResponse
 )
 from backend.auth import (
     hash_password, verify_password, create_access_token, create_temp_token,
@@ -39,6 +40,7 @@ from backend.totp_auth import (
 from backend.device_manager import fleet_manager
 from backend.gemini_analyzer import gemini_analyzer
 from backend.continuous_improver import continuous_improver
+from backend.jira_service import jira_service
 from edge.ocr_engine import ocr_engine
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -522,6 +524,26 @@ async def update_user_role(user_id: int, payload: UserRoleUpdate, current_user: 
     conn.commit()
     conn.close()
     return {"status": "success", "user_id": user_id, "new_role": payload.role}
+
+# ----------------- Jira Integration & Ticket Tracking Endpoints ----------------- #
+
+@app.get("/api/jira/tickets", response_model=List[JiraTicketResponse])
+async def list_jira_tickets(user: Dict[str, Any] = Depends(require_viewer)):
+    """Lists tracked tickets created for continuous portal improvements or user review."""
+    return jira_service.list_tickets()
+
+@app.post("/api/jira/tickets", response_model=Dict[str, Any])
+async def create_jira_ticket(payload: JiraTicketCreate, user: Dict[str, Any] = Depends(require_engineer)):
+    """Creates a new ticket in Jira or local backlog and assigns it."""
+    return jira_service.create_ticket(
+        summary=payload.summary,
+        description=payload.description,
+        issue_type=payload.issue_type or "Task",
+        priority=payload.priority or "Medium",
+        assignee_id=payload.assignee_id,
+        labels=payload.labels,
+        plant_id=payload.plant_id
+    )
 
 # ----------------- Multi-Device Fleet Endpoints ----------------- #
 

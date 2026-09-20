@@ -167,5 +167,23 @@ def init_db():
     );
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS jira_tickets (
+        id TEXT PRIMARY KEY,
+        jira_key TEXT,
+        summary TEXT NOT NULL,
+        description TEXT,
+        issue_type TEXT DEFAULT 'Task',
+        priority TEXT DEFAULT 'Medium',
+        status TEXT DEFAULT 'OPEN',
+        assignee TEXT,
+        labels_json TEXT DEFAULT '[]',
+        plant_id TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_with_jira INTEGER DEFAULT 0
+    );
+    """)
+
     conn.commit()
     conn.close()
