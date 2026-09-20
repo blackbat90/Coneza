@@ -14,33 +14,34 @@
             --navy: #0b1728;
             --navy-deep: #081522;
             --ink: #152235;
-            --muted: #8fa2b5;
-            --line: rgba(223, 231, 238, 0.14);
+            --muted: #637084;
+            --line: #dfe7ee;
             --blue: #1577d4;
-            --cyan: #25c7c9;
+            --cyan: #0ea5e9;
+            --cyan-accent: #25c7c9;
             --mint: #e8fbf7;
-            --status-online: #5ce0ad;
+            --status-online: #10b981;
             --white: #ffffff;
-            --shadow: 0 18px 55px rgba(11, 23, 40, .28);
+            --shadow: 0 10px 30px rgba(11, 23, 40, 0.06);
 
             /* Semantic Theme Mappings */
-            --bg-base: #081522;
-            --bg-surface: #0b1728;
-            --bg-card: rgba(11, 23, 40, 0.85);
-            --bg-glass: rgba(21, 34, 53, 0.72);
-            --border-glow: rgba(37, 199, 201, 0.35);
-            --border-subtle: rgba(223, 231, 238, 0.12);
-            --primary: #25c7c9;
-            --primary-glow: #25c7c9;
-            --primary-dark: #1577d4;
-            --accent: #1577d4;
-            --accent-glow: #38bdf8;
-            --emerald: #5ce0ad;
-            --emerald-glow: #5ce0ad;
+            --bg-base: #fbfdff;
+            --bg-surface: #ffffff;
+            --bg-card: #ffffff;
+            --bg-glass: rgba(255, 255, 255, 0.9);
+            --border-glow: #cbd5e1;
+            --border-subtle: #dfe7ee;
+            --primary: #1577d4;
+            --primary-glow: rgba(21, 119, 212, 0.2);
+            --primary-dark: #0b1728;
+            --accent: #25c7c9;
+            --accent-glow: rgba(37, 199, 201, 0.2);
+            --emerald: #10b981;
+            --emerald-glow: rgba(16, 185, 129, 0.2);
             --amber: #f59e0b;
             --rose: #f43f5e;
-            --text-main: #fbfdff;
-            --text-muted: #8fa2b5;
+            --text-main: #152235;
+            --text-muted: #637084;
             --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
@@ -58,14 +59,17 @@
         body {
             background-color: var(--bg-base);
             background-image: 
-                radial-gradient(circle at 85% 15%, rgba(37, 199, 201, 0.18) 0%, transparent 32%),
-                radial-gradient(circle at 15% 85%, rgba(21, 119, 212, 0.15) 0%, transparent 36%),
-                linear-gradient(135deg, #091522 0%, #0d2842 56%, #06445d 100%);
+                radial-gradient(circle at 90% 10%, rgba(37, 199, 201, 0.08) 0%, transparent 32%),
+                radial-gradient(circle at 10% 90%, rgba(21, 119, 212, 0.06) 0%, transparent 36%);
             color: var(--text-main);
             font-family: var(--font-sans);
             min-height: 100vh;
             line-height: 1.55;
             overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--navy);
         }
 
         /* Top Navigation Header */
@@ -74,13 +78,13 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.9rem 2.2rem;
-            background: rgba(11, 23, 40, 0.88);
+            background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(18px);
-            border-bottom: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--line);
             position: sticky;
             top: 0;
             z-index: 50;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 2px 14px rgba(11, 23, 40, 0.04);
         }
 
         .brand {
@@ -94,15 +98,16 @@
         .brand-logo-wrap {
             display: inline-block;
             background: #ffffff;
+            border: 1px solid var(--line);
             border-radius: 10px;
             padding: 3px 8px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .brand-logo-wrap:hover {
             transform: scale(1.03);
-            box-shadow: 0 6px 24px rgba(37, 199, 201, 0.35);
+            box-shadow: 0 4px 16px rgba(21, 119, 212, 0.15);
         }
 
         .brand-logo-img {
@@ -115,15 +120,15 @@
             font-size: 1.45rem;
             font-weight: 800;
             letter-spacing: -0.03em;
-            color: #ffffff;
+            color: var(--navy);
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
         .brand-title span {
-            color: var(--cyan);
-            font-weight: 400;
+            color: var(--blue);
+            font-weight: 500;
             font-size: 1rem;
             text-transform: uppercase;
             letter-spacing: 0.12em;
@@ -138,7 +143,7 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
         }
 
@@ -152,43 +157,41 @@
             display: inline-flex;
             align-items: center;
             gap: 0.45rem;
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text-main);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #f1f5f9;
+            color: var(--ink);
+            border: 1px solid var(--line);
         }
 
         .badge-super {
-            background: rgba(37, 199, 201, 0.15);
-            color: var(--cyan);
-            border: 1px solid rgba(37, 199, 201, 0.35);
-            box-shadow: 0 0 14px rgba(37, 199, 201, 0.15);
+            background: #e8fbf7;
+            color: #0f766e;
+            border: 1px solid #99f6e4;
         }
 
         .badge-engineer {
-            background: rgba(21, 119, 212, 0.2);
-            color: #60a5fa;
-            border: 1px solid rgba(21, 119, 212, 0.4);
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
         }
 
         .badge-online {
-            background: rgba(92, 224, 173, 0.15);
-            color: var(--status-online);
-            border: 1px solid rgba(92, 224, 173, 0.35);
-            box-shadow: 0 0 12px rgba(92, 224, 173, 0.15);
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
         }
 
         .badge-danger {
-            background: rgba(244, 63, 94, 0.15);
-            color: var(--rose);
-            border: 1px solid rgba(244, 63, 94, 0.35);
+            background: #fff1f2;
+            color: #be123c;
+            border: 1px solid #fecdd3;
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: var(--status-online);
-            box-shadow: 0 0 8px var(--status-online);
+            background-color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
             animation: pulse 2s infinite;
         }
 
@@ -206,19 +209,19 @@
 
         /* Hero / Overview Banner matching Coneza.de */
         .hero-banner {
-            background: rgba(11, 23, 40, 0.75);
-            backdrop-filter: blur(14px);
-            border: 1px solid var(--border-glow);
+            background: linear-gradient(135deg, #091522 0%, #0d2842 56%, #06445d 100%);
+            border: 1px solid rgba(37, 199, 201, 0.25);
             border-radius: 20px;
             padding: 2.2rem;
             margin-bottom: 2rem;
             position: relative;
             overflow: hidden;
-            box-shadow: var(--shadow);
+            box-shadow: 0 16px 45px rgba(11, 23, 40, 0.12);
             display: grid;
-            grid-template-columns: 1.15fr 0.85fr;
-            gap: 2.5rem;
+            grid-template-columns: 0.85fr 1.15fr;
+            gap: 2.2rem;
             align-items: center;
+            color: #ffffff;
         }
 
         .hero-banner::after {
@@ -235,7 +238,7 @@
         }
 
         .eyebrow {
-            color: var(--cyan);
+            color: var(--cyan-accent);
             text-transform: uppercase;
             letter-spacing: 0.14em;
             font-size: 0.74rem;
@@ -243,7 +246,8 @@
             margin-bottom: 0.5rem;
         }
 
-        .hero-banner h1 {
+        .hero-banner h1, .hero-banner h2, .hero-banner h3 {
+            color: #ffffff;
             font-size: clamp(1.8rem, 3.2vw, 2.7rem);
             line-height: 1.12;
             letter-spacing: -0.045em;
@@ -259,23 +263,42 @@
             max-width: 620px;
         }
 
-        /* Coneza Controller Display from coneza.de */
+        .hero-banner .btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        .hero-banner .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+        }
+
+        .hero-banner .btn-primary {
+            background: var(--blue);
+            border: 1px solid var(--blue);
+            color: #ffffff;
+        }
+
+        /* Coneza EZA Synoptic Energy Flow & Grid Controller Monitor */
         .controller-card {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(37, 199, 201, 0.3);
+            background: rgba(8, 21, 34, 0.88);
+            border: 1px solid rgba(37, 199, 201, 0.35);
             border-radius: 18px;
-            padding: 18px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(10px);
+            padding: 16px 18px;
+            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
             position: relative;
             z-index: 1;
+            color: #ffffff;
         }
 
         .controller-screen {
-            background: #081522;
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid rgba(37, 199, 201, 0.2);
+            background: #06111c;
+            border-radius: 14px;
+            padding: 14px 16px;
+            border: 1px solid rgba(37, 199, 201, 0.22);
         }
 
         .screen-top {
@@ -284,73 +307,197 @@
             align-items: center;
             color: #aec2d3;
             font-size: 0.74rem;
-            font-weight: 600;
-            letter-spacing: 0.08em;
+            font-weight: 700;
+            letter-spacing: 0.06em;
             text-transform: uppercase;
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .screen-top .status {
-            color: var(--status-online);
+            color: #10b981;
             display: flex;
             align-items: center;
-            gap: 5px;
-        }
-
-        .meter {
-            height: 90px;
-            display: flex;
-            align-items: end;
             gap: 6px;
-            padding: 14px 2px 4px;
-            background: linear-gradient(180deg, transparent 0 24%, rgba(255,255,255,.05) 25% 25.5%, transparent 26% 49%, rgba(255,255,255,.05) 50% 50.5%, transparent 51% 74%, rgba(255,255,255,.05) 75% 75.5%, transparent 76%);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
         }
 
-        .meter .bar {
-            flex: 1;
-            border-radius: 3px 3px 0 0;
-            background: linear-gradient(180deg, var(--cyan), var(--blue));
-            transition: height 0.6s ease;
+        .sim-mode-select {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(37, 199, 201, 0.3);
+            border-radius: 6px;
+            color: #ecfeff;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            outline: none;
+            cursor: pointer;
+        }
+        .sim-mode-select option {
+            background: #081522;
+            color: #ffffff;
         }
 
-        .readings {
+        /* SVG Energy Flow Diagram Styles */
+        .energy-flow-svg-wrap {
+            width: 100%;
+            margin: 10px 0 12px 0;
+            position: relative;
+        }
+
+        .energy-flow-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            overflow: visible;
+        }
+
+        .flow-line {
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+        }
+
+        .flow-line-pv {
+            stroke: #f59e0b;
+            stroke-dasharray: 7 5;
+            animation: flowAnimPv 1.2s linear infinite;
+        }
+
+        .flow-line-bat-charge {
+            stroke: #10b981;
+            stroke-dasharray: 6 5;
+            animation: flowAnimBatCharge 1.4s linear infinite;
+        }
+
+        .flow-line-bat-discharge {
+            stroke: #10b981;
+            stroke-dasharray: 6 5;
+            animation: flowAnimBatDischarge 1.4s linear infinite;
+        }
+
+        .flow-line-load {
+            stroke: #f43f5e;
+            stroke-dasharray: 5 5;
+            animation: flowAnimLoad 1.6s linear infinite;
+        }
+
+        .flow-line-grid {
+            stroke: #25c7c9;
+            stroke-dasharray: 8 5;
+            animation: flowAnimGrid 1.0s linear infinite;
+        }
+
+        @keyframes flowAnimPv {
+            from { stroke-dashoffset: 24; }
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes flowAnimBatCharge {
+            from { stroke-dashoffset: 22; }
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes flowAnimBatDischarge {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: 22; }
+        }
+        @keyframes flowAnimLoad {
+            from { stroke-dashoffset: 20; }
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes flowAnimGrid {
+            from { stroke-dashoffset: 26; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Section dividers & labels */
+        .flow-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #8fa5ba;
+            margin: 8px 0 5px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            padding-top: 7px;
+        }
+
+        .flow-params-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 10px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
         }
 
-        .reading {
-            background: rgba(255, 255, 255, 0.06);
+        .flow-param-box {
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 8px;
-            padding: 9px;
-            font-size: 0.72rem;
-            color: #9eb3c5;
+            padding: 6px 8px;
+            transition: all 0.2s ease;
         }
 
-        .reading strong {
-            display: block;
-            color: white;
-            font-size: 1.05rem;
+        .flow-param-box:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(37, 199, 201, 0.3);
+        }
+
+        .flow-param-title {
+            font-size: 0.62rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .flow-param-value {
+            font-size: 0.96rem;
             font-family: var(--font-mono);
-            margin-top: 2px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+
+        .flow-param-desc {
+            font-size: 0.62rem;
+            color: #7b91a5;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 1100px) {
+            .hero-banner {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .flow-params-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         /* Navigation Tabs */
         .nav-tabs {
             display: flex;
             gap: 0.65rem;
-            border-bottom: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--line);
             padding-bottom: 0.85rem;
             margin-bottom: 2rem;
             overflow-x: auto;
         }
 
         .tab-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #ffffff;
+            border: 1px solid var(--line);
             color: var(--text-muted);
             font-family: var(--font-sans);
             font-size: 0.92rem;
@@ -363,20 +510,21 @@
             align-items: center;
             gap: 0.55rem;
             white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         }
 
         .tab-btn:hover {
-            color: var(--text-main);
-            background: rgba(37, 199, 201, 0.1);
-            border-color: rgba(37, 199, 201, 0.35);
+            color: var(--navy);
+            background: #f8fafc;
+            border-color: #cbd5e1;
         }
 
         .tab-btn.active {
-            color: #062331;
-            background: var(--cyan);
-            border-color: var(--cyan);
-            box-shadow: 0 4px 18px rgba(37, 199, 201, 0.35);
-            font-weight: 750;
+            color: #ffffff;
+            background: var(--navy);
+            border-color: var(--navy);
+            box-shadow: 0 4px 14px rgba(11, 23, 40, 0.2);
+            font-weight: 700;
         }
 
         /* Tab Content Panes */
@@ -418,20 +566,20 @@
 
         .card {
             background: var(--bg-card);
-            backdrop-filter: blur(14px);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--line);
             border-radius: 16px;
             padding: 1.6rem;
             transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 30px rgba(11, 23, 40, 0.2);
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+            color: var(--text-main);
         }
 
         .card:hover {
-            border-color: var(--border-glow);
+            border-color: #cbd5e1;
             transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(37, 199, 201, 0.12);
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
         }
 
         .card-header {
@@ -446,7 +594,7 @@
         .card-title {
             font-size: 1.15rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--navy);
             display: flex;
             align-items: center;
             gap: 0.55rem;
@@ -462,8 +610,8 @@
         }
 
         .metric-tile {
-            background: rgba(15, 27, 44, 0.7);
-            border: 1px solid var(--border-subtle);
+            background: #f8fafc;
+            border: 1px solid var(--line);
             border-radius: 10px;
             padding: 0.85rem 0.65rem;
             text-align: center;
@@ -482,14 +630,14 @@
             font-size: 1.18rem;
             font-family: var(--font-mono);
             font-weight: 700;
-            color: var(--cyan);
+            color: var(--navy);
         }
 
         /* Buttons & Forms */
         .btn {
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--text-main);
+            background: #ffffff;
+            border: 1px solid var(--line);
+            color: var(--ink);
             font-family: var(--font-sans);
             font-size: 0.88rem;
             font-weight: 600;
@@ -501,71 +649,76 @@
             align-items: center;
             gap: 0.5rem;
             text-decoration: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            background: rgba(37, 199, 201, 0.15);
-            border-color: var(--cyan);
-            color: #ffffff;
-            box-shadow: 0 6px 20px rgba(37, 199, 201, 0.2);
+            transform: translateY(-1px);
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: var(--navy);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         }
 
         .btn-primary {
-            background: var(--cyan);
-            border: 1px solid var(--cyan);
-            color: #062331;
-            font-weight: 750;
-            box-shadow: 0 4px 16px rgba(37, 199, 201, 0.3);
+            background: var(--blue);
+            border: 1px solid var(--blue);
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(21, 119, 212, 0.25);
         }
 
         .btn-primary:hover {
-            background: #2fe0e2;
-            box-shadow: 0 8px 25px rgba(37, 199, 201, 0.45);
-            color: #062331;
+            background: #1066bb;
+            border-color: #1066bb;
+            box-shadow: 0 6px 18px rgba(21, 119, 212, 0.35);
+            color: #ffffff;
         }
 
         .btn-success {
-            background: var(--status-online);
-            border: 1px solid var(--status-online);
-            color: #062331;
-            font-weight: 750;
-            box-shadow: 0 4px 16px rgba(92, 224, 173, 0.25);
+            background: #10b981;
+            border: 1px solid #10b981;
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
         }
 
         .btn-success:hover {
-            background: #73f0c0;
-            box-shadow: 0 8px 24px rgba(92, 224, 173, 0.4);
+            background: #059669;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+            color: #ffffff;
         }
 
         .btn-danger {
-            background: var(--rose);
-            border: 1px solid var(--rose);
-            color: white;
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #e11d48;
             font-weight: 600;
-            box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
+            box-shadow: 0 1px 4px rgba(244, 63, 94, 0.08);
         }
 
         .btn-danger:hover {
-            background: #ff5272;
-            box-shadow: 0 8px 24px rgba(244, 63, 94, 0.4);
+            background: #f43f5e;
+            border-color: #f43f5e;
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.25);
         }
 
         /* File Upload Dropzone */
         .dropzone {
-            border: 2px dashed rgba(37, 199, 201, 0.35);
+            border: 2px dashed #93c5fd;
             border-radius: 16px;
             padding: 2.5rem 1.5rem;
             text-align: center;
-            background: rgba(11, 23, 40, 0.4);
+            background: #f8fafc;
             cursor: pointer;
             transition: all 0.2s ease;
             margin-bottom: 1.5rem;
         }
 
         .dropzone:hover {
-            border-color: var(--cyan);
-            background: rgba(37, 199, 201, 0.07);
+            border-color: var(--blue);
+            background: #eff6ff;
         }
 
         .dropzone-icon {
@@ -577,9 +730,10 @@
         /* Tables */
         .table-wrap {
             overflow-x: auto;
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--line);
             border-radius: 12px;
-            background: rgba(11, 23, 40, 0.6);
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
         }
 
         table {
@@ -590,11 +744,11 @@
         }
 
         th {
-            background: rgba(21, 34, 53, 0.7);
+            background: #f8fafc;
             color: var(--text-muted);
             font-weight: 700;
             padding: 0.85rem 1.1rem;
-            border-bottom: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--line);
             text-transform: uppercase;
             font-size: 0.72rem;
             letter-spacing: 0.07em;
@@ -602,8 +756,8 @@
 
         td {
             padding: 0.85rem 1.1rem;
-            border-bottom: 1px solid var(--border-subtle);
-            color: var(--text-main);
+            border-bottom: 1px solid #edf2f7;
+            color: var(--ink);
         }
 
         tr:last-child td {
@@ -611,7 +765,7 @@
         }
 
         tr:hover td {
-            background: rgba(37, 199, 201, 0.04);
+            background: #f8fafc;
         }
 
         /* Discrepancy Alerts */
@@ -619,23 +773,24 @@
             padding: 1rem 1.2rem;
             border-radius: 12px;
             margin-bottom: 0.85rem;
-            border-left: 4px solid;
-            background: rgba(11, 23, 40, 0.85);
+            border: 1px solid var(--line);
+            border-left-width: 4px;
+            background: #ffffff;
         }
 
         .alert-warning {
             border-left-color: var(--amber);
-            background: rgba(245, 158, 11, 0.09);
+            background: #fffbeb;
         }
 
         .alert-critical {
             border-left-color: var(--rose);
-            background: rgba(244, 63, 94, 0.09);
+            background: #fff1f2;
         }
 
         .alert-info {
-            border-left-color: var(--cyan);
-            background: rgba(37, 199, 201, 0.09);
+            border-left-color: var(--blue);
+            background: #eff6ff;
         }
 
         /* Modal Backdrop */
@@ -645,8 +800,8 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(6, 15, 26, 0.86);
-            backdrop-filter: blur(12px);
+            background: rgba(11, 23, 40, 0.55);
+            backdrop-filter: blur(8px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -654,44 +809,45 @@
         }
 
         .modal {
-            background: var(--navy);
-            border: 1px solid var(--border-glow);
+            background: #ffffff;
+            border: 1px solid var(--line);
             border-radius: 18px;
             max-width: 600px;
             width: 92%;
             padding: 2.2rem;
-            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 20px 60px rgba(11, 23, 40, 0.16);
             max-height: 90vh;
             overflow-y: auto;
+            color: var(--ink);
         }
 
         .input-control {
             width: 100%;
-            background: rgba(8, 21, 34, 0.85);
-            border: 1px solid var(--border-subtle);
+            background: #ffffff;
+            border: 1px solid var(--line);
             border-radius: 9px;
             padding: 0.8rem 1.1rem;
-            color: white;
+            color: var(--ink);
             font-family: var(--font-sans);
             font-size: 0.92rem;
             margin-bottom: 1.1rem;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .input-control:focus {
             outline: none;
-            border-color: var(--cyan);
-            box-shadow: 0 0 12px rgba(37, 199, 201, 0.25);
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(21, 119, 212, 0.15);
         }
 
         /* Footer */
         footer {
             padding: 2rem 2.2rem;
-            color: #7d8998;
+            color: var(--text-muted);
             font-size: 0.88rem;
-            border-top: 1px solid var(--border-subtle);
+            border-top: 1px solid var(--line);
             margin-top: 3rem;
-            background: rgba(8, 21, 34, 0.7);
+            background: #ffffff;
         }
 
         footer .container {
@@ -757,7 +913,7 @@
         <section class="hero-banner">
             <div>
                 <div class="eyebrow">EZA-Regler für moderne Energieanlagen</div>
-                <h1>Netzkonform. <span style="color:var(--cyan)">Präzise.</span> Zukunftssicher.</h1>
+                <h1>Netzkonform. <span style="color:var(--cyan-accent)">Präzise.</span> Zukunftssicher.</h1>
                 <p>Coneza verbindet Erzeugungsanlagen (PV, Wind, BESS) und Netzanschlusspunkt zu einem intelligenten Regelungssystem nach VDE-AR-N 4110 / 4120 – vollautomatische Dokumentenanalyse, Modbus TCP Inbetriebnahme und Flottensteuerung.</p>
                 <div style="display: flex; gap: 0.85rem; flex-wrap: wrap;">
                     <button class="btn btn-primary" onclick="switchTab('geminiTab', document.querySelectorAll('.tab-btn')[2])">
@@ -769,37 +925,179 @@
                 </div>
             </div>
 
-            <!-- Interactive Controller Screen Widget from Coneza.de -->
-            <div class="controller-card" aria-label="Coneza EZA Live Controller Status">
+            <!-- Interactive Synoptic Energy Flow & EZA Controller Console -->
+            <div class="controller-card" aria-label="Coneza EZA Live Energy Flow & Controller Status">
                 <div class="controller-screen">
                     <div class="screen-top">
-                        <span>Anlagenübersicht EZA</span>
-                        <span class="status">● ONLINE · REGELT</span>
-                    </div>
-                    <div class="meter" id="heroMeter">
-                        <i class="bar" style="height:48%"></i>
-                        <i class="bar" style="height:62%"></i>
-                        <i class="bar" style="height:55%"></i>
-                        <i class="bar" style="height:78%"></i>
-                        <i class="bar" style="height:72%"></i>
-                        <i class="bar" style="height:92%"></i>
-                        <i class="bar" style="height:84%"></i>
-                        <i class="bar" style="height:95%"></i>
-                        <i class="bar" style="height:88%"></i>
-                        <i class="bar" style="height:98%"></i>
-                    </div>
-                    <div class="readings">
-                        <div class="reading">
-                            Wirkleistung P
-                            <strong id="heroPAct">2.480 kW</strong>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span>⚡ EZA-Energiefluss &amp; Regelung</span>
+                            <span style="color: var(--cyan-accent); font-size: 0.7rem; font-weight: 500;">(VDE-AR-N 4110)</span>
                         </div>
-                        <div class="reading">
-                            Netzspannung U
-                            <strong id="heroUAct">20,12 kV</strong>
+                        <div style="display: flex; align-items: center; gap: 0.65rem;">
+                            <select id="flowSimSelect" onchange="setFlowSimulationMode(this.value)" class="sim-mode-select" title="Betriebs- und Simulationsmodus">
+                                <option value="normal">☀️ Tagbetrieb (PV 2,2 MW + BESS Laden)</option>
+                                <option value="peak">🔋 Spitzenlast (BESS Entladung + PV)</option>
+                                <option value="curtail">⚠️ Wirkleistungsreduktion 50% (DSO)</option>
+                                <option value="qu_boost">⚡ Q(U)-Spannungsstützung (+280 kvar)</option>
+                            </select>
+                            <span class="status">● ONLINE · REGELT</span>
                         </div>
-                        <div class="reading">
-                            Blindleistung Q
-                            <strong id="heroQAct" style="color:var(--status-online)">+25 kvar</strong>
+                    </div>
+
+                    <!-- SVG Synoptic Energy Flow Diagram -->
+                    <div class="energy-flow-svg-wrap">
+                        <svg viewBox="0 0 660 215" class="energy-flow-svg" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="gradEza" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#092136" />
+                                    <stop offset="100%" stop-color="#061624" />
+                                </linearGradient>
+                                <linearGradient id="gradGrid" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#0b2e47" />
+                                    <stop offset="100%" stop-color="#061c2c" />
+                                </linearGradient>
+                                <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+
+                            <!-- FLOW LINES -->
+                            <!-- Solar to EZA bus -->
+                            <path d="M 157 50 L 200 50 L 200 78 L 242 78" class="flow-line flow-line-pv" />
+                            <!-- Battery to/from EZA bus -->
+                            <path d="M 157 164 L 200 164 L 200 122 L 242 122" id="pathBatteryFlow" class="flow-line flow-line-bat-charge" />
+                            <!-- EZA bus to Eigenbedarf -->
+                            <path d="M 330 144 L 330 168" class="flow-line flow-line-load" />
+                            <!-- EZA bus to Public Grid NAP -->
+                            <path d="M 417 100 L 500 100" class="flow-line flow-line-grid" />
+
+                            <!-- Junction Pulse Circles on lines -->
+                            <circle cx="200" cy="78" r="3" fill="#f59e0b" />
+                            <circle cx="200" cy="122" r="3" fill="#10b981" />
+                            <circle cx="330" cy="156" r="3" fill="#f43f5e" />
+                            <circle cx="458" cy="100" r="3.5" fill="#25c7c9" />
+
+                            <!-- NODE 1: Solar (PV) -->
+                            <g class="flow-node" id="nodeSolar">
+                                <rect x="12" y="16" width="145" height="68" rx="10" fill="#0b1c2d" stroke="#f59e0b" stroke-width="1.8" />
+                                <text x="24" y="38" fill="#fbbf24" font-size="12" font-weight="700">☀️ Solar PV</text>
+                                <text x="24" y="59" fill="#ffffff" font-size="16" font-weight="800" font-family="'JetBrains Mono', monospace" id="flowPpv">+2.180 kW</text>
+                                <text x="24" y="74" fill="#94a3b8" font-size="10" id="flowPvIrrad">840 W/m² · 3 Strings</text>
+                            </g>
+
+                            <!-- NODE 2: Batterie (BESS) -->
+                            <g class="flow-node" id="nodeBattery">
+                                <rect x="12" y="128" width="145" height="72" rx="10" fill="#0b1c2d" stroke="#10b981" stroke-width="1.8" />
+                                <text x="24" y="150" fill="#34d399" font-size="12" font-weight="700">🔋 Batterie BESS</text>
+                                <text x="24" y="171" fill="#ffffff" font-size="16" font-weight="800" font-family="'JetBrains Mono', monospace" id="flowPbat">-320 kW</text>
+                                <text x="24" y="188" fill="#94a3b8" font-size="10" id="flowSoc">SoC: 84% · Laden</text>
+                            </g>
+
+                            <!-- NODE 3: Zentraler EZA-Regler (Sammelschiene) -->
+                            <g class="flow-node" id="nodeEza">
+                                <rect x="242" y="56" width="175" height="88" rx="12" fill="url(#gradEza)" stroke="#25c7c9" stroke-width="2.2" filter="url(#glowCyan)" />
+                                <text x="254" y="78" fill="#25c7c9" font-size="12" font-weight="800">⚡ Phoenix Contact EZA</text>
+                                <text x="254" y="93" fill="#94a3b8" font-size="9.5">AXC F 2152 · VDE 4110</text>
+                                <text x="254" y="118" fill="#ffffff" font-size="18" font-weight="800" font-family="'JetBrains Mono', monospace" id="flowPbus">1.818 kW</text>
+                                <text x="254" y="134" fill="#38bdf8" font-size="10">Sammelschiene (Netto)</text>
+                            </g>
+
+                            <!-- NODE 4: Verbrauch (Eigenbedarf) -->
+                            <g class="flow-node" id="nodeLoad">
+                                <rect x="255" y="168" width="150" height="42" rx="8" fill="#161e29" stroke="#f43f5e" stroke-width="1.4" />
+                                <text x="267" y="185" fill="#fb7185" font-size="11" font-weight="700">🏢 Eigenbedarf / Last</text>
+                                <text x="267" y="200" fill="#cbd5e1" font-size="10" font-family="'JetBrains Mono', monospace" id="flowPload">-42 kW · Hilfsbetriebe</text>
+                            </g>
+
+                            <!-- NODE 5: Netzanschlusspunkt (NAP 20 kV) -->
+                            <g class="flow-node" id="nodeGrid">
+                                <rect x="500" y="56" width="148" height="88" rx="12" fill="url(#gradGrid)" stroke="#38bdf8" stroke-width="2.2" filter="url(#glowCyan)" />
+                                <text x="512" y="78" fill="#38bdf8" font-size="12" font-weight="800">🌐 Netz (NAP 20 kV)</text>
+                                <text x="512" y="93" fill="#94a3b8" font-size="9.5">Bayernwerk 20 kV MS</text>
+                                <text x="512" y="118" fill="#10b981" font-size="18" font-weight="800" font-family="'JetBrains Mono', monospace" id="flowPgrid">1.818 kW</text>
+                                <text x="512" y="134" fill="#34d399" font-size="10">Einspeisung Netto</text>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- 1. NETZWERK-PARAMETER (Netz- und Anschlussparameter) -->
+                    <div class="flow-section-header">
+                        <span>🌐 Netzwerk-Parameter (NAP / Mittelspannung)</span>
+                        <span style="font-family: var(--font-mono); font-size: 0.65rem; color: #10b981;">3-phasig 20 kV</span>
+                    </div>
+                    <div class="flow-params-grid">
+                        <div class="flow-param-box">
+                            <div class="flow-param-title">
+                                <span>Spannung U</span>
+                                <span style="color:#25c7c9;">U_n</span>
+                            </div>
+                            <div class="flow-param-value" id="flowNetU">20,12 kV</div>
+                            <div class="flow-param-desc" id="flowNetUPercent">100,6% U_n · L12/23/31</div>
+                        </div>
+                        <div class="flow-param-box">
+                            <div class="flow-param-title">
+                                <span>Frequenz f</span>
+                                <span style="color:#10b981;">50 Hz</span>
+                            </div>
+                            <div class="flow-param-value" style="color: #10b981;" id="flowNetF">50,02 Hz</div>
+                            <div class="flow-param-desc" id="flowNetFDelta">Δf: +0,02 Hz · Stabil</div>
+                        </div>
+                        <div class="flow-param-box">
+                            <div class="flow-param-title">
+                                <span>Netzstrom I</span>
+                                <span style="color:#94a3b8;">Effektiv</span>
+                            </div>
+                            <div class="flow-param-value" id="flowNetI">52,4 A</div>
+                            <div class="flow-param-desc" id="flowNetISub">I_L1: 52,4A · I_L2: 52,3A</div>
+                        </div>
+                        <div class="flow-param-box">
+                            <div class="flow-param-title">
+                                <span>Scheinleist. S</span>
+                                <span style="color:#38bdf8;">kVA</span>
+                            </div>
+                            <div class="flow-param-value" id="flowNetS">1.819 kVA</div>
+                            <div class="flow-param-desc" id="flowNetSSub">P: 1.818 kW · Q: +45 kvar</div>
+                        </div>
+                    </div>
+
+                    <!-- 2. REGEL-PARAMETER (EZA VDE-AR-N 4110) -->
+                    <div class="flow-section-header">
+                        <span>⚡ Regel-Parameter (EZA-Regler Setpoints &amp; Istwerte)</span>
+                        <span style="font-family: var(--font-mono); font-size: 0.65rem; color: #25c7c9;">VDE-AR-N 4110</span>
+                    </div>
+                    <div class="flow-params-grid">
+                        <div class="flow-param-box">
+                            <div class="flow-param-title">
+                                <span>Wirkleistung P</span>
+                                <span class="badge badge-online" id="flowCtrlPBadge" style="font-size: 0.58rem; padding: 1px 4px;">P_AV 100%</span>
+                            </div>
+                            <div class="flow-param-value" id="flowCtrlPAct">1.818 kW</div>
+                            <div class="flow-param-desc" id="flowCtrlPSet">Soll: 2.000 kW (P(U) OK)</div>
+                        </div>
+                        <div class="flow-param-box">
+                            <div class="flow-param-title">
+                                <span>Blindleistung Q</span>
+                                <span class="badge badge-super" id="flowCtrlQBadge" style="font-size: 0.58rem; padding: 1px 4px;">Q(U)</span>
+                            </div>
+                            <div class="flow-param-value" style="color: #25c7c9;" id="flowCtrlQAct">+45 kvar</div>
+                            <div class="flow-param-desc" id="flowCtrlQMode">Totband 97-103% Un</div>
+                        </div>
+                        <div class="flow-param-box">
+                            <div class="flow-param-title">
+                                <span>Frequenz P(f)</span>
+                                <span class="badge badge-online" id="flowCtrlFBadge" style="font-size: 0.58rem; padding: 1px 4px;">Statik 40%</span>
+                            </div>
+                            <div class="flow-param-value" id="flowCtrlFAct">50,02 Hz</div>
+                            <div class="flow-param-desc" id="flowCtrlFSub">Schwelle: 50,20 Hz (Standby)</div>
+                        </div>
+                        <div class="flow-param-box">
+                            <div class="flow-param-title">
+                                <span>Leistungsfaktor PF</span>
+                                <span class="badge badge-online" id="flowCtrlPFBadge" style="font-size: 0.58rem; padding: 1px 4px;">cos φ</span>
+                            </div>
+                            <div class="flow-param-value" id="flowCtrlPFAct">0,999 ind</div>
+                            <div class="flow-param-desc" id="flowCtrlPFSub">Soll: 1,000 (Band ±0,05)</div>
                         </div>
                     </div>
                 </div>
@@ -940,7 +1238,7 @@
 
         <!-- Tab 3: Gemini API Grid Analysis -->
         <div id="geminiTab" class="tab-content">
-            <div class="card" style="margin-bottom: 2rem; border-color: rgba(37, 199, 201, 0.4);">
+            <div class="card" style="margin-bottom: 2rem;">
                 <div class="card-header">
                     <div>
                         <span class="card-title">✨ Gemini 3.7 Flash - Electrical Analysis & Discrepancy Validator</span>
@@ -959,7 +1257,7 @@
                         <span class="card-title">📋 Interconnection Summary & VDE-AR-N 4110 Evaluation</span>
                         <span class="badge badge-online" id="analysisStatusBadge">COMPLETED</span>
                     </div>
-                    <p id="analysisSummaryText" style="font-size: 0.95rem; line-height: 1.6; color: #e2e8f0;"></p>
+                    <p id="analysisSummaryText" style="font-size: 0.95rem; line-height: 1.6; color: var(--ink);"></p>
                 </div>
 
                 <!-- Parameters & Discrepancies Grid -->
@@ -1110,14 +1408,14 @@
                             <span class="card-title">⚙️ Unattended Self-Tuning Safeguards</span>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;">
-                            <div style="padding: 0.85rem; background: rgba(37, 199, 201, 0.08); border-left: 3px solid var(--cyan); border-radius: 8px;">
-                                <div style="font-weight: 700; color: #ffffff;">Q(U) Dynamic Deadband Optimization</div>
+                            <div style="padding: 0.85rem; background: #eff6ff; border-left: 3px solid var(--blue); border-radius: 8px;">
+                                <div style="font-weight: 700; color: var(--navy);">Q(U) Dynamic Deadband Optimization</div>
                                 <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">
                                     Auto-inserts standard VDE-AR-N 4110 deadband breakpoints (U2=97%, U3=103%) if omitted by DSO, preventing hunting oscillations between inverters.
                                 </div>
                             </div>
-                            <div style="padding: 0.85rem; background: rgba(92, 224, 173, 0.08); border-left: 3px solid var(--status-online); border-radius: 8px;">
-                                <div style="font-weight: 700; color: #ffffff;">Active Power Gradient Soft-Starting</div>
+                            <div style="padding: 0.85rem; background: #ecfdf5; border-left: 3px solid #10b981; border-radius: 8px;">
+                                <div style="font-weight: 700; color: var(--navy);">Active Power Gradient Soft-Starting</div>
                                 <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">
                                     Smooths P ramp-rate to 100 kW/s on medium-voltage grid connection points, mitigating MV/LV transformer inrush stress.
                                 </div>
@@ -1199,7 +1497,7 @@
             </div>
 
             <!-- Tab switcher: Login vs Register -->
-            <div style="display: flex; background: rgba(8, 21, 34, 0.9); border: 1px solid var(--border-subtle); border-radius: 9999px; padding: 4px; margin-bottom: 1.5rem;">
+            <div style="display: flex; background: #f1f5f9; border: 1px solid var(--line); border-radius: 9999px; padding: 4px; margin-bottom: 1.5rem;">
                 <button type="button" id="tabLoginBtn" class="tab-btn active" style="flex: 1; justify-content: center; padding: 0.5rem 1rem; font-size: 0.86rem;" onclick="showAuthView('login')">
                     Anmelden
                 </button>
@@ -1209,11 +1507,11 @@
             </div>
 
             <!-- Error Banner -->
-            <div id="authErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;">
+            <div id="authErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #be123c; font-size: 0.84rem; margin-bottom: 1.2rem;">
             </div>
 
             <!-- Success Banner -->
-            <div id="authSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(92, 224, 173, 0.15); border: 1px solid var(--status-online); color: #a7f3d0; font-size: 0.84rem; margin-bottom: 1.2rem;">
+            <div id="authSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--status-online); color: #047857; font-size: 0.84rem; margin-bottom: 1.2rem;">
             </div>
 
             <!-- LOGIN FORM -->
@@ -1238,7 +1536,7 @@
                 </div>
 
                 <div style="margin-bottom: 1.2rem;">
-                    <input type="text" id="loginTotpCode" class="input-control" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="text-align: center; font-size: 1.6rem; letter-spacing: 0.35em; font-family: var(--font-mono); font-weight: 700; color: var(--cyan);" autofocus>
+                    <input type="text" id="loginTotpCode" class="input-control" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="text-align: center; font-size: 1.6rem; letter-spacing: 0.35em; font-family: var(--font-mono); font-weight: 700; color: var(--navy);" autofocus>
                 </div>
 
                 <button type="submit" id="btn2faSubmit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.82rem; font-size: 0.95rem;">
@@ -1264,7 +1562,7 @@
                 <input type="password" id="regPassword" class="input-control" placeholder="••••••••••••" minlength="6" required>
 
                 <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Gewünschte Rolle</label>
-                <select id="regRole" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                <select id="regRole" class="input-control">
                     <option value="ENGINEER">ENGINEER (Netzprüfung, Dokumentenanalyse & EZA-Konfiguration)</option>
                     <option value="VIEWER">VIEWER (Nur Lesezugriff auf Telemetrie & Audit-Logs)</option>
                 </select>
@@ -1285,7 +1583,7 @@
                 <p style="color: var(--text-muted); font-size: 0.85rem;">Aus Sicherheitsgründen müssen Sie ein neues individuelles Passwort festlegen (mindestens 8 Zeichen), bevor Sie das Portal nutzen können.</p>
             </div>
 
-            <div id="resetPwErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;">
+            <div id="resetPwErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #be123c; font-size: 0.84rem; margin-bottom: 1.2rem;">
             </div>
 
             <form onsubmit="handleForcePasswordResetSubmit(event)">
@@ -1316,8 +1614,8 @@
                 <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.85rem;" onclick="closeVoluntaryChangePwModal()">✕</button>
             </div>
 
-            <div id="voluntaryPwErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
-            <div id="voluntaryPwSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(92, 224, 173, 0.15); border: 1px solid var(--status-online); color: #a7f3d0; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+            <div id="voluntaryPwErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #be123c; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+            <div id="voluntaryPwSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--status-online); color: #047857; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
 
             <form onsubmit="handleVoluntaryPasswordChangeSubmit(event)">
                 <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Aktuelles Passwort</label>
@@ -1348,14 +1646,14 @@
                 <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.85rem;" onclick="close2faModal()">✕</button>
             </div>
 
-            <div id="setup2faErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
-            <div id="setup2faSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(92, 224, 173, 0.15); border: 1px solid var(--status-online); color: #a7f3d0; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+            <div id="setup2faErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #be123c; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+            <div id="setup2faSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--status-online); color: #047857; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
 
             <div id="active2faView" style="display: none; text-align: center; padding: 1rem 0;">
                 <div style="font-size: 2.6rem; margin-bottom: 0.5rem;">🛡️</div>
                 <div style="font-size: 1.15rem; font-weight: 700; color: var(--status-online); margin-bottom: 0.5rem;">2FA ist für Ihr Konto aktiviert</div>
                 <p style="color: var(--text-muted); font-size: 0.86rem; margin-bottom: 1.5rem;">Ihr Konto ist bei jeder Anmeldung durch einen zeitbasierten Einmalcode geschützt.</p>
-                <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.2rem; text-align: left;">
+                <div style="border-top: 1px solid var(--line); padding-top: 1.2rem; text-align: left;">
                     <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Passwort zur Bestätigung der Deaktivierung</label>
                     <input type="password" id="disable2faPassword" class="input-control" placeholder="Ihr Passwort eingeben">
                     <button class="btn btn-danger" style="width: 100%; justify-content: center; margin-top: 0.5rem;" onclick="disable2FA()">2FA deaktivieren</button>
@@ -1363,14 +1661,14 @@
             </div>
 
             <div id="unconfigured2faView">
-                <div style="background: rgba(11, 23, 40, 0.7); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; text-align: center;">
+                <div style="background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; text-align: center;">
                     <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.65rem; font-weight: 600;">1. QR-Code mit Authenticator-App scannen:</div>
-                    <div style="display: inline-block; background: white; padding: 10px; border-radius: 8px; margin-bottom: 0.75rem;">
+                    <div style="display: inline-block; background: white; padding: 10px; border-radius: 8px; margin-bottom: 0.75rem; border: 1px solid var(--line);">
                         <img id="qrCodeImg" src="" alt="2FA QR Code" style="width: 160px; height: 160px; display: block; margin: 0 auto;">
                     </div>
                     <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem;">Oder Schlüssel manuell eingeben:</div>
                     <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap;">
-                        <span id="manualKeyDisplay" style="font-family: var(--font-mono); font-size: 0.95rem; color: var(--cyan); font-weight: 700; background: rgba(37, 199, 201, 0.08); padding: 0.35rem 0.7rem; border-radius: 6px; letter-spacing: 0.1em;">----</span>
+                        <span id="manualKeyDisplay" style="font-family: var(--font-mono); font-size: 0.95rem; color: #0f766e; font-weight: 700; background: #e8fbf7; border: 1px solid #99f6e4; padding: 0.35rem 0.7rem; border-radius: 6px; letter-spacing: 0.1em;">----</span>
                         <button type="button" class="btn" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="copy2faSecret()">📋 Kopieren</button>
                     </div>
                 </div>
@@ -1403,7 +1701,7 @@
             <input type="password" id="adminNewPassword" class="input-control" placeholder="••••••••••••" minlength="6" required>
 
             <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Systemrolle</label>
-            <select id="adminNewRole" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+            <select id="adminNewRole" class="input-control">
                 <option value="ENGINEER">ENGINEER (Netzprüfung & EZA-Konfiguration)</option>
                 <option value="VIEWER">VIEWER (Lesezugriff)</option>
                 <option value="SUPER_ADMIN">SUPER_ADMIN (Volle System- und Geräteverwaltung)</option>
@@ -1456,7 +1754,7 @@
                 <button type="button" class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.85rem;" onclick="closeCreatePlantModal()">✕</button>
             </div>
 
-            <div id="createPlantErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+            <div id="createPlantErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #be123c; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
 
             <form id="createPlantForm" onsubmit="handleCreatePlantSubmit(event)">
                 <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
@@ -1466,7 +1764,7 @@
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Anlagentyp *</label>
-                        <select id="plantType" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                        <select id="plantType" class="input-control">
                             <option value="PV">☀️ PV (Solar Freifläche/Dach)</option>
                             <option value="BESS">🔋 BESS (Batteriespeicher)</option>
                             <option value="WIND">💨 Windkraftanlage</option>
@@ -1482,7 +1780,7 @@
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Spannungsebene / Norm *</label>
-                        <select id="plantVoltageLevel" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                        <select id="plantVoltageLevel" class="input-control">
                             <option value="MS_4110">Mittelspannung (VDE-AR-N 4110 / 10-30 kV)</option>
                             <option value="HS_4120">Hochspannung (VDE-AR-N 4120 / 110 kV)</option>
                             <option value="NS_4105">Niederspannung (VDE-AR-N 4105 / 400 V)</option>
@@ -1497,7 +1795,7 @@
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Inbetriebnahmedatum</label>
-                        <input type="date" id="plantCommissioningDate" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                        <input type="date" id="plantCommissioningDate" class="input-control">
                     </div>
                 </div>
 
@@ -1514,7 +1812,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Initialer Betriebsstatus</label>
-                        <select id="plantStatus" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                        <select id="plantStatus" class="input-control">
                             <option value="PLANNING">In Planung</option>
                             <option value="COMMISSIONING">Inbetriebnahme läuft</option>
                             <option value="ONLINE_REGULATING">Online & Regelnd (VDE-konform)</option>
@@ -1523,7 +1821,7 @@
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Coneza Edge-Gerät zuweisen</label>
-                        <select id="plantInitialDevice" class="input-control" style="background: rgba(8, 21, 34, 0.85); color: white;">
+                        <select id="plantInitialDevice" class="input-control">
                             <option value="">-- Kein Gerät (später zuweisen) --</option>
                         </select>
                     </div>
@@ -1546,7 +1844,7 @@
     <div class="modal-backdrop" id="plantDetailModal" style="display: none;">
         <div class="modal" style="max-width: 960px; width: 95vw; padding: 2.2rem; max-height: 92vh; overflow-y: auto;">
             <!-- Modal Header -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--line); padding-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
                     <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; flex-wrap: wrap;">
                         <span class="badge badge-super" id="detailPlantType">☀️ PV</span>
@@ -1554,7 +1852,7 @@
                         <span class="badge" id="detailPlantVoltage" style="font-size: 0.72rem;">MS_4110</span>
                         <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);" id="detailPlantId">ID</span>
                     </div>
-                    <h2 style="font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;" id="detailPlantName">Anlagenname</h2>
+                    <h2 style="font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; color: var(--navy);" id="detailPlantName">Anlagenname</h2>
                     <p style="color: var(--text-muted); font-size: 0.86rem; margin-top: 0.2rem;" id="detailPlantLocation">Standort</p>
                 </div>
                 <div style="display: flex; gap: 0.6rem; align-items: center;">
@@ -1563,32 +1861,32 @@
             </div>
 
             <!-- SECTION 1: Specifications Grid -->
-            <div class="card" style="margin-bottom: 1.5rem; background: rgba(11, 23, 40, 0.6);">
+            <div class="card" style="margin-bottom: 1.5rem;">
                 <div class="card-header" style="margin-bottom: 0.85rem;">
                     <span class="card-title">⚡ Anlagendaten & Netzanschlusspunkt</span>
-                    <span style="color: var(--cyan); font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem;" id="detailPlantCapacity">0 kW</span>
+                    <span style="color: var(--navy); font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem;" id="detailPlantCapacity">0 kW</span>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.85rem;">
                     <div>
                         <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block;">Verteilnetzbetreiber</span>
-                        <strong style="color: #ffffff;" id="detailPlantGridOp">-</strong>
+                        <strong style="color: var(--navy);" id="detailPlantGridOp">-</strong>
                     </div>
                     <div>
                         <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block;">Netzanschlusspunkt (NAP)</span>
-                        <strong style="color: #ffffff;" id="detailPlantNap">-</strong>
+                        <strong style="color: var(--navy);" id="detailPlantNap">-</strong>
                     </div>
                     <div>
                         <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block;">Inbetriebnahme</span>
-                        <strong style="color: #ffffff;" id="detailPlantCommissioning">-</strong>
+                        <strong style="color: var(--navy);" id="detailPlantCommissioning">-</strong>
                     </div>
                     <div>
                         <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block;">Erfasst von</span>
-                        <strong style="color: #ffffff;" id="detailPlantCreatedBy">-</strong>
+                        <strong style="color: var(--navy);" id="detailPlantCreatedBy">-</strong>
                     </div>
                 </div>
-                <div id="detailPlantNotesContainer" style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border-subtle); display: none;">
+                <div id="detailPlantNotesContainer" style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--line); display: none;">
                     <span style="color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Netzauflagen & Bemerkungen:</span>
-                    <p style="color: #c7d7e5; font-size: 0.84rem;" id="detailPlantNotes">-</p>
+                    <p style="color: var(--ink); font-size: 0.84rem;" id="detailPlantNotes">-</p>
                 </div>
             </div>
 
@@ -1607,10 +1905,10 @@
                 </div>
 
                 <!-- Assign Device Action Box -->
-                <div id="detailAssignDeviceBox" style="background: rgba(8, 21, 34, 0.7); border: 1px dashed var(--border-glow); border-radius: 12px; padding: 1rem 1.25rem;">
-                    <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; color: #ffffff;">+ Weiteres Coneza-Gerät mit dieser Anlage verknüpfen</div>
+                <div id="detailAssignDeviceBox" style="background: #f8fafc; border: 1px dashed var(--line); border-radius: 12px; padding: 1rem 1.25rem;">
+                    <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--navy);">+ Weiteres Coneza-Gerät mit dieser Anlage verknüpfen</div>
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                        <select id="modalAssignDeviceSelect" class="input-control" style="flex: 1; min-width: 260px; background: rgba(11, 23, 40, 0.9); color: white; margin-bottom: 0;">
+                        <select id="modalAssignDeviceSelect" class="input-control" style="flex: 1; min-width: 260px; margin-bottom: 0;">
                             <option value="">-- Verfügbares Edge-Gerät auswählen --</option>
                         </select>
                         <button type="button" class="btn btn-primary" onclick="assignSelectedDeviceToCurrentPlant()">
@@ -1635,12 +1933,12 @@
                 </div>
 
                 <!-- Direct Document Upload Form for this plant -->
-                <div style="background: rgba(8, 21, 34, 0.7); border: 1px dashed rgba(37, 199, 201, 0.35); border-radius: 12px; padding: 1.25rem;">
-                    <div style="font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem; color: #ffffff;">📄 Neues Dokument direkt dieser Anlage zuweisen</div>
+                <div style="background: #f8fafc; border: 1px dashed var(--line); border-radius: 12px; padding: 1.25rem;">
+                    <div style="font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--navy);">📄 Neues Dokument direkt dieser Anlage zuweisen</div>
                     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.85rem;">Laden Sie E.8 Datenblätter, E.9 Inbetriebsetzungsaufträge oder SLD Stromlaufpläne hoch. Die OCR-Engine extrahiert die Parameter automatisch.</p>
 
                     <form id="plantDirectUploadForm" onsubmit="handlePlantDirectDocUpload(event)" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
-                        <select id="plantDocTypeSelect" class="input-control" style="width: auto; background: rgba(11, 23, 40, 0.9); color: white; margin-bottom: 0;">
+                        <select id="plantDocTypeSelect" class="input-control" style="width: auto; margin-bottom: 0;">
                             <option value="E8">E.8 Datenblatt Erzeugungsanlage</option>
                             <option value="E9">E.9 Inbetriebsetzungsauftrag VNB</option>
                             <option value="SLD">SLD Übersichtsschaltplan (NAP)</option>
@@ -2277,9 +2575,9 @@
 
                 if (plants.length === 0) {
                     grid.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1.5rem; background: rgba(11,23,40,0.6); border: 1px dashed var(--border-subtle); border-radius: 16px;">
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1.5rem; background: #f8fafc; border: 1px dashed var(--line); border-radius: 16px;">
                             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏗️</div>
-                            <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 0.4rem;">Keine Energieanlagen registriert</h3>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem;">Keine Energieanlagen registriert</h3>
                             <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.2rem;">Legen Sie jetzt Ihre erste Solar- oder Speicheranlage an und verbinden Sie die Coneza-Steuerung.</p>
                             ${(currentRole === 'ENGINEER' || currentRole === 'SUPER_ADMIN') ? `
                                 <button class="btn btn-primary" onclick="openCreatePlantModal()">+ Erste Anlage anlegen</button>
@@ -2327,46 +2625,46 @@
                                 <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(p.id)}</span>
                             </div>
 
-                            <h3 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; margin-bottom: 0.35rem;">
+                            <h3 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; color: var(--navy); margin-bottom: 0.35rem;">
                                 ${escapeHtml(p.name)}
                             </h3>
                             <p style="color: var(--text-muted); font-size: 0.83rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.35rem;">
                                 📍 ${escapeHtml(p.location || 'Standort nicht hinterlegt')}
                             </p>
 
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; background: rgba(8, 21, 34, 0.6); padding: 0.85rem; border-radius: 10px; border: 1px solid var(--border-subtle); margin-bottom: 1.1rem; font-size: 0.82rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; background: #f8fafc; padding: 0.85rem; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 1.1rem; font-size: 0.82rem;">
                                 <div>
                                     <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Installiert P_inst</span>
-                                    <strong style="color: var(--cyan); font-family: var(--font-mono); font-size: 0.95rem;">${capacityKw.toLocaleString('de-DE')} kW</strong>
+                                    <strong style="color: var(--blue); font-family: var(--font-mono); font-size: 0.95rem;">${capacityKw.toLocaleString('de-DE')} kW</strong>
                                     <span style="color: var(--text-muted); font-size: 0.72rem;">(${capacityMwp} MWp)</span>
                                 </div>
                                 <div>
                                     <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Netzbetreiber</span>
-                                    <strong style="color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${escapeHtml(p.grid_operator)}</strong>
+                                    <strong style="color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${escapeHtml(p.grid_operator)}</strong>
                                 </div>
                                 <div>
                                     <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Norm / Spannung</span>
-                                    <strong style="color: #ffffff;">${escapeHtml(p.voltage_level).replace('_', ' ')}</strong>
+                                    <strong style="color: var(--navy);">${escapeHtml(p.voltage_level).replace('_', ' ')}</strong>
                                 </div>
                                 <div>
                                     <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Netzanschlusspunkt</span>
-                                    <strong style="color: #ffffff; word-break: break-word;">${escapeHtml(p.grid_connection_point || 'Umspannwerk')}</strong>
+                                    <strong style="color: var(--navy); word-break: break-word;">${escapeHtml(p.grid_connection_point || 'Umspannwerk')}</strong>
                                 </div>
                             </div>
 
                             <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
-                                <div style="flex: 1; background: rgba(37, 199, 201, 0.08); border: 1px solid rgba(37, 199, 201, 0.25); border-radius: 8px; padding: 0.6rem 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="flex: 1; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.6rem 0.8rem; display: flex; align-items: center; justify-content: space-between;">
                                     <span style="font-size: 0.78rem; color: var(--text-muted);">📟 Coneza Geräte</span>
-                                    <strong style="color: var(--cyan); font-family: var(--font-mono); font-size: 1rem;">${p.device_count || 0}</strong>
+                                    <strong style="color: var(--blue); font-family: var(--font-mono); font-size: 1rem;">${p.device_count || 0}</strong>
                                 </div>
-                                <div style="flex: 1; background: rgba(21, 119, 212, 0.1); border: 1px solid rgba(21, 119, 212, 0.3); border-radius: 8px; padding: 0.6rem 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="flex: 1; background: #e8fbf7; border: 1px solid #99f6e4; border-radius: 8px; padding: 0.6rem 0.8rem; display: flex; align-items: center; justify-content: space-between;">
                                     <span style="font-size: 0.78rem; color: var(--text-muted);">📑 Netzdokumente</span>
-                                    <strong style="color: #60a5fa; font-family: var(--font-mono); font-size: 1rem;">${p.document_count || 0}</strong>
+                                    <strong style="color: #0f766e; font-family: var(--font-mono); font-size: 1rem;">${p.document_count || 0}</strong>
                                 </div>
                             </div>
                         </div>
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.95rem; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 0.95rem; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
                             <button class="btn btn-primary" style="padding: 0.5rem 1.1rem; font-size: 0.84rem;" onclick="openPlantDetail('${p.id}')">
                                 🔍 Details & Geräte öffnen
                             </button>
@@ -2527,7 +2825,7 @@
 
                 if (!plant.devices || plant.devices.length === 0) {
                     devList.innerHTML = `
-                        <div style="text-align: center; padding: 1.5rem; background: rgba(8, 21, 34, 0.5); border-radius: 10px; border: 1px dashed var(--border-subtle); color: var(--text-muted); font-size: 0.85rem;">
+                        <div style="text-align: center; padding: 1.5rem; background: #f8fafc; border-radius: 10px; border: 1px dashed var(--line); color: var(--text-muted); font-size: 0.85rem;">
                             Keine Coneza Edge-Geräte verknüpft. Weisen Sie unten ein bereitgestelltes Linux-Gateway zu.
                         </div>
                     `;
@@ -2541,13 +2839,13 @@
                         const cosPhi = tel.cos_phi !== undefined ? Number(tel.cos_phi).toFixed(3) : '1,000';
 
                         const devCard = document.createElement("div");
-                        devCard.style = "background: rgba(8, 21, 34, 0.85); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.1rem;";
+                        devCard.style = "background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem;";
                         devCard.innerHTML = `
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                                 <div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <span class="badge ${dev.status === 'ONLINE' ? 'badge-online' : 'badge-danger'}" style="font-size: 0.72rem;">● ${dev.status}</span>
-                                        <strong style="color: #ffffff; font-size: 0.95rem;">${escapeHtml(dev.name)}</strong>
+                                        <strong style="color: var(--navy); font-size: 0.95rem;">${escapeHtml(dev.name)}</strong>
                                     </div>
                                     <div style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
                                         ID: ${escapeHtml(dev.device_id)} · IP: ${escapeHtml(dev.local_ip)} · Phoenix EZA: ${escapeHtml(dev.controller_host)}:${dev.controller_port}
@@ -2629,7 +2927,7 @@
 
                 if (!plant.documents || plant.documents.length === 0) {
                     docList.innerHTML = `
-                        <div style="text-align: center; padding: 1.5rem; background: rgba(8, 21, 34, 0.5); border-radius: 10px; border: 1px dashed var(--border-subtle); color: var(--text-muted); font-size: 0.85rem;">
+                        <div style="text-align: center; padding: 1.5rem; background: #f8fafc; border-radius: 10px; border: 1px dashed var(--line); color: var(--text-muted); font-size: 0.85rem;">
                             Bisher keine Netzanschlussdokumente für diese Anlage hinterlegt. Laden Sie unten ein E.8-, E.9- oder SLD-Dokument hoch.
                         </div>
                     `;
@@ -2641,17 +2939,17 @@
                         const vnb = entities.vnb || entities.Netzbetreiber || plant.grid_operator;
 
                         const docItem = document.createElement("div");
-                        docItem.style = "background: rgba(8, 21, 34, 0.85); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.85rem 1.1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;";
+                        docItem.style = "background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 0.85rem 1.1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;";
                         docItem.innerHTML = `
                             <div>
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                                     <span class="badge badge-super" style="font-size: 0.72rem;">${escapeHtml(doc.doc_type)}</span>
-                                    <strong style="color: #ffffff; font-size: 0.92rem;">${escapeHtml(doc.filename)}</strong>
+                                    <strong style="color: var(--navy); font-size: 0.92rem;">${escapeHtml(doc.filename)}</strong>
                                 </div>
                                 <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--text-muted);">
-                                    <span>P_max: <strong style="color:var(--cyan);">${escapeHtml(String(pMax))}</strong></span>
-                                    <span>cos φ: <strong style="color:#ffffff;">${escapeHtml(String(cosPhi))}</strong></span>
-                                    <span>VNB: <strong style="color:#ffffff;">${escapeHtml(String(vnb))}</strong></span>
+                                    <span>P_max: <strong style="color:var(--blue);">${escapeHtml(String(pMax))}</strong></span>
+                                    <span>cos φ: <strong style="color:var(--navy);">${escapeHtml(String(cosPhi))}</strong></span>
+                                    <span>VNB: <strong style="color:var(--navy);">${escapeHtml(String(vnb))}</strong></span>
                                     <span>Hochgeladen: ${doc.created_at || 'Neu'}</span>
                                 </div>
                             </div>
@@ -2818,7 +3116,7 @@
 
                     tr.innerHTML = `
                         <td style="font-family: var(--font-mono); color: var(--text-muted);">${u.id}</td>
-                        <td style="font-weight: 700; color: #ffffff;">${u.username} ${isSelf ? '<span style="color:var(--cyan); font-size:0.75rem;">(Sie)</span>' : ''}</td>
+                        <td style="font-weight: 700; color: var(--navy);">${u.username} ${isSelf ? '<span style="color:var(--blue); font-size:0.75rem;">(Sie)</span>' : ''}</td>
                         <td style="color: var(--text-muted); font-size: 0.82rem;">${u.email}</td>
                         <td><span class="${roleBadgeClass}" style="font-size: 0.72rem;">${u.role}</span></td>
                         <td>${twoFaBadge}</td>
@@ -3395,7 +3693,7 @@
                         data.recent_pipeline_events.forEach(ev => {
                             const div = document.createElement("div");
                             const isOpt = ev.event_type === 'CONFIG_AUTO_OPTIMIZED';
-                            div.style.cssText = `padding: 0.85rem; border-radius: 8px; background: ${isOpt ? 'rgba(92, 224, 173, 0.08)' : 'rgba(11, 23, 40, 0.7)'}; border: 1px solid ${isOpt ? 'rgba(92, 224, 173, 0.3)' : 'var(--border-subtle)'}; font-size: 0.85rem;`;
+                            div.style.cssText = `padding: 0.85rem; border-radius: 8px; background: ${isOpt ? 'rgba(16, 185, 129, 0.08)' : '#f8fafc'}; border: 1px solid ${isOpt ? 'rgba(16, 185, 129, 0.3)' : 'var(--line)'}; font-size: 0.85rem;`;
                             
                             const timeStr = new Date(ev.created_at).toLocaleTimeString();
                             let detailText = "";
@@ -3411,7 +3709,7 @@
                                     <span class="badge ${isOpt ? 'badge-online' : 'badge-super'}" style="font-size: 0.72rem;">${ev.event_type}</span>
                                     <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">${timeStr}</span>
                                 </div>
-                                <div style="margin-top: 0.4rem; font-weight: 500;">Device: <span style="font-family: var(--font-mono); color: var(--cyan);">${ev.device_id || 'Global'}</span></div>
+                                <div style="margin-top: 0.4rem; font-weight: 500; color: var(--navy);">Device: <span style="font-family: var(--font-mono); color: var(--blue);">${ev.device_id || 'Global'}</span></div>
                                 ${detailText}
                             `;
                             evStream.appendChild(div);
@@ -3450,26 +3748,250 @@
             }
         }
 
-        // Animate hero meter slightly for dynamic industrial feedback
-        function animateHeroMeter() {
-            const bars = document.querySelectorAll("#heroMeter .bar");
-            bars.forEach(bar => {
-                const currentH = parseInt(bar.style.height) || 60;
-                const delta = (Math.random() * 10 - 5);
-                const newH = Math.min(100, Math.max(30, Math.round(currentH + delta)));
-                bar.style.height = `${newH}%`;
-            });
+        // ----------------- EZA Energy Flow & Controller Physics Engine ----------------- //
+        let flowSimulationMode = "normal"; // "normal" | "peak" | "curtail" | "qu_boost"
+        let flowState = {
+            P_pv: 2180.0,
+            P_bat: -320.0, // Negative = charging, positive = discharging
+            P_load: 42.0,
+            battery_soc: 84.0,
+            U_grid: 20.12, // kV
+            f_grid: 50.02, // Hz
+            P_setpoint_percent: 100.0,
+            Q_act: 45.0, // kvar
+            cos_phi: 0.999
+        };
+
+        function setFlowSimulationMode(mode) {
+            flowSimulationMode = mode;
+            if (mode === "normal") {
+                flowState.P_pv = 2180.0;
+                flowState.P_bat = -320.0;
+                flowState.P_load = 42.0;
+                flowState.battery_soc = 84.0;
+                flowState.U_grid = 20.12;
+                flowState.f_grid = 50.02;
+                flowState.P_setpoint_percent = 100.0;
+                flowState.Q_act = 45.0;
+            } else if (mode === "peak") {
+                flowState.P_pv = 1450.0;
+                flowState.P_bat = 650.0; // Battery discharging into EZA bus
+                flowState.P_load = 45.0;
+                flowState.battery_soc = 62.0;
+                flowState.U_grid = 20.08;
+                flowState.f_grid = 49.98;
+                flowState.P_setpoint_percent = 100.0;
+                flowState.Q_act = -20.0;
+            } else if (mode === "curtail") {
+                flowState.P_pv = 1000.0; // Curtailment by DSO
+                flowState.P_bat = 0.0;
+                flowState.P_load = 40.0;
+                flowState.battery_soc = 85.0;
+                flowState.U_grid = 20.18;
+                flowState.f_grid = 50.15;
+                flowState.P_setpoint_percent = 50.0;
+                flowState.Q_act = 85.0;
+            } else if (mode === "qu_boost") {
+                flowState.P_pv = 2050.0;
+                flowState.P_bat = -100.0;
+                flowState.P_load = 42.0;
+                flowState.battery_soc = 86.0;
+                flowState.U_grid = 19.45; // Under-voltage on grid (97.25% Un)
+                flowState.f_grid = 50.01;
+                flowState.P_setpoint_percent = 100.0;
+                flowState.Q_act = 280.0; // Capacitive support
+            }
+            updateEnergyFlowUI();
+        }
+
+        function tickEnergyFlowPhysics() {
+            // Natural micro-fluctuations (subtle industrial telemetry jitter)
+            const dF = (Math.random() * 0.02 - 0.01);
+            const dU = (Math.random() * 0.02 - 0.01);
+            const dPv = (Math.random() * 8.0 - 4.0);
+
+            flowState.f_grid = Math.max(49.85, Math.min(50.25, flowState.f_grid + dF));
+            flowState.U_grid = Math.max(19.2, Math.min(20.8, flowState.U_grid + dU));
+            flowState.P_pv = Math.max(0, flowState.P_pv + dPv);
+
+            // Battery SoC micro-drift
+            if (flowState.P_bat < 0) {
+                flowState.battery_soc = Math.min(99.9, flowState.battery_soc + 0.02);
+            } else if (flowState.P_bat > 0) {
+                flowState.battery_soc = Math.max(10.0, flowState.battery_soc - 0.03);
+            }
+
+            // Automatic Q(U) characteristic curve behavior (VDE-AR-N 4110)
+            const uNominal = 20.0;
+            const uRatio = flowState.U_grid / uNominal;
+            if (uRatio < 0.97) {
+                // Voltage drop: capacitive reactive power boost
+                flowState.Q_act = Math.min(600, Math.round(flowState.Q_act + (0.97 - uRatio) * 800));
+            } else if (uRatio > 1.03) {
+                // Voltage rise: inductive reactive power absorption
+                flowState.Q_act = Math.max(-600, Math.round(flowState.Q_act - (uRatio - 1.03) * 800));
+            }
+
+            updateEnergyFlowUI();
+        }
+
+        function updateEnergyFlowUI() {
+            // Net bus calculation
+            const P_net = Math.max(0, flowState.P_pv + flowState.P_bat - flowState.P_load);
+            const S_net = Math.sqrt(Math.pow(P_net, 2) + Math.pow(flowState.Q_act, 2));
+            const I_net = S_net > 0 ? (S_net / (Math.sqrt(3) * flowState.U_grid)) : 0;
+            const pf = S_net > 0 ? (P_net / S_net) : 1.0;
+            const isInductive = flowState.Q_act >= 0;
+
+            // Update SVG elements
+            const elPpv = document.getElementById("flowPpv");
+            if (elPpv) elPpv.textContent = `+${Math.round(flowState.P_pv).toLocaleString('de-DE')} kW`;
+
+            const elPbat = document.getElementById("flowPbat");
+            if (elPbat) {
+                const sign = flowState.P_bat > 0 ? "+" : (flowState.P_bat < 0 ? "-" : "±");
+                elPbat.textContent = `${sign}${Math.abs(Math.round(flowState.P_bat)).toLocaleString('de-DE')} kW`;
+            }
+
+            const elSoc = document.getElementById("flowSoc");
+            if (elSoc) {
+                const modeLabel = flowState.P_bat < 0 ? "Laden" : (flowState.P_bat > 0 ? "Entladen" : "Standby");
+                elSoc.textContent = `SoC: ${flowState.battery_soc.toFixed(0)}% · ${modeLabel}`;
+            }
+
+            const elPbus = document.getElementById("flowPbus");
+            if (elPbus) elPbus.textContent = `${Math.round(P_net).toLocaleString('de-DE')} kW`;
+
+            const elPload = document.getElementById("flowPload");
+            if (elPload) elPload.textContent = `-${Math.round(flowState.P_load)} kW · Hilfsbetriebe`;
+
+            const elPgrid = document.getElementById("flowPgrid");
+            if (elPgrid) elPgrid.textContent = `${Math.round(P_net).toLocaleString('de-DE')} kW`;
+
+            // Battery flow path animation direction
+            const pathBat = document.getElementById("pathBatteryFlow");
+            if (pathBat) {
+                if (flowState.P_bat > 0) {
+                    pathBat.className.baseVal = "flow-line flow-line-bat-discharge";
+                } else {
+                    pathBat.className.baseVal = "flow-line flow-line-bat-charge";
+                }
+            }
+
+            // 1. Network Parameters
+            const elNetU = document.getElementById("flowNetU");
+            if (elNetU) elNetU.textContent = `${flowState.U_grid.toFixed(2)} kV`;
+            const elNetUPercent = document.getElementById("flowNetUPercent");
+            if (elNetUPercent) elNetUPercent.textContent = `${((flowState.U_grid / 20.0) * 100).toFixed(1)}% Un · L12/23/31`;
+
+            const elNetF = document.getElementById("flowNetF");
+            if (elNetF) elNetF.textContent = `${flowState.f_grid.toFixed(2)} Hz`;
+            const elNetFDelta = document.getElementById("flowNetFDelta");
+            if (elNetFDelta) {
+                const deltaF = flowState.f_grid - 50.0;
+                const sign = deltaF >= 0 ? "+" : "";
+                elNetFDelta.textContent = `Δf: ${sign}${deltaF.toFixed(2)} Hz · ${Math.abs(deltaF) < 0.1 ? 'Stabil' : 'Regelung aktiv'}`;
+            }
+
+            const elNetI = document.getElementById("flowNetI");
+            if (elNetI) elNetI.textContent = `${I_net.toFixed(1)} A`;
+            const elNetISub = document.getElementById("flowNetISub");
+            if (elNetISub) elNetISub.textContent = `I_L1: ${I_net.toFixed(1)}A · I_L2: ${(I_net * 0.998).toFixed(1)}A`;
+
+            const elNetS = document.getElementById("flowNetS");
+            if (elNetS) elNetS.textContent = `${Math.round(S_net).toLocaleString('de-DE')} kVA`;
+            const elNetSSub = document.getElementById("flowNetSSub");
+            if (elNetSSub) elNetSSub.textContent = `P: ${Math.round(P_net)} kW · Q: ${flowState.Q_act >= 0 ? '+' : ''}${Math.round(flowState.Q_act)} kvar`;
+
+            // 2. Control Parameters (Wirk, Blind, Freq, PF)
+            const elCtrlPAct = document.getElementById("flowCtrlPAct");
+            if (elCtrlPAct) elCtrlPAct.textContent = `${Math.round(P_net).toLocaleString('de-DE')} kW`;
+            const elCtrlPSet = document.getElementById("flowCtrlPSet");
+            if (elCtrlPSet) {
+                if (flowState.P_setpoint_percent < 100) {
+                    elCtrlPSet.textContent = `Soll: ${flowState.P_setpoint_percent}% (${Math.round(2000 * flowState.P_setpoint_percent / 100)} kW)`;
+                } else {
+                    elCtrlPSet.textContent = `Soll: 2.000 kW (P_AV 100%)`;
+                }
+            }
+            const elCtrlPBadge = document.getElementById("flowCtrlPBadge");
+            if (elCtrlPBadge) {
+                if (flowState.P_setpoint_percent < 100) {
+                    elCtrlPBadge.textContent = `Abregelung ${flowState.P_setpoint_percent}%`;
+                    elCtrlPBadge.className = "badge badge-danger";
+                } else {
+                    elCtrlPBadge.textContent = "P_AV 100%";
+                    elCtrlPBadge.className = "badge badge-online";
+                }
+            }
+
+            const elCtrlQAct = document.getElementById("flowCtrlQAct");
+            if (elCtrlQAct) {
+                const sign = flowState.Q_act >= 0 ? "+" : "";
+                elCtrlQAct.textContent = `${sign}${Math.round(flowState.Q_act)} kvar`;
+            }
+            const elCtrlQMode = document.getElementById("flowCtrlQMode");
+            if (elCtrlQMode) {
+                const uRatio = flowState.U_grid / 20.0;
+                if (uRatio >= 0.97 && uRatio <= 1.03) {
+                    elCtrlQMode.textContent = "Totband 97-103% Un (OK)";
+                } else if (uRatio < 0.97) {
+                    elCtrlQMode.textContent = "Q(U) kapazitiv stützend";
+                } else {
+                    elCtrlQMode.textContent = "Q(U) induktiv dämpfend";
+                }
+            }
+            const elCtrlQBadge = document.getElementById("flowCtrlQBadge");
+            if (elCtrlQBadge) {
+                const uRatio = flowState.U_grid / 20.0;
+                if (uRatio >= 0.97 && uRatio <= 1.03) {
+                    elCtrlQBadge.textContent = "Q(U)";
+                    elCtrlQBadge.className = "badge badge-super";
+                } else {
+                    elCtrlQBadge.textContent = "Q(U) Aktiv!";
+                    elCtrlQBadge.className = "badge badge-online";
+                }
+            }
+
+            const elCtrlFAct = document.getElementById("flowCtrlFAct");
+            if (elCtrlFAct) elCtrlFAct.textContent = `${flowState.f_grid.toFixed(2)} Hz`;
+            const elCtrlFBadge = document.getElementById("flowCtrlFBadge");
+            if (elCtrlFBadge) {
+                if (flowState.f_grid > 50.20) {
+                    elCtrlFBadge.textContent = "P(f) Statik AKTIV";
+                    elCtrlFBadge.className = "badge badge-danger";
+                } else {
+                    elCtrlFBadge.textContent = "Statik 40%";
+                    elCtrlFBadge.className = "badge badge-online";
+                }
+            }
+
+            const elCtrlPFAct = document.getElementById("flowCtrlPFAct");
+            if (elCtrlPFAct) {
+                elCtrlPFAct.textContent = `${pf.toFixed(3)} ${isInductive ? 'ind' : 'kap'}`;
+            }
+            const elCtrlPFBadge = document.getElementById("flowCtrlPFBadge");
+            if (elCtrlPFBadge) {
+                if (pf >= 0.95) {
+                    elCtrlPFBadge.textContent = "cos φ OK";
+                    elCtrlPFBadge.className = "badge badge-online";
+                } else {
+                    elCtrlPFBadge.textContent = "cos φ Bandgrenze";
+                    elCtrlPFBadge.className = "badge badge-engineer";
+                }
+            }
         }
 
         // Initialize on page load: check auth without bypassing admin password
         window.addEventListener("DOMContentLoaded", () => {
             checkAuthOnLoad();
+            updateEnergyFlowUI();
             setInterval(() => {
                 if (authToken) {
                     loadImproverTelemetry();
                 }
             }, 15000);
-            setInterval(animateHeroMeter, 2500);
+            setInterval(tickEnergyFlowPhysics, 2200);
         });
     </script>
 </body>
