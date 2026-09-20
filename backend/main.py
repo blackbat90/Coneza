@@ -121,13 +121,6 @@ def seed_default_users():
             datetime.utcnow().isoformat()
         ))
         conn.commit()
-    else:
-        # Enforce password reset on existing default accounts
-        cursor.execute("""
-            UPDATE users SET must_change_password = 1
-            WHERE username IN ('admin', 'engineer', 'viewer') AND (must_change_password IS NULL OR must_change_password = 0)
-        """)
-        conn.commit()
 
     # Seed default sample plant if none exists
     cursor.execute("SELECT COUNT(*) FROM plants")
