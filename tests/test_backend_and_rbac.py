@@ -7,6 +7,7 @@ import unittest
 from fastapi.testclient import TestClient
 from backend.main import app, seed_default_users
 from backend.database import init_db
+from backend.totp_auth import get_totp_code
 
 class TestBackendAndRBAC(unittest.TestCase):
 
@@ -30,18 +31,47 @@ class TestBackendAndRBAC(unittest.TestCase):
             except Exception:
                 pass
 
-    def test_01_superuser_login(self):
+    def test_01_superuser_login_and_forced_password_reset(self):
+        # 1. First login of seeded admin returns PASSWORD_RESET_REQUIRED
         resp = self.client.post("/api/auth/login", json={"username": "admin", "password": "conezaAdmin2026!"})
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
-        self.assertIn("access_token", data)
-        self.assertEqual(data["user"]["role"], "SUPER_ADMIN")
-        TestBackendAndRBAC.super_token = data["access_token"]
+        self.assertEqual(data["status"], "PASSWORD_RESET_REQUIRED")
+        self.assertTrue(data["must_change_password"])
+        temp_token = data["temp_token"]
+
+        # 2. Cannot access protected API with temp token
+        res_fail = self.client.get("/api/auth/users", headers={"Authorization": f"Bearer {temp_token}"})
+        self.assertEqual(res_fail.status_code, 403)
+
+        # 3. Change password to new secure password
+        res_change = self.client.post("/api/auth/change-password", json={
+            "temp_token": temp_token,
+            "old_password": "conezaAdmin2026!",
+            "new_password": "newSuperAdminPassword2026!"
+        })
+        self.assertEqual(res_change.status_code, 200)
+        data_change = res_change.json()
+        self.assertIn("access_token", data_change)
+        self.assertEqual(data_change["user"]["role"], "SUPER_ADMIN")
+        TestBackendAndRBAC.super_token = data_change["access_token"]
+
+        # 4. Subsequent login succeeds directly
+        res_direct = self.client.post("/api/auth/login", json={"username": "admin", "password": "newSuperAdminPassword2026!"})
+        self.assertEqual(res_direct.status_code, 200)
+        self.assertEqual(res_direct.json()["status"], "SUCCESS")
 
     def test_02_engineer_login(self):
         resp = self.client.post("/api/auth/login", json={"username": "engineer", "password": "engineer2026!"})
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
+        if data.get("status") == "PASSWORD_RESET_REQUIRED":
+            res_change = self.client.post("/api/auth/change-password", json={
+                "temp_token": data["temp_token"],
+                "new_password": "newEngineerPassword2026!"
+            })
+            self.assertEqual(res_change.status_code, 200)
+            data = res_change.json()
         self.assertEqual(data["user"]["role"], "ENGINEER")
         TestBackendAndRBAC.engineer_token = data["access_token"]
 
@@ -49,8 +79,16 @@ class TestBackendAndRBAC(unittest.TestCase):
         resp = self.client.post("/api/auth/login", json={"username": "viewer", "password": "viewer2026!"})
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
+        if data.get("status") == "PASSWORD_RESET_REQUIRED":
+            res_change = self.client.post("/api/auth/change-password", json={
+                "temp_token": data["temp_token"],
+                "new_password": "newViewerPassword2026!"
+            })
+            self.assertEqual(res_change.status_code, 200)
+            data = res_change.json()
         self.assertEqual(data["user"]["role"], "VIEWER")
         TestBackendAndRBAC.viewer_token = data["access_token"]
+
 
     def test_04_device_provision_rbac(self):
         payload = {
@@ -129,7 +167,7 @@ class TestBackendAndRBAC(unittest.TestCase):
         self.assertIn("Invalid username or password", res_wrong.json()["detail"])
 
         # Correct password succeeds
-        res_correct = self.client.post("/api/auth/login", json={"username": "admin", "password": "conezaAdmin2026!"})
+        res_correct = self.client.post("/api/auth/login", json={"username": "admin", "password": "newSuperAdminPassword2026!"})
         self.assertEqual(res_correct.status_code, 200)
 
     def test_09_user_registration(self):
@@ -176,6 +214,64 @@ class TestBackendAndRBAC(unittest.TestCase):
         res_del = self.client.delete(f"/api/auth/users/{self.new_user_id}", headers={"Authorization": f"Bearer {self.super_token}"})
         self.assertEqual(res_del.status_code, 200)
 
+    def test_11_2fa_setup_and_login_flow(self):
+        # 1. Setup 2FA
+        res_setup = self.client.get("/api/auth/2fa/setup", headers={"Authorization": f"Bearer {self.engineer_token}"})
+        self.assertEqual(res_setup.status_code, 200)
+        data_setup = res_setup.json()
+        self.assertIn("secret", data_setup)
+        self.assertIn("otpauth_url", data_setup)
+        secret = data_setup["secret"]
+
+        # 2. Try activating with invalid code (400)
+        res_bad_enable = self.client.post(
+            "/api/auth/2fa/enable",
+            json={"totp_code": "000000"},
+            headers={"Authorization": f"Bearer {self.engineer_token}"}
+        )
+        self.assertEqual(res_bad_enable.status_code, 400)
+
+        # 3. Activate with valid TOTP code (200)
+        valid_code = get_totp_code(secret)
+        res_enable = self.client.post(
+            "/api/auth/2fa/enable",
+            json={"totp_code": valid_code},
+            headers={"Authorization": f"Bearer {self.engineer_token}"}
+        )
+        self.assertEqual(res_enable.status_code, 200)
+
+        # 4. Next login requires 2FA challenge
+        res_login_2fa = self.client.post("/api/auth/login", json={"username": "engineer", "password": "newEngineerPassword2026!"})
+        self.assertEqual(res_login_2fa.status_code, 200)
+        data_login_2fa = res_login_2fa.json()
+        self.assertEqual(data_login_2fa["status"], "2FA_REQUIRED")
+        temp_token = data_login_2fa["temp_token"]
+
+        # 5. Invalid 2FA code rejected (400)
+        res_verify_bad = self.client.post("/api/auth/2fa/verify-login", json={"temp_token": temp_token, "totp_code": "999999"})
+        self.assertEqual(res_verify_bad.status_code, 400)
+
+        # 6. Valid 2FA code completes login (200)
+        valid_login_code = get_totp_code(secret)
+        res_verify_good = self.client.post("/api/auth/2fa/verify-login", json={"temp_token": temp_token, "totp_code": valid_login_code})
+        self.assertEqual(res_verify_good.status_code, 200)
+        self.assertIn("access_token", res_verify_good.json())
+
+    def test_12_admin_force_password_reset_and_reset_2fa(self):
+        # Admin forces password reset for viewer
+        res_force = self.client.post("/api/auth/users/3/force-reset-password", headers={"Authorization": f"Bearer {self.super_token}"})
+        self.assertEqual(res_force.status_code, 200)
+
+        # Viewer login now requires password reset
+        res_v_login = self.client.post("/api/auth/login", json={"username": "viewer", "password": "newViewerPassword2026!"})
+        self.assertEqual(res_v_login.status_code, 200)
+        self.assertEqual(res_v_login.json()["status"], "PASSWORD_RESET_REQUIRED")
+
+        # Admin resets 2FA for engineer (user 2)
+        res_reset_2fa = self.client.post("/api/auth/users/2/reset-2fa", headers={"Authorization": f"Bearer {self.super_token}"})
+        self.assertEqual(res_reset_2fa.status_code, 200)
+
 if __name__ == "__main__":
     unittest.main()
+
 

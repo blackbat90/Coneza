@@ -733,6 +733,12 @@
             <button class="btn" id="btnLoginHeaderBtn" onclick="openAuthModal('login')">
                 🔐 Anmelden
             </button>
+            <button class="btn" id="btn2faHeaderBtn" style="display: none;" onclick="open2faModal()">
+                🔑 2FA
+            </button>
+            <button class="btn" id="btnChangePwHeaderBtn" style="display: none;" onclick="openVoluntaryChangePwModal()">
+                🔒 Passwort ändern
+            </button>
             <button class="btn btn-primary" id="btnProvisionDevice" style="display: none;" onclick="openProvisionModal()">
                 + Provision Linux Device
             </button>
@@ -1119,9 +1125,11 @@
                                 <th>Benutzername</th>
                                 <th>E-Mail</th>
                                 <th>Rolle</th>
+                                <th>2FA Status</th>
+                                <th>Passwort Status</th>
                                 <th>Erstellt am</th>
                                 <th>Rolle ändern</th>
-                                <th>Aktion</th>
+                                <th>Sicherheits-Aktionen</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
@@ -1166,7 +1174,7 @@
             <!-- LOGIN FORM -->
             <form id="loginForm" onsubmit="handleLoginSubmit(event)">
                 <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Benutzername</label>
-                <input type="text" id="loginUsername" class="input-control" placeholder="z. B. admin oder engineer" required autofocus>
+                <input type="text" id="loginUsername" class="input-control" placeholder="Benutzername eingeben" required autofocus>
 
                 <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Passwort</label>
                 <input type="password" id="loginPassword" class="input-control" placeholder="••••••••••••" required>
@@ -1174,11 +1182,28 @@
                 <button type="submit" id="btnLoginSubmit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.82rem; font-size: 0.95rem; margin-top: 0.3rem;">
                     🔐 Anmelden
                 </button>
+            </form>
 
-                <div style="background: rgba(37, 199, 201, 0.07); border: 1px solid rgba(37, 199, 201, 0.2); border-radius: 10px; padding: 0.85rem; margin-top: 1.3rem; font-size: 0.8rem; color: var(--text-muted);">
-                    <div style="font-weight: 700; color: #ffffff; margin-bottom: 0.25rem;">Standardkonten (Passwort erforderlich):</div>
-                    <div>• <b>Admin:</b> <span style="font-family: var(--font-mono); color: var(--cyan);">admin</span> / <span style="font-family: var(--font-mono); color: var(--cyan);">conezaAdmin2026!</span></div>
-                    <div>• <b>Ingenieur:</b> <span style="font-family: var(--font-mono); color: var(--cyan);">engineer</span> / <span style="font-family: var(--font-mono); color: var(--cyan);">engineer2026!</span></div>
+            <!-- 2FA LOGIN CHALLENGE FORM -->
+            <form id="twoFactorLoginForm" style="display: none;" onsubmit="handleTwoFactorSubmit(event)">
+                <div style="text-align: center; margin-bottom: 1.2rem;">
+                    <div style="font-size: 2.2rem; margin-bottom: 0.35rem;">📱</div>
+                    <h4 style="font-weight: 700; font-size: 1.15rem; margin-bottom: 0.25rem;">Zwei-Faktor-Authentifizierung</h4>
+                    <p style="font-size: 0.84rem; color: var(--text-muted);">Geben Sie den 6-stelligen Sicherheitscode aus Ihrer Authenticator-App (z. B. Google Authenticator) ein:</p>
+                </div>
+
+                <div style="margin-bottom: 1.2rem;">
+                    <input type="text" id="loginTotpCode" class="input-control" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="text-align: center; font-size: 1.6rem; letter-spacing: 0.35em; font-family: var(--font-mono); font-weight: 700; color: var(--cyan);" autofocus>
+                </div>
+
+                <button type="submit" id="btn2faSubmit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.82rem; font-size: 0.95rem;">
+                    🔐 Code bestätigen
+                </button>
+
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button type="button" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="cancelTwoFactorChallenge()">
+                        ← Zurück zur Passworteingabe
+                    </button>
                 </div>
             </form>
 
@@ -1205,6 +1230,117 @@
             </form>
         </div>
     </div>
+
+    <!-- Mandatory Password Reset Modal -->
+    <div class="modal-backdrop" id="forcePasswordResetModal" style="display: none;">
+        <div class="modal" style="max-width: 480px; padding: 2.2rem;">
+            <div style="text-align: center; margin-bottom: 1.3rem;">
+                <div style="font-size: 2.4rem; margin-bottom: 0.35rem;">🛡️</div>
+                <h3 style="font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.3rem;">Passwortänderung erforderlich</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Aus Sicherheitsgründen müssen Sie ein neues individuelles Passwort festlegen (mindestens 8 Zeichen), bevor Sie das Portal nutzen können.</p>
+            </div>
+
+            <div id="resetPwErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;">
+            </div>
+
+            <form onsubmit="handleForcePasswordResetSubmit(event)">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Bisheriges Passwort (zur Bestätigung)</label>
+                <input type="password" id="resetOldPassword" class="input-control" placeholder="Ihr bisheriges Passwort eingeben">
+
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Neues Passwort (mind. 8 Zeichen)</label>
+                <input type="password" id="resetNewPassword" class="input-control" placeholder="••••••••••••" minlength="8" required>
+
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Neues Passwort wiederholen</label>
+                <input type="password" id="resetNewPasswordConfirm" class="input-control" placeholder="••••••••••••" minlength="8" required>
+
+                <button type="submit" id="btnResetPwSubmit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.82rem; font-size: 0.95rem; margin-top: 0.5rem;">
+                    🛡️ Neues Passwort speichern & Anmelden
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Voluntary Change Password Modal -->
+    <div class="modal-backdrop" id="voluntaryChangePwModal" style="display: none;">
+        <div class="modal" style="max-width: 460px; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem;">
+                <div>
+                    <h3 style="font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Passwort ändern</h3>
+                    <p style="color: var(--text-muted); font-size: 0.84rem;">Aktualisieren Sie Ihr persönliches Zugangspasswort.</p>
+                </div>
+                <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.85rem;" onclick="closeVoluntaryChangePwModal()">✕</button>
+            </div>
+
+            <div id="voluntaryPwErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+            <div id="voluntaryPwSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(92, 224, 173, 0.15); border: 1px solid var(--status-online); color: #a7f3d0; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+
+            <form onsubmit="handleVoluntaryPasswordChangeSubmit(event)">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Aktuelles Passwort</label>
+                <input type="password" id="volOldPassword" class="input-control" placeholder="Aktuelles Passwort" required>
+
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Neues Passwort (mind. 8 Zeichen)</label>
+                <input type="password" id="volNewPassword" class="input-control" placeholder="••••••••••••" minlength="8" required>
+
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Neues Passwort bestätigen</label>
+                <input type="password" id="volNewPasswordConfirm" class="input-control" placeholder="••••••••••••" minlength="8" required>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+                    <button type="button" class="btn" onclick="closeVoluntaryChangePwModal()">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Passwort aktualisieren</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2FA Setup Modal -->
+    <div class="modal-backdrop" id="setup2faModal" style="display: none;">
+        <div class="modal" style="max-width: 500px; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem;">
+                <div>
+                    <h3 style="font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Zwei-Faktor-Authentifizierung (2FA)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Schützen Sie Ihren Zugang mit einem Einmalcode nach RFC 6238.</p>
+                </div>
+                <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.85rem;" onclick="close2faModal()">✕</button>
+            </div>
+
+            <div id="setup2faErrorBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fecdd3; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+            <div id="setup2faSuccessBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(92, 224, 173, 0.15); border: 1px solid var(--status-online); color: #a7f3d0; font-size: 0.84rem; margin-bottom: 1.2rem;"></div>
+
+            <div id="active2faView" style="display: none; text-align: center; padding: 1rem 0;">
+                <div style="font-size: 2.6rem; margin-bottom: 0.5rem;">🛡️</div>
+                <div style="font-size: 1.15rem; font-weight: 700; color: var(--status-online); margin-bottom: 0.5rem;">2FA ist für Ihr Konto aktiviert</div>
+                <p style="color: var(--text-muted); font-size: 0.86rem; margin-bottom: 1.5rem;">Ihr Konto ist bei jeder Anmeldung durch einen zeitbasierten Einmalcode geschützt.</p>
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.2rem; text-align: left;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">Passwort zur Bestätigung der Deaktivierung</label>
+                    <input type="password" id="disable2faPassword" class="input-control" placeholder="Ihr Passwort eingeben">
+                    <button class="btn btn-danger" style="width: 100%; justify-content: center; margin-top: 0.5rem;" onclick="disable2FA()">2FA deaktivieren</button>
+                </div>
+            </div>
+
+            <div id="unconfigured2faView">
+                <div style="background: rgba(11, 23, 40, 0.7); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; text-align: center;">
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.65rem; font-weight: 600;">1. QR-Code mit Authenticator-App scannen:</div>
+                    <div style="display: inline-block; background: white; padding: 10px; border-radius: 8px; margin-bottom: 0.75rem;">
+                        <img id="qrCodeImg" src="" alt="2FA QR Code" style="width: 160px; height: 160px; display: block; margin: 0 auto;">
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem;">Oder Schlüssel manuell eingeben:</div>
+                    <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+                        <span id="manualKeyDisplay" style="font-family: var(--font-mono); font-size: 0.95rem; color: var(--cyan); font-weight: 700; background: rgba(37, 199, 201, 0.08); padding: 0.35rem 0.7rem; border-radius: 6px; letter-spacing: 0.1em;">----</span>
+                        <button type="button" class="btn" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="copy2faSecret()">📋 Kopieren</button>
+                    </div>
+                </div>
+
+                <form onsubmit="handleEnable2faSubmit(event)">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.35rem;">2. 6-stelligen Bestätigungscode eingeben</label>
+                    <input type="text" id="setupVerifyCode" class="input-control" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="text-align: center; font-size: 1.4rem; letter-spacing: 0.3em; font-family: var(--font-mono); font-weight: 700;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.82rem; font-size: 0.95rem; margin-top: 0.4rem;">
+                        ✅ 2FA jetzt aktivieren
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Create User Modal (Super Admin only) -->
     <div class="modal-backdrop" id="createUserModal" style="display: none;">
@@ -1305,6 +1441,10 @@
             }
         }
 
+        let twoFactorTempToken = "";
+        let passwordResetTempToken = "";
+        let current2faSecret = "";
+
         function openAuthModal(mode = 'login') {
             document.getElementById("authModal").style.display = "flex";
             showAuthView(mode);
@@ -1312,6 +1452,7 @@
 
         function closeAuthModal() {
             document.getElementById("authModal").style.display = "none";
+            cancelTwoFactorChallenge();
         }
 
         function showAuthView(view) {
@@ -1319,11 +1460,15 @@
             const tabReg = document.getElementById("tabRegisterBtn");
             const logForm = document.getElementById("loginForm");
             const regForm = document.getElementById("registerForm");
+            const twoFaForm = document.getElementById("twoFactorLoginForm");
             const errBanner = document.getElementById("authErrorBanner");
             const succBanner = document.getElementById("authSuccessBanner");
 
             errBanner.style.display = "none";
             succBanner.style.display = "none";
+            twoFaForm.style.display = "none";
+
+            document.getElementById("tabLoginBtn").parentElement.style.display = "flex";
 
             if (view === 'login') {
                 tabLog.classList.add("active");
@@ -1338,6 +1483,14 @@
                 regForm.style.display = "block";
                 document.getElementById("authModalSubtitle").innerText = "Erstellen Sie ein neues Benutzerkonto.";
             }
+        }
+
+        function cancelTwoFactorChallenge() {
+            twoFactorTempToken = "";
+            document.getElementById("twoFactorLoginForm").style.display = "none";
+            document.getElementById("loginTotpCode").value = "";
+            document.getElementById("tabLoginBtn").parentElement.style.display = "flex";
+            showAuthView('login');
         }
 
         async function handleLoginSubmit(e) {
@@ -1357,7 +1510,32 @@
                     body: JSON.stringify({ username, password })
                 });
                 const data = await res.json();
-                if (res.ok) {
+
+                // 1. Two-Factor Authentication Challenge
+                if (data.status === "2FA_REQUIRED") {
+                    twoFactorTempToken = data.temp_token;
+                    document.getElementById("loginForm").style.display = "none";
+                    document.getElementById("registerForm").style.display = "none";
+                    document.getElementById("tabLoginBtn").parentElement.style.display = "none";
+                    document.getElementById("twoFactorLoginForm").style.display = "block";
+                    document.getElementById("loginTotpCode").value = "";
+                    document.getElementById("loginTotpCode").focus();
+                    return;
+                }
+
+                // 2. Mandatory Password Reset
+                if (data.status === "PASSWORD_RESET_REQUIRED") {
+                    passwordResetTempToken = data.temp_token;
+                    closeAuthModal();
+                    document.getElementById("resetOldPassword").value = password;
+                    document.getElementById("resetNewPassword").value = "";
+                    document.getElementById("resetNewPasswordConfirm").value = "";
+                    document.getElementById("resetPwErrorBanner").style.display = "none";
+                    document.getElementById("forcePasswordResetModal").style.display = "flex";
+                    return;
+                }
+
+                if (res.ok && data.access_token) {
                     authToken = data.access_token;
                     currentUser = data.user;
                     currentRole = data.user.role;
@@ -1377,6 +1555,296 @@
             } finally {
                 btn.disabled = false;
                 btn.innerText = "🔐 Anmelden";
+            }
+        }
+
+        async function handleTwoFactorSubmit(e) {
+            e.preventDefault();
+            const totpCode = document.getElementById("loginTotpCode").value.trim();
+            const btn = document.getElementById("btn2faSubmit");
+            const errBanner = document.getElementById("authErrorBanner");
+            errBanner.style.display = "none";
+            btn.disabled = true;
+            btn.innerText = "⏳ Verifiziere Code...";
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ temp_token: twoFactorTempToken, totp_code: totpCode })
+                });
+                const data = await res.json();
+
+                if (data.status === "PASSWORD_RESET_REQUIRED") {
+                    passwordResetTempToken = data.temp_token;
+                    closeAuthModal();
+                    document.getElementById("resetOldPassword").value = "";
+                    document.getElementById("resetNewPassword").value = "";
+                    document.getElementById("resetNewPasswordConfirm").value = "";
+                    document.getElementById("resetPwErrorBanner").style.display = "none";
+                    document.getElementById("forcePasswordResetModal").style.display = "flex";
+                    return;
+                }
+
+                if (res.ok && data.access_token) {
+                    authToken = data.access_token;
+                    currentUser = data.user;
+                    currentRole = data.user.role;
+                    localStorage.setItem("coneza_token", authToken);
+                    closeAuthModal();
+                    updateUserUI();
+                    loadDevices();
+                    loadDocuments();
+                    loadImproverTelemetry();
+                } else {
+                    errBanner.innerText = data.detail || "Ungültiger 2FA-Code.";
+                    errBanner.style.display = "block";
+                }
+            } catch (err) {
+                errBanner.innerText = `Fehler: ${err.message}`;
+                errBanner.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🔐 Code bestätigen";
+            }
+        }
+
+        async function handleForcePasswordResetSubmit(e) {
+            e.preventDefault();
+            const oldPw = document.getElementById("resetOldPassword").value;
+            const newPw = document.getElementById("resetNewPassword").value;
+            const confirmPw = document.getElementById("resetNewPasswordConfirm").value;
+            const errBanner = document.getElementById("resetPwErrorBanner");
+            const btn = document.getElementById("btnResetPwSubmit");
+
+            errBanner.style.display = "none";
+
+            if (newPw.length < 8) {
+                errBanner.innerText = "Das neue Passwort muss mindestens 8 Zeichen lang sein.";
+                errBanner.style.display = "block";
+                return;
+            }
+
+            if (newPw !== confirmPw) {
+                errBanner.innerText = "Die neuen Passwörter stimmen nicht überein.";
+                errBanner.style.display = "block";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "⏳ Speichere neues Passwort...";
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        temp_token: passwordResetTempToken,
+                        old_password: oldPw || null,
+                        new_password: newPw
+                    })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.access_token) {
+                    document.getElementById("forcePasswordResetModal").style.display = "none";
+                    passwordResetTempToken = "";
+                    authToken = data.access_token;
+                    currentUser = data.user;
+                    currentRole = data.user.role;
+                    localStorage.setItem("coneza_token", authToken);
+                    updateUserUI();
+                    loadDevices();
+                    loadDocuments();
+                    loadImproverTelemetry();
+                    alert("Passwort erfolgreich aktualisiert! Willkommen im Coneza Portal.");
+                } else {
+                    errBanner.innerText = data.detail || "Passwortänderung fehlgeschlagen.";
+                    errBanner.style.display = "block";
+                }
+            } catch (err) {
+                errBanner.innerText = `Fehler: ${err.message}`;
+                errBanner.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🛡️ Neues Passwort speichern & Anmelden";
+            }
+        }
+
+        function openVoluntaryChangePwModal() {
+            document.getElementById("voluntaryPwErrorBanner").style.display = "none";
+            document.getElementById("voluntaryPwSuccessBanner").style.display = "none";
+            document.getElementById("volOldPassword").value = "";
+            document.getElementById("volNewPassword").value = "";
+            document.getElementById("volNewPasswordConfirm").value = "";
+            document.getElementById("voluntaryChangePwModal").style.display = "flex";
+        }
+
+        function closeVoluntaryChangePwModal() {
+            document.getElementById("voluntaryChangePwModal").style.display = "none";
+        }
+
+        async function handleVoluntaryPasswordChangeSubmit(e) {
+            e.preventDefault();
+            const oldPw = document.getElementById("volOldPassword").value;
+            const newPw = document.getElementById("volNewPassword").value;
+            const confirmPw = document.getElementById("volNewPasswordConfirm").value;
+            const errBanner = document.getElementById("voluntaryPwErrorBanner");
+            const succBanner = document.getElementById("voluntaryPwSuccessBanner");
+
+            errBanner.style.display = "none";
+            succBanner.style.display = "none";
+
+            if (newPw.length < 8) {
+                errBanner.innerText = "Das neue Passwort muss mindestens 8 Zeichen lang sein.";
+                errBanner.style.display = "block";
+                return;
+            }
+
+            if (newPw !== confirmPw) {
+                errBanner.innerText = "Die neuen Passwörter stimmen nicht überein.";
+                errBanner.style.display = "block";
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ old_password: oldPw, new_password: newPw })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    succBanner.innerText = "Passwort erfolgreich geändert!";
+                    succBanner.style.display = "block";
+                    setTimeout(() => {
+                        closeVoluntaryChangePwModal();
+                    }, 1200);
+                } else {
+                    errBanner.innerText = data.detail || "Passwortänderung fehlgeschlagen.";
+                    errBanner.style.display = "block";
+                }
+            } catch (err) {
+                errBanner.innerText = `Fehler: ${err.message}`;
+                errBanner.style.display = "block";
+            }
+        }
+
+        // 2FA Management Modal
+        async function open2faModal() {
+            document.getElementById("setup2faErrorBanner").style.display = "none";
+            document.getElementById("setup2faSuccessBanner").style.display = "none";
+            document.getElementById("setupVerifyCode").value = "";
+            document.getElementById("setup2faModal").style.display = "flex";
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/2fa/setup`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                current2faSecret = data.secret;
+
+                if (data.is_2fa_enabled) {
+                    document.getElementById("active2faView").style.display = "block";
+                    document.getElementById("unconfigured2faView").style.display = "none";
+                } else {
+                    document.getElementById("active2faView").style.display = "none";
+                    document.getElementById("unconfigured2faView").style.display = "block";
+                    document.getElementById("manualKeyDisplay").innerText = data.formatted_secret;
+                    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(data.otpauth_url)}`;
+                }
+            } catch (e) {
+                console.error("2FA setup error:", e);
+            }
+        }
+
+        function close2faModal() {
+            document.getElementById("setup2faModal").style.display = "none";
+        }
+
+        function copy2faSecret() {
+            if (!current2faSecret) return;
+            navigator.clipboard.writeText(current2faSecret).then(() => {
+                alert("2FA-Schlüssel in Zwischenablage kopiert!");
+            });
+        }
+
+        async function handleEnable2faSubmit(e) {
+            e.preventDefault();
+            const totpCode = document.getElementById("setupVerifyCode").value.trim();
+            const errBanner = document.getElementById("setup2faErrorBanner");
+            const succBanner = document.getElementById("setup2faSuccessBanner");
+
+            errBanner.style.display = "none";
+            succBanner.style.display = "none";
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/2fa/enable`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ totp_code: totpCode })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    succBanner.innerText = data.message || "2FA erfolgreich aktiviert!";
+                    succBanner.style.display = "block";
+                    setTimeout(() => {
+                        open2faModal();
+                        if (currentRole === 'SUPER_ADMIN') loadUsers();
+                    }, 1000);
+                } else {
+                    errBanner.innerText = data.detail || "Aktivierung fehlgeschlagen.";
+                    errBanner.style.display = "block";
+                }
+            } catch (e) {
+                errBanner.innerText = `Fehler: ${e.message}`;
+                errBanner.style.display = "block";
+            }
+        }
+
+        async function disable2FA() {
+            const password = document.getElementById("disable2faPassword").value;
+            const errBanner = document.getElementById("setup2faErrorBanner");
+            const succBanner = document.getElementById("setup2faSuccessBanner");
+            errBanner.style.display = "none";
+            succBanner.style.display = "none";
+
+            if (!password) {
+                alert("Bitte geben Sie Ihr Passwort zur Bestätigung ein.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/2fa/disable`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    succBanner.innerText = data.message || "2FA wurde deaktiviert.";
+                    succBanner.style.display = "block";
+                    setTimeout(() => {
+                        open2faModal();
+                        if (currentRole === 'SUPER_ADMIN') loadUsers();
+                    }, 1000);
+                } else {
+                    errBanner.innerText = data.detail || "Deaktivierung fehlgeschlagen.";
+                    errBanner.style.display = "block";
+                }
+            } catch (e) {
+                errBanner.innerText = `Fehler: ${e.message}`;
+                errBanner.style.display = "block";
             }
         }
 
@@ -1432,6 +1900,8 @@
             authToken = "";
             currentUser = null;
             currentRole = "";
+            twoFactorTempToken = "";
+            passwordResetTempToken = "";
             localStorage.removeItem("coneza_token");
             
             const roleBadge = document.getElementById("roleBadge");
@@ -1444,6 +1914,10 @@
             if (pBtn) pBtn.style.display = "none";
             const logoutBtn = document.getElementById("btnLogoutBtn");
             if (logoutBtn) logoutBtn.style.display = "none";
+            const btn2fa = document.getElementById("btn2faHeaderBtn");
+            if (btn2fa) btn2fa.style.display = "none";
+            const btnPw = document.getElementById("btnChangePwHeaderBtn");
+            if (btnPw) btnPw.style.display = "none";
             const loginHeaderBtn = document.getElementById("btnLoginHeaderBtn");
             if (loginHeaderBtn) loginHeaderBtn.style.display = "inline-flex";
 
@@ -1458,6 +1932,10 @@
 
             const logoutBtn = document.getElementById("btnLogoutBtn");
             if (logoutBtn) logoutBtn.style.display = "inline-flex";
+            const btn2fa = document.getElementById("btn2faHeaderBtn");
+            if (btn2fa) btn2fa.style.display = "inline-flex";
+            const btnPw = document.getElementById("btnChangePwHeaderBtn");
+            if (btnPw) btnPw.style.display = "inline-flex";
             const loginHeaderBtn = document.getElementById("btnLoginHeaderBtn");
             if (loginHeaderBtn) loginHeaderBtn.style.display = "none";
 
@@ -1494,12 +1972,16 @@
                     const tr = document.createElement("tr");
                     const roleBadgeClass = u.role === 'SUPER_ADMIN' ? 'badge badge-super' : (u.role === 'ENGINEER' ? 'badge badge-engineer' : 'badge badge-online');
                     const isSelf = currentUser && currentUser.id === u.id;
+                    const twoFaBadge = u.is_2fa_enabled ? '<span class=\"badge badge-online\" style=\"font-size:0.72rem;\">● Aktiv (2FA)</span>' : '<span class=\"badge\" style=\"color:var(--text-muted); font-size:0.72rem;\">Inaktiv</span>';
+                    const pwBadge = u.must_change_password ? '<span class=\"badge\" style=\"background:rgba(244,63,94,0.15); color:#fecdd3; border:1px solid var(--rose); font-size:0.72rem;\">⚠️ Reset erzwungen</span>' : '<span class=\"badge badge-online\" style=\"font-size:0.72rem;\">✓ Gültig</span>';
 
                     tr.innerHTML = `
                         <td style="font-family: var(--font-mono); color: var(--text-muted);">${u.id}</td>
                         <td style="font-weight: 700; color: #ffffff;">${u.username} ${isSelf ? '<span style="color:var(--cyan); font-size:0.75rem;">(Sie)</span>' : ''}</td>
                         <td style="color: var(--text-muted); font-size: 0.82rem;">${u.email}</td>
                         <td><span class="${roleBadgeClass}" style="font-size: 0.72rem;">${u.role}</span></td>
+                        <td>${twoFaBadge}</td>
+                        <td>${pwBadge}</td>
                         <td style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">${u.created_at || 'Standard'}</td>
                         <td>
                             <select class="input-control" style="padding: 0.3rem 0.6rem; font-size: 0.78rem; margin: 0; width: auto; display: inline-block;" onchange="changeUserRole(${u.id}, this.value)">
@@ -1509,13 +1991,57 @@
                             </select>
                         </td>
                         <td>
-                            ${isSelf ? '<span style="color:var(--text-muted); font-size:0.75rem;">Aktiv</span>' : `<button class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.76rem;" onclick="deleteUser(${u.id}, '${u.username}')">Löschen</button>`}
+                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.74rem;" title="Benutzer zwingen, neues Passwort beim nächsten Login zu setzen" onclick="forceUserPasswordReset(${u.id}, '${u.username}')">Reset erzwingen</button>
+                                ${u.is_2fa_enabled ? `<button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.74rem;" title="2FA zurücksetzen" onclick="adminResetUser2fa(${u.id}, '${u.username}')">2FA Reset</button>` : ''}
+                                ${isSelf ? '' : `<button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.74rem;" onclick="deleteUser(${u.id}, '${u.username}')">Löschen</button>`}
+                            </div>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (err) {
                 console.error("Load users failed:", err);
+            }
+        }
+
+        async function forceUserPasswordReset(userId, username) {
+            if (!confirm(`Soll für Benutzer "${username}" (ID: ${userId}) beim nächsten Login eine Passwortänderung erzwungen werden?`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/users/${userId}/force-reset-password`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    alert(`Passwort-Reset für "${username}" wurde erzwungen.`);
+                    loadUsers();
+                } else {
+                    alert(`Fehler: ${await res.text()}`);
+                }
+            } catch (e) {
+                alert(`Fehler: ${e.message}`);
+            }
+        }
+
+        async function adminResetUser2fa(userId, username) {
+            if (!confirm(`Möchten Sie die 2FA für Benutzer "${username}" (ID: ${userId}) wirklich zurücksetzen (z. B. bei Geräteverlust)?`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/users/${userId}/reset-2fa`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    alert(`2FA für "${username}" erfolgreich zurückgesetzt.`);
+                    loadUsers();
+                } else {
+                    alert(`Fehler: ${await res.text()}`);
+                }
+            } catch (e) {
+                alert(`Fehler: ${e.message}`);
             }
         }
 
@@ -1600,6 +2126,7 @@
                 alert(`Fehler: ${e.message}`);
             }
         }
+
 
         function switchTab(tabId, btn) {
             document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));

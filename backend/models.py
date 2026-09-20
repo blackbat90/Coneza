@@ -14,6 +14,23 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+    totp_code: Optional[str] = None
+
+class TwoFactorVerifyLogin(BaseModel):
+    temp_token: str
+    totp_code: str
+
+class TwoFactorEnableRequest(BaseModel):
+    totp_code: str
+
+class TwoFactorDisableRequest(BaseModel):
+    password: str
+    totp_code: Optional[str] = None
+
+class PasswordChangeRequest(BaseModel):
+    new_password: str
+    old_password: Optional[str] = None
+    temp_token: Optional[str] = None
 
 class UserRoleUpdate(BaseModel):
     role: str
@@ -23,6 +40,9 @@ class UserResponse(BaseModel):
     username: str
     email: str
     role: str
+    is_2fa_enabled: Optional[int] = 0
+    must_change_password: Optional[int] = 0
+
 
 class DeviceRegister(BaseModel):
     device_id: str

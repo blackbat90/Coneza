@@ -29,12 +29,25 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
-def create_access_token(user_id: int, username: str, role: str) -> str:
+def create_access_token(user_id: int, username: str, role: str, scope: str = "full_access") -> str:
     payload = {
         "sub": str(user_id),
         "username": username,
         "role": role,
+        "scope": scope,
         "exp": int(time.time()) + TOKEN_EXPIRY_SECONDS,
+        "iat": int(time.time())
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def create_temp_token(user_id: int, username: str, role: str, scope: str, expiry_seconds: int = 600) -> str:
+    """Creates a short-lived scoped token for 2FA challenge or password reset (10 min)."""
+    payload = {
+        "sub": str(user_id),
+        "username": username,
+        "role": role,
+        "scope": scope,
+        "exp": int(time.time()) + expiry_seconds,
         "iat": int(time.time())
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -44,6 +57,12 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except jwt.PyJWTError:
         return None
+
+def decode_scoped_token(token: str, expected_scope: str) -> Optional[Dict[str, Any]]:
+    payload = decode_access_token(token)
+    if not payload or payload.get("scope") != expected_scope:
+        return None
+    return payload
 
 def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Dict[str, Any]:
     """Authenticates the bearer token and retrieves user record."""
@@ -62,9 +81,16 @@ def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depen
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Scoped tokens (like 2fa_challenge or password_reset) cannot be used for standard API endpoints
+    if payload.get("scope") != "full_access":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Incomplete authentication: 2FA challenge or password change required"
+        )
+
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, email, role FROM users WHERE id = ?", (payload["sub"],))
+    cursor.execute("SELECT id, username, email, role, is_2fa_enabled, must_change_password FROM users WHERE id = ?", (payload["sub"],))
     row = cursor.fetchone()
     conn.close()
 
@@ -72,6 +98,7 @@ def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depen
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     return dict(row)
+
 
 def require_super_user(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
     """Ensures caller has SUPER_ADMIN privileges."""

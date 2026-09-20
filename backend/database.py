@@ -9,10 +9,11 @@ import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-DB_PATH = os.getenv("CONEZA_DB_PATH", os.path.join(os.path.dirname(__file__), "coneza_backend.db"))
+def get_db_path() -> str:
+    return os.getenv("CONEZA_DB_PATH", os.path.join(os.path.dirname(__file__), "coneza_backend.db"))
 
 def get_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -28,9 +29,23 @@ def init_db():
         email TEXT UNIQUE NOT NULL,
         hashed_password TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'VIEWER', -- 'SUPER_ADMIN', 'ENGINEER', 'VIEWER'
+        totp_secret TEXT DEFAULT NULL,
+        is_2fa_enabled INTEGER DEFAULT 0,
+        must_change_password INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+
+    # Automatic schema migration for existing databases
+    cursor.execute("PRAGMA table_info(users)")
+    existing_cols = [row[1] for row in cursor.fetchall()]
+    if "totp_secret" not in existing_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN totp_secret TEXT DEFAULT NULL")
+    if "is_2fa_enabled" not in existing_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN is_2fa_enabled INTEGER DEFAULT 0")
+    if "must_change_password" not in existing_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN must_change_password INTEGER DEFAULT 0")
+
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS devices (

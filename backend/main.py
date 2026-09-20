@@ -18,15 +18,22 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
+from fastapi.security import HTTPAuthorizationCredentials
 from backend.database import init_db, get_connection
 from backend.models import (
     UserCreate, UserLogin, UserResponse, UserRoleUpdate,
+    TwoFactorVerifyLogin, TwoFactorEnableRequest, TwoFactorDisableRequest, PasswordChangeRequest,
     DeviceRegister, DeviceHeartbeat, DeviceResponse,
     AnalysisTrigger, ConfigDeployRequest
 )
 from backend.auth import (
-    hash_password, verify_password, create_access_token,
+    hash_password, verify_password, create_access_token, create_temp_token,
+    decode_access_token, decode_scoped_token, security,
     get_current_user, require_super_user, require_engineer, require_viewer
+)
+from backend.totp_auth import (
+    generate_totp_secret, format_secret_for_display,
+    get_totp_code, verify_totp_code, generate_otpauth_url
 )
 from backend.device_manager import fleet_manager
 from backend.gemini_analyzer import gemini_analyzer
@@ -72,29 +79,29 @@ async def health_check():
     return {"status": "ok", "service": "coneza-backend"}
 
 def seed_default_users():
-    """Seeds default Super User, Engineer, and Viewer accounts if DB is fresh."""
+    """Seeds default Super User, Engineer, and Viewer accounts if DB is fresh, enforcing initial password reset."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM users")
     count = cursor.fetchone()[0]
     if count == 0:
-        logger.info("Seeding initial users (Super User: admin)...")
+        logger.info("Seeding initial users with mandatory password change (admin, engineer, viewer)...")
         # Super User
         cursor.execute("""
-            INSERT INTO users (username, email, hashed_password, role)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO users (username, email, hashed_password, role, must_change_password)
+            VALUES (?, ?, ?, ?, 1)
         """, ("admin", "admin@coneza.local", hash_password("conezaAdmin2026!"), "SUPER_ADMIN"))
 
         # Commissioning Engineer
         cursor.execute("""
-            INSERT INTO users (username, email, hashed_password, role)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO users (username, email, hashed_password, role, must_change_password)
+            VALUES (?, ?, ?, ?, 1)
         """, ("engineer", "engineer@coneza.local", hash_password("engineer2026!"), "ENGINEER"))
 
         # Read-only Viewer
         cursor.execute("""
-            INSERT INTO users (username, email, hashed_password, role)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO users (username, email, hashed_password, role, must_change_password)
+            VALUES (?, ?, ?, ?, 1)
         """, ("viewer", "viewer@coneza.local", hash_password("viewer2026!"), "VIEWER"))
 
         # Seed sample demo device
@@ -113,6 +120,13 @@ def seed_default_users():
             datetime.utcnow().isoformat()
         ))
         conn.commit()
+    else:
+        # Enforce password reset on existing default accounts
+        cursor.execute("""
+            UPDATE users SET must_change_password = 1
+            WHERE username IN ('admin', 'engineer', 'viewer') AND (must_change_password IS NULL OR must_change_password = 0)
+        """)
+        conn.commit()
     conn.close()
 
 # ----------------- Authentication Endpoints ----------------- #
@@ -128,17 +142,259 @@ async def login(credentials: UserLogin):
     if not user or not verify_password(credentials.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
+    user_id = user["id"]
+    username = user["username"]
+    role = user["role"]
+    is_2fa = bool(user["is_2fa_enabled"] if "is_2fa_enabled" in user.keys() else False)
+    must_change = bool(user["must_change_password"] if "must_change_password" in user.keys() else False)
+
+    # 1. Two-Factor Authentication Check
+    if is_2fa:
+        totp_secret = user["totp_secret"] if "totp_secret" in user.keys() else None
+        valid_totp = False
+        if credentials.totp_code and totp_secret:
+            valid_totp = verify_totp_code(totp_secret, credentials.totp_code)
+
+        if not valid_totp:
+            temp_token = create_temp_token(user_id, username, role, scope="2fa_challenge")
+            return {
+                "status": "2FA_REQUIRED",
+                "is_2fa_required": True,
+                "temp_token": temp_token,
+                "message": "Zwei-Faktor-Authentifizierung erforderlich. Bitte geben Sie Ihren 6-stelligen Code aus Ihrer Authenticator-App ein."
+            }
+
+    # 2. Mandatory Password Reset Check
+    if must_change:
+        temp_token = create_temp_token(user_id, username, role, scope="password_reset")
+        return {
+            "status": "PASSWORD_RESET_REQUIRED",
+            "must_change_password": True,
+            "temp_token": temp_token,
+            "user": {
+                "id": user_id,
+                "username": username,
+                "email": user["email"],
+                "role": role
+            },
+            "message": "Passwortänderung erforderlich: Aus Sicherheitsgründen müssen Sie Ihr Initialpasswort ändern."
+        }
+
+    # 3. Successful Direct Login
+    token = create_access_token(user_id, username, role)
+    return {
+        "status": "SUCCESS",
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user_id,
+            "username": username,
+            "email": user["email"],
+            "role": role,
+            "is_2fa_enabled": 1 if is_2fa else 0,
+            "must_change_password": 0
+        }
+    }
+
+@app.post("/api/auth/2fa/verify-login")
+async def verify_login_2fa(payload: TwoFactorVerifyLogin):
+    token_data = decode_scoped_token(payload.temp_token, expected_scope="2fa_challenge")
+    if not token_data:
+        raise HTTPException(status_code=401, detail="Sitzung abgelaufen oder ungültig. Bitte erneut anmelden.")
+
+    user_id = int(token_data["sub"])
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
+
+    totp_secret = user["totp_secret"]
+    if not totp_secret or not verify_totp_code(totp_secret, payload.totp_code):
+        raise HTTPException(status_code=400, detail="Ungültiger 2FA-Code. Bitte prüfen Sie die Uhrzeit und Ihre App.")
+
+    # Check if forced password reset is required after 2FA succeeds
+    if bool(user["must_change_password"]):
+        temp_token = create_temp_token(user["id"], user["username"], user["role"], scope="password_reset")
+        return {
+            "status": "PASSWORD_RESET_REQUIRED",
+            "must_change_password": True,
+            "temp_token": temp_token,
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"],
+                "role": user["role"]
+            },
+            "message": "Passwortänderung erforderlich: Aus Sicherheitsgründen müssen Sie Ihr Initialpasswort ändern."
+        }
+
     token = create_access_token(user["id"], user["username"], user["role"])
     return {
+        "status": "SUCCESS",
         "access_token": token,
         "token_type": "bearer",
         "user": {
             "id": user["id"],
             "username": user["username"],
             "email": user["email"],
-            "role": user["role"]
+            "role": user["role"],
+            "is_2fa_enabled": 1,
+            "must_change_password": 0
         }
     }
+
+@app.post("/api/auth/change-password")
+async def change_password(payload: PasswordChangeRequest, creds: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    """Handles forced password change or voluntary password updates."""
+    user_id = None
+    if payload.temp_token:
+        token_data = decode_scoped_token(payload.temp_token, expected_scope="password_reset")
+        if token_data:
+            user_id = int(token_data["sub"])
+
+    if not user_id and creds:
+        token_data = decode_access_token(creds.credentials)
+        if token_data and token_data.get("sub"):
+            user_id = int(token_data["sub"])
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Nicht autorisiert: Ungültiges oder abgelaufenes Token.")
+
+    new_pw = payload.new_password.strip()
+    if len(new_pw) < 8:
+        raise HTTPException(status_code=400, detail="Das neue Passwort muss mindestens 8 Zeichen lang sein.")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
+
+    # If old password was supplied, verify it
+    if payload.old_password:
+        if not verify_password(payload.old_password, user["hashed_password"]):
+            conn.close()
+            raise HTTPException(status_code=400, detail="Das bisherige Passwort ist nicht korrekt.")
+
+    # New password cannot be identical to current password
+    if verify_password(new_pw, user["hashed_password"]):
+        conn.close()
+        raise HTTPException(status_code=400, detail="Das neue Passwort darf nicht mit dem bisherigen Passwort identisch sein.")
+
+    new_hashed = hash_password(new_pw)
+    cursor.execute("UPDATE users SET hashed_password = ?, must_change_password = 0 WHERE id = ?", (new_hashed, user_id))
+    conn.commit()
+    conn.close()
+
+    new_token = create_access_token(user_id, user["username"], user["role"])
+    return {
+        "status": "success",
+        "message": "Passwort erfolgreich aktualisiert!",
+        "access_token": new_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user_id,
+            "username": user["username"],
+            "email": user["email"],
+            "role": user["role"],
+            "is_2fa_enabled": user["is_2fa_enabled"] or 0,
+            "must_change_password": 0
+        }
+    }
+
+@app.get("/api/auth/2fa/setup")
+async def setup_2fa(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Returns TOTP secret, formatted key, and otpauth URL for Google/Microsoft Authenticator."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT totp_secret, is_2fa_enabled FROM users WHERE id = ?", (current_user["id"],))
+    row = cursor.fetchone()
+
+    secret = row["totp_secret"] if (row and row["totp_secret"]) else generate_totp_secret()
+    if not row or not row["totp_secret"]:
+        cursor.execute("UPDATE users SET totp_secret = ? WHERE id = ?", (secret, current_user["id"]))
+        conn.commit()
+    conn.close()
+
+    otpauth_url = generate_otpauth_url(current_user["username"], secret)
+    return {
+        "secret": secret,
+        "formatted_secret": format_secret_for_display(secret),
+        "otpauth_url": otpauth_url,
+        "is_2fa_enabled": bool(row["is_2fa_enabled"] if row else False)
+    }
+
+@app.post("/api/auth/2fa/enable")
+async def enable_2fa(payload: TwoFactorEnableRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Verifies a 6-digit TOTP code and activates 2FA for the authenticated user."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT totp_secret FROM users WHERE id = ?", (current_user["id"],))
+    row = cursor.fetchone()
+
+    if not row or not row["totp_secret"]:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Kein 2FA-Schlüssel initialisiert. Bitte rufen Sie zuerst /setup auf.")
+
+    if not verify_totp_code(row["totp_secret"], payload.totp_code):
+        conn.close()
+        raise HTTPException(status_code=400, detail="Ungültiger 2FA-Code. Bitte prüfen Sie Ihre Authenticator-App.")
+
+    cursor.execute("UPDATE users SET is_2fa_enabled = 1 WHERE id = ?", (current_user["id"],))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": "Zwei-Faktor-Authentifizierung (2FA) wurde erfolgreich aktiviert!"}
+
+@app.post("/api/auth/2fa/disable")
+async def disable_2fa(payload: TwoFactorDisableRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Disables 2FA (requires password confirmation)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT hashed_password FROM users WHERE id = ?", (current_user["id"],))
+    row = cursor.fetchone()
+
+    if not row or not verify_password(payload.password, row["hashed_password"]):
+        conn.close()
+        raise HTTPException(status_code=400, detail="Ungültiges Passwort.")
+
+    cursor.execute("UPDATE users SET is_2fa_enabled = 0, totp_secret = NULL WHERE id = ?", (current_user["id"],))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": "2FA wurde deaktiviert."}
+
+@app.post("/api/auth/users/{user_id}/force-reset-password", dependencies=[Depends(require_super_user)])
+async def admin_force_reset_password(user_id: int):
+    """Super Admin forces a user to reset their password upon their next login."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET must_change_password = 1 WHERE id = ?", (user_id,))
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": f"Passwort-Reset für Benutzer {user_id} wurde erzwungen."}
+
+@app.post("/api/auth/users/{user_id}/reset-2fa", dependencies=[Depends(require_super_user)])
+async def admin_reset_2fa(user_id: int):
+    """Super Admin resets 2FA for a user (e.g. if their authenticator phone was lost)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET is_2fa_enabled = 0, totp_secret = NULL WHERE id = ?", (user_id,))
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": f"2FA für Benutzer {user_id} wurde erfolgreich zurückgesetzt."}
+
 
 @app.post("/api/auth/register")
 async def register(payload: UserCreate):
@@ -217,10 +473,11 @@ async def create_user(payload: UserCreate):
 async def list_users():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, email, role, created_at FROM users ORDER BY id ASC")
+    cursor.execute("SELECT id, username, email, role, is_2fa_enabled, must_change_password, created_at FROM users ORDER BY id ASC")
     users = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return users
+
 
 @app.delete("/api/auth/users/{user_id}", dependencies=[Depends(require_super_user)])
 async def delete_user(user_id: int, current_user: Dict[str, Any] = Depends(get_current_user)):
