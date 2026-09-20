@@ -16,6 +16,13 @@ services:
       - CONEZA_JWT_SECRET=${CONEZA_JWT_SECRET:-coneza-super-secret-jwt-key-2026-vde4110}
       - CONEZA_DB_PATH=/data/coneza_backend.db
       - PYTHONUNBUFFERED=1
+      # Jira Integration
+      - JIRA_URL=${JIRA_URL:-}
+      - JIRA_EMAIL=${JIRA_EMAIL:-}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN:-}
+      - JIRA_PROJECT_KEY=${JIRA_PROJECT_KEY:-EEP}
+      - JIRA_DEFAULT_ASSIGNEE_ID=${JIRA_DEFAULT_ASSIGNEE_ID:-}
+      - JIRA_AI_ACCOUNT_ID=${JIRA_AI_ACCOUNT_ID:-}
     networks:
       - default
       - coneza-web-fe_default
