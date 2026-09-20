@@ -1127,6 +1127,9 @@
             <button class="tab-btn" id="usersTabBtn" style="display: none;" onclick="switchTab('usersTab', this); loadUsers();">
                 👥 Benutzerverwaltung (<span id="userCount">0</span>)
             </button>
+            <button class="tab-btn" id="jiraTabBtn" onclick="switchTab('jiraTab', this); loadJiraTickets();">
+                📋 Jira &amp; Roadmap (<span id="jiraTicketCount">4</span>)
+            </button>
         </nav>
 
         <!-- Tab 0: Plants & Sites Management -->
@@ -1477,6 +1480,66 @@
                         </thead>
                         <tbody id="usersTableBody">
                             <!-- Populated via JS loadUsers() -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 7: Jira Issue Tracker & Roadmap -->
+        <div id="jiraTab" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">📋 Jira Issue Tracker &amp; Kontinuierliche Portal-Roadmap</h2>
+                    <p style="color: var(--text-muted); font-size: 0.88rem;">Automatische Aufgabenverfolgung, Freigaben und Feature-Tickets mit direkter Atlassian Jira-Integration.</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <button class="btn" onclick="loadJiraTickets()">🔄 Aktualisieren</button>
+                    <button class="btn btn-primary" onclick="openCreateJiraTicketModal()">+ Neues Ticket anlegen</button>
+                </div>
+            </div>
+
+            <!-- Jira Status & KPI Tiles -->
+            <div class="grid-4" style="margin-bottom: 1.5rem;">
+                <div class="metric-tile">
+                    <div class="metric-label">Roadmap Tickets</div>
+                    <div class="metric-value" id="kpiJiraTotal">4</div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-label">Offene Aufgaben</div>
+                    <div class="metric-value" id="kpiJiraOpen" style="color: var(--blue);">4</div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-label">Rückfragen an Sie</div>
+                    <div class="metric-value" id="kpiJiraQuestions" style="color: var(--amber);">1</div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-label">Jira Sync-Status</div>
+                    <div class="metric-value" id="kpiJiraSync" style="font-size: 0.82rem; color: var(--status-online);">Bereit (Warteschlange)</div>
+                </div>
+            </div>
+
+            <!-- Tickets Table -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🚀 Aktive Verbesserungs- &amp; Freigabetickets</span>
+                    <span class="badge badge-super" id="jiraTableCountBadge">4 Tickets</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Jira Key</th>
+                                <th>Typ</th>
+                                <th>Zusammenfassung</th>
+                                <th>Priorität</th>
+                                <th>Status</th>
+                                <th>Zugewiesen an</th>
+                                <th>Erstellt am</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jiraTicketsTableBody">
+                            <!-- Populated via JS loadJiraTickets() -->
                         </tbody>
                     </table>
                 </div>
@@ -3982,10 +4045,101 @@
             }
         }
 
+        // ----------------- Jira Ticket Management ----------------- //
+        async function loadJiraTickets() {
+            try {
+                const res = await fetch(`${API_BASE}/api/jira/tickets`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
+                });
+                if (!res.ok) return;
+                const tickets = await res.json();
+
+                const countEl = document.getElementById("jiraTicketCount");
+                if (countEl) countEl.innerText = tickets.length;
+                const kpiTotal = document.getElementById("kpiJiraTotal");
+                if (kpiTotal) kpiTotal.innerText = tickets.length;
+                const badgeEl = document.getElementById("jiraTableCountBadge");
+                if (badgeEl) badgeEl.innerText = `${tickets.length} Tickets`;
+
+                let openCount = 0;
+                let questionCount = 0;
+                tickets.forEach(t => {
+                    if (t.status === 'OPEN') openCount++;
+                    if ((t.summary || '').includes('[Rückfrage') || (t.labels || []).includes('user-question')) {
+                        questionCount++;
+                    }
+                });
+
+                const kpiOpen = document.getElementById("kpiJiraOpen");
+                if (kpiOpen) kpiOpen.innerText = openCount;
+                const kpiQ = document.getElementById("kpiJiraQuestions");
+                if (kpiQ) kpiQ.innerText = questionCount;
+
+                const tbody = document.getElementById("jiraTicketsTableBody");
+                if (!tbody) return;
+                tbody.innerHTML = "";
+
+                if (tickets.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">Keine Jira Tickets vorhanden.</td></tr>`;
+                    return;
+                }
+
+                tickets.forEach(t => {
+                    const tr = document.createElement("tr");
+                    const isQuestion = (t.summary || '').includes('[Rückfrage');
+                    const prioClass = t.priority === 'High' ? 'badge-danger' : (t.priority === 'Medium' ? 'badge-engineer' : 'badge');
+                    const statusClass = t.status === 'OPEN' ? 'badge-online' : 'badge';
+
+                    tr.innerHTML = `
+                        <td style="font-family: var(--font-mono); font-weight: 700; color: var(--blue);">
+                            ${escapeHtml(t.jira_key)}
+                            ${t.synced_with_jira ? '<span title="Mit Jira synchronisiert" style="color:var(--status-online); margin-left:4px;">☁️</span>' : '<span title="Lokale Warteschlange" style="color:var(--text-muted); margin-left:4px;">💾</span>'}
+                        </td>
+                        <td><span class="badge ${isQuestion ? 'badge-super' : 'badge'}" style="font-size:0.72rem;">${escapeHtml(t.issue_type)}</span></td>
+                        <td style="font-weight: 600; color: var(--navy); max-width: 320px;">
+                            ${escapeHtml(t.summary)}
+                            ${t.description ? `<div style="font-size:0.75rem; color:var(--text-muted); font-weight:normal; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(t.description)}</div>` : ''}
+                        </td>
+                        <td><span class="badge ${prioClass}" style="font-size:0.7rem;">${escapeHtml(t.priority)}</span></td>
+                        <td><span class="badge ${statusClass}" style="font-size:0.7rem;">● ${escapeHtml(t.status)}</span></td>
+                        <td style="font-size:0.82rem; color:var(--ink);">${escapeHtml(t.assignee || 'Ihnen zugewiesen')}</td>
+                        <td style="font-family: var(--font-mono); font-size:0.75rem; color:var(--text-muted);">${new Date(t.created_at).toLocaleDateString('de-DE')}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.warn("Could not load Jira tickets:", err);
+            }
+        }
+
+        function openCreateJiraTicketModal() {
+            const summary = prompt("Titel / Zusammenfassung des neuen Jira-Tickets:");
+            if (!summary || !summary.trim()) return;
+            const description = prompt("Beschreibung der Aufgabe / Anforderung:");
+
+            fetch(`${API_BASE}/api/jira/tickets`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${authToken}`
+                },
+                body: JSON.stringify({
+                    summary: summary.trim(),
+                    description: description ? description.trim() : "",
+                    issue_type: "Task",
+                    priority: "High"
+                })
+            }).then(r => r.json()).then(d => {
+                alert(`Ticket ${d.jira_key} wurde erfolgreich erstellt!`);
+                loadJiraTickets();
+            }).catch(e => alert("Fehler: " + e));
+        }
+
         // Initialize on page load: check auth without bypassing admin password
         window.addEventListener("DOMContentLoaded", () => {
             checkAuthOnLoad();
             updateEnergyFlowUI();
+            loadJiraTickets();
             setInterval(() => {
                 if (authToken) {
                     loadImproverTelemetry();
