@@ -1,0 +1,17 @@
+services:
+  eza-simulator:
+    image: coneza-eza-simulator:local
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.simulator
+    environment:
+      CONEZA_BACKEND_URL: ${CONEZA_BACKEND_URL:?Set the portal backend base URL}
+      SIMULATOR_DEVICE_ID: ${SIMULATOR_DEVICE_ID:-coneza-sim-01}
+      SIMULATOR_NAME: ${SIMULATOR_NAME:-Ubuntu IPC virtual EZA}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
