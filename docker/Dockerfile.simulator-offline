@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app
 COPY docker/requirements.simulator.txt /app/requirements.txt
 COPY docker/wheels/ /wheels/
 RUN --network=none pip install --no-cache-dir --no-index --find-links=/wheels -r /app/requirements.txt
-COPY edge/backend_client.py edge/simulator_service.py /app/edge/
+COPY edge/backend_client.py edge/simulator_service.py edge/simulator_web.py /app/edge/
 COPY edge/phoenix_eza/controller.py edge/phoenix_eza/simulator.py edge/phoenix_eza/register_map.py /app/edge/phoenix_eza/
 USER 10001:10001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD python -c "import socket; socket.create_connection(('127.0.0.1', 5502), timeout=2).close()"

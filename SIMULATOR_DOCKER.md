@@ -58,3 +58,11 @@ sudo docker compose -p coneza-simulator -f /opt/coneza-simulator/isolated-eep77/
 ```
 
 The image uses in-memory simulated settings and must not be represented as Phoenix PCU firmware or certified EZA control. Existing portal approval restrictions apply. Visual portal login/plant assignment and physical PCU compatibility were not tested.
+
+## Lokale Weboberfläche (EEP-77)
+
+Auf dem IPC erreichbar unter http://192.168.8.186/ (HTTP, Port 80, nur diese LAN-Adresse). Schreibgeschützte Anzeige von Portalstatus, synthetischen Messwerten und aktueller Konfiguration; Aktualisierung alle 5 Sekunden. Konfigurationsänderungen bleiben im Portal. Keine Anmeldung: Geräte im erreichbaren lokalen Netz können die Simulationswerte lesen. Keine Geheimnisse, Fehlermeldungsdetails oder Hostverwaltung werden angeboten.
+
+Der Container bleibt network=none und nutzt für die Oberfläche ausschließlich /run/coneza-simulator-web/web.sock. Der Hostdienst coneza-simulator-web leitet nur zu diesem Socket weiter, erhält keine Docker-Socket-Rechte und bindet nicht an die PLC-Netzwerkadresse. deploy/coneza-simulator-web.conf erzeugt das Socketverzeichnis mit UID/GID 10001 beim Boot. Installieren mit systemd-tmpfiles --create und dem gleichnamigen systemd-Dienst. Compose verwendet nun coneza-eza-simulator:local-web; das vorherige Image :isolated bleibt als Rückfall verfügbar.
+
+Verifiziert: 13 gezielte lokale Tests; echte Browseransicht mit ONLINE und Messwerten auf dem IPC. Der Dienst ist für Autostart aktiviert, ein vollständiger IPC-Neustart wurde nicht getestet. Physische PLC unverändert.

@@ -13,3 +13,5 @@
 !docker/Dockerfile.simulator-offline
 !docker/wheels/
 !docker/wheels/*.whl
+
+!edge/simulator_web.py

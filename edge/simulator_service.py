@@ -53,12 +53,19 @@ async def run(stop_event=None):
         for signum in (signal.SIGTERM, signal.SIGINT):
             loop.add_signal_handler(signum, stop.set)
             installed.append(signum)
+    web_server = None
     try:
         await simulator.start()
+        if os.environ.get("SIMULATOR_WEB_SOCKET"):
+            from edge.simulator_web import SimulatorWeb
+            web_server = await SimulatorWeb(gateway).start(os.environ["SIMULATOR_WEB_SOCKET"])
         gateway.start()
         logging.info("Simulator started as %s; all controller traffic stays on loopback", gateway.device_id)
         await stop.wait()
     finally:
+        if web_server:
+            web_server.close()
+            await web_server.wait_closed()
         await gateway.stop()
         await simulator.stop()
         for signum in installed:

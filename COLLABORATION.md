@@ -77,3 +77,8 @@ FrÃ¼here Statusangaben â€kein Build/keine Registrierungâ€œ sind damit Ã¼berholt
 ## Aktuelle Ãœbergabe nach BetriebsprÃ¼fung
 
 EEP-77: Installation und gezielte Tests abgeschlossen; nur Git-/Jira-Abschluss lÃ¤uft. Alle beanspruchten Implementierungsdateien sind anschlieÃŸend freigegeben. Erneute SSH-PrÃ¼fung bestÃ¤tigt healthy und fortlaufende HTTP-200-Heartbeats. Andere Codex-Aufgabe inaktiv; Gemini-Zustand unbekannt. Fremde Ã„nderungen bleiben erhalten. Kein weiteres Paket begonnen.
+
+## Lokale Simulator-Weboberfläche (Nutzerauftrag)
+Codex beansprucht simulator_web.py, simulator_web_relay.py, zugehörigen Dienst und Tests sowie Simulator-Service, Dockerdateien und Anleitung. Nur lesender LAN-Zugang zu simulierten Messwerten und Einstellungen. Keine PLC-Zugriffe. Keine konkurrierende Codex-Arbeit festgestellt.
+
+Lokale Weboberfläche EEP-77 abgeschlossen: http://192.168.8.186/ im Browser geprüft, ONLINE und synthetische Messwerte sichtbar. 13 Tests bestanden. Schreibgeschützt, LAN-Bindung nur 192.168.8.186:80, isolierter Container unverändert network=none. Neuer unprivilegierter Hostdienst mit ausschließlich CAP_NET_BIND_SERVICE. Image 24d4dfab81056cfa0da9ea58ba4471976e63bdfaed3ca5186999aafc5622dabb. Autostart eingerichtet, Reboot nicht getestet. Dateien nach fokussiertem Commit freigegeben; fremde Änderungen erhalten.
