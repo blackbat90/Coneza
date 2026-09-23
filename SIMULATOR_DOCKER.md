@@ -66,3 +66,11 @@ Auf dem IPC erreichbar unter http://192.168.8.186/ (HTTP, Port 80, nur diese LAN
 Der Container bleibt network=none und nutzt für die Oberfläche ausschließlich /run/coneza-simulator-web/web.sock. Der Hostdienst coneza-simulator-web leitet nur zu diesem Socket weiter, erhält keine Docker-Socket-Rechte und bindet nicht an die PLC-Netzwerkadresse. deploy/coneza-simulator-web.conf erzeugt das Socketverzeichnis mit UID/GID 10001 beim Boot. Installieren mit systemd-tmpfiles --create und dem gleichnamigen systemd-Dienst. Compose verwendet nun coneza-eza-simulator:local-web; das vorherige Image :isolated bleibt als Rückfall verfügbar.
 
 Verifiziert: 13 gezielte lokale Tests; echte Browseransicht mit ONLINE und Messwerten auf dem IPC. Der Dienst ist für Autostart aktiviert, ein vollständiger IPC-Neustart wurde nicht getestet. Physische PLC unverändert.
+
+## EEP-77 separate Modbus TCP LAN endpoints
+
+Explicitly authorized endpoints: 192.168.8.186:5502 -> simulator only; 192.168.8.186:502 -> physical 192.168.1.10:502. These are transparent TCP relays, including write functions. No internet/router forwarding or firewall disabling. Bind address is the IPC LAN address only; clients with network access can send Modbus commands. Container stays network=none; simulator traffic enters through a fixed Unix socket. This does not prove full Phoenix firmware/register compatibility.
+
+Service: coneza-modbus-access. Files: /opt/coneza-modbus-access. Compose uses existing base file plus docker/compose.modbus-access.yml in that directory. Image is a layer on the previously deployed local-web image, deliberately excluding unrelated local controller/simulator edits. To disable both listeners: systemctl stop coneza-modbus-access.
+
+Verified: two relay tests passed; simulator LAN FC03 read succeeded, container healthy. Physical target TCP connection refused from IPC; forwarding listener runs but real PCU access is NOT operational until its Modbus TCP server is available. No physical writes performed. Existing coneza-phoenix-gateway service unchanged. Autostart enabled, reboot not tested.

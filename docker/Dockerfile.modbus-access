@@ -1,0 +1,3 @@
+FROM coneza-eza-simulator:local-web
+COPY edge/modbus_access.py /app/edge/modbus_access.py
+CMD ["python", "-m", "edge.modbus_access", "container"]

@@ -1,0 +1,5 @@
+**
+!edge/
+!edge/modbus_access.py
+!docker/
+!docker/Dockerfile.modbus-access

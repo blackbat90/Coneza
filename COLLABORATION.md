@@ -82,3 +82,8 @@ EEP-77: Installation und gezielte Tests abgeschlossen; nur Git-/Jira-Abschluss l
 Codex beansprucht simulator_web.py, simulator_web_relay.py, zugehörigen Dienst und Tests sowie Simulator-Service, Dockerdateien und Anleitung. Nur lesender LAN-Zugang zu simulierten Messwerten und Einstellungen. Keine PLC-Zugriffe. Keine konkurrierende Codex-Arbeit festgestellt.
 
 Lokale Weboberfläche EEP-77 abgeschlossen: http://192.168.8.186/ im Browser geprüft, ONLINE und synthetische Messwerte sichtbar. 13 Tests bestanden. Schreibgeschützt, LAN-Bindung nur 192.168.8.186:80, isolierter Container unverändert network=none. Neuer unprivilegierter Hostdienst mit ausschließlich CAP_NET_BIND_SERVICE. Image 24d4dfab81056cfa0da9ea58ba4471976e63bdfaed3ca5186999aafc5622dabb. Autostart eingerichtet, Reboot nicht getestet. Dateien nach fokussiertem Commit freigegeben; fremde Änderungen erhalten.
+
+## EEP-77 Modbus LAN access
+User explicitly requested both endpoints: simulator :5502 and physical PCU :502. Codex owns only new modbus_access module, service, Docker overlay and tests. Existing modified simulator/controller and physical gateway files remain untouched. Physical gateway service observed active; simulator stopped before this work.
+
+EEP-77 endpoints installed. Simulator FC03 verified on LAN5502, healthy/network=none; physical forward LAN502 installed but target 192.168.1.10:502 refuses TCP. Two relay tests pass. No PLC writes or changes. New files released after commit; all pre-existing controller/simulator/gateway edits preserved.

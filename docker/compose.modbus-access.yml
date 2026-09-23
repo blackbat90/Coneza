@@ -1,0 +1,3 @@
+services:
+  eza-simulator:
+    image: coneza-eza-simulator:modbus-access
