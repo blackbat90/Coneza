@@ -156,6 +156,10 @@ class PhoenixEZAControllerClient:
             "alarm_code_bitmask": status_vals[4],
         }
 
+    @staticmethod
+    def _signed16(value: int) -> int:
+        return value - 65536 if value & 0x8000 else value
+
     async def read_active_configuration(self) -> Dict[str, Any]:
         """Reads current setpoints and regulation curves from holding registers."""
         sys_vals = await self.read_holding_registers(0, 7)
@@ -178,12 +182,12 @@ class PhoenixEZAControllerClient:
             "q_control_mode": q_vals[0],
             "q_control_mode_text": Q_MODES_DESCRIPTION.get(q_vals[0], "Unknown"),
             "cos_phi_setpoint": q_vals[1] / 1000.0,
-            "q_setpoint_kvar": q_vals[3],
+            "q_setpoint_kvar": self._signed16(q_vals[3]),
             "q_u_curve": {
-                "u1_percent": qu_curve[0] / 10.0, "q1_percent": qu_curve[1] / 10.0,
-                "u2_percent": qu_curve[2] / 10.0, "q2_percent": qu_curve[3] / 10.0,
-                "u3_percent": qu_curve[4] / 10.0, "q3_percent": qu_curve[5] / 10.0,
-                "u4_percent": qu_curve[6] / 10.0, "q4_percent": qu_curve[7] / 10.0,
+                "u1_percent": qu_curve[0] / 10.0, "q1_percent": self._signed16(qu_curve[1]) / 10.0,
+                "u2_percent": qu_curve[2] / 10.0, "q2_percent": self._signed16(qu_curve[3]) / 10.0,
+                "u3_percent": qu_curve[4] / 10.0, "q3_percent": self._signed16(qu_curve[5]) / 10.0,
+                "u4_percent": qu_curve[6] / 10.0, "q4_percent": self._signed16(qu_curve[7]) / 10.0,
             },
             "p_f_droop": {
                 "overfreq_start_hz": pf_vals[0] / 100.0,
