@@ -1,0 +1,21 @@
+[Unit]
+Description=Coneza simulator fixed HTTPS portal relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+DynamicUser=yes
+RuntimeDirectory=coneza-portal
+RuntimeDirectoryMode=0755
+ExecStart=/usr/bin/python3 /opt/coneza-simulator/isolated-eep77/edge/portal_tunnel.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

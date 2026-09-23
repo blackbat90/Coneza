@@ -1,43 +1,43 @@
-# Gemeinsame Zusammenarbeit: Codex / Gemini
-
-Stand: 2026-09-23. Gemeinsamer lokaler Arbeitsbaum: C:/Workplace/Coneza/Coneza.
-
-## Verbindliche Arbeitsvereinbarung
-
-- Vor Änderungen aktuellen Dateistand und Git-Diff prüfen; fremde Änderungen erhalten. Keine konkurrierende Umsetzung desselben Pakets.
-- Jeder Schritt hat einen Jira-Schlüssel, Quellen, Prüfkriterien, passende Tests und fokussierte lokale Commits. Bestehende passende Epics wiederverwenden; sinnvolle fremde Zuordnungen erhalten.
-- Keine pauschalen Commits des Arbeitsbaums, kein Umschreiben der Historie, kein Produktionsdeployment und keine Steuerung realer Anlagen.
-- Jira-Aufgabenorganisation, Fortschrittskommentare und Commit-Verknüpfung sind autorisiert. Zugangsdaten nie in Dokumente oder Ausgaben übernehmen.
-- Diese Datei ist eine gemeinsame Übergabemöglichkeit. Es besteht keine direkte Verbindung zu Gemini; ob Gemini sie gelesen hat, ist unbekannt.
-
-## Aktive Zuständigkeiten
-
-| Agent | Paket | Dateien | Status |
-|---|---|---|---|
-| Codex | EEP-76: signed Q-Rücklesung; Epic EEP-38 | edge/phoenix_eza/controller.py; tests/test_phoenix_signed_config.py; COLLABORATION.md | Test abgeschlossen; Commit durch Git-Schreibrechte blockiert; keine aktive Codebearbeitung |
-| Gemini | Unbekannt | Unbekannt; bestehende Änderungen gelten als zu erhalten | Keine bestätigte Abstimmung |
-
-Codex beansprucht in diesem Zyklus keine anderen Implementierungsdateien. Andere Codex-Aufgabe im Projekt ist laut App-Status inaktiv; Gemini-Aktivität ist dadurch nicht feststellbar.
-
-## Bisherige Arbeit und Grenzen
-
-- 2026-09-21: Offline-Analyse ohne erfundene 2500-kW-Anlage/100%-Konsens; kritische Reviews und fehlende Daten blockieren Freigabe, Deployment und wartende Aufträge; keine KI-Zertifizierung im Audit. 14 gezielte isolierte Tests bestanden. Diese Änderungen sind noch uncommittet und mit dem vorherigen lokalen Arbeitsstand verschränkt; nicht pauschal mitcommitten.
-- Signed-Q-Korrektur stammt ebenfalls aus diesem Codex-Zyklus. controller.py war vor dieser Korrektur unverändert; sein aktueller Diff enthält ausschließlich die signed-Dekodierung. Deshalb lässt sich dieses Paket sicher isolieren.
-- Confluence-Inventur: CONFLUENCE_REQUIREMENTS.md, Stand 2026-09-21. 4 Spaces/35 Seiten inventarisiert, 30 Produktseiten textuell gelesen. Whiteboards, Bildanhänge und Norm-PDF bleiben inhaltlich offen. Keine vollständige Anforderungsabdeckung behaupten.
-- 2026-09-23: Jira-Backlog erneut live gelesen; passende bestehende Hierarchie EEP-38 -> EEP-40/EEP-48 bleibt bestehen. Neues Bug-Ticket EEP-76 unter EEP-38 erstellt: https://easy-eza.atlassian.net/browse/EEP-76.
-
-## Priorisierter Folge-Backlog (noch nicht beansprucht)
-
-1. Audit-/Freigabekorrekturen isolieren und nachvollziehbar committen; Quellen: EEP-34, Edge Cases 23199745. Eine verlässliche Trennung vom vorherigen Gemini-Stand ist erforderlich.
-2. TAB-Anwendung reparieren: backend/main.py fragt configurations/config_json ab; das Schema enthält eza_configurations/parameters_json. Quelle: Architecture and Features 1933313, EEP-40. Vorschlag für Prüfkriterien: richtigen Entwurf aktualisieren, Quellenversion dokumentieren, alte Freigabe verwerfen, keine angenommenen DSO-Werte als bestätigt behandeln.
-3. EEP-48: Konfigurationsimport/-export für Backup und Wiederverwendung. Vorschlag: versioniertes Format, strikte Validierung, Import als neuer ungeprüfter Entwurf; keine übernommene Deployment-Freigabe.
-4. EEP-23/EEP-34: nachvollziehbare Dokumentquellen, Komponenten-/Portzuordnung und geführte Inbetriebnahme. Der bestehende Code deckt nur Teile ab.
-5. Edge Cases 23199745: Offline-Nutzung sowie wöchentliche Backups/Reset; local_buffer.py ist bisher nicht im Heartbeat eingebunden. Puffergröße 50.000, BESS 95% und Timeout 5s sind Implementierungsannahmen, keine belegten Anforderungen der gelesenen Seiten.
-6. Quellenabdeckung vervollständigen: drei Whiteboards, Bildanhänge und VDE-PDF. Registerkarte in Confluence und lokaler Simulator unterscheiden sich; keine Hardware-Kompatibilität allein aus Simulation ableiten.
-
-## Übergabe
-
-Vor dem nächsten Arbeitspaket Status hier aktualisieren und Dateiinhalte erneut prüfen. Nicht automatisch annehmen, dass ein Jira-Backlogstatus den lokalen Implementierungsstand wiedergibt. Die komplette Testsuite ist nicht verifiziert.
+# Gemeinsame Zusammenarbeit: Codex / Gemini
+
+Stand: 2026-09-23. Gemeinsamer lokaler Arbeitsbaum: C:/Workplace/Coneza/Coneza.
+
+## Verbindliche Arbeitsvereinbarung
+
+- Vor Änderungen aktuellen Dateistand und Git-Diff prüfen; fremde Änderungen erhalten. Keine konkurrierende Umsetzung desselben Pakets.
+- Jeder Schritt hat einen Jira-Schlüssel, Quellen, Prüfkriterien, passende Tests und fokussierte lokale Commits. Bestehende passende Epics wiederverwenden; sinnvolle fremde Zuordnungen erhalten.
+- Keine pauschalen Commits des Arbeitsbaums, kein Umschreiben der Historie, kein Produktionsdeployment und keine Steuerung realer Anlagen.
+- Jira-Aufgabenorganisation, Fortschrittskommentare und Commit-Verknüpfung sind autorisiert. Zugangsdaten nie in Dokumente oder Ausgaben übernehmen.
+- Diese Datei ist eine gemeinsame Übergabemöglichkeit. Es besteht keine direkte Verbindung zu Gemini; ob Gemini sie gelesen hat, ist unbekannt.
+
+## Aktive Zuständigkeiten
+
+| Agent | Paket | Dateien | Status |
+|---|---|---|---|
+| Codex | EEP-76: signed Q-Rücklesung; Epic EEP-38 | edge/phoenix_eza/controller.py; tests/test_phoenix_signed_config.py; COLLABORATION.md | Abgeschlossen: Commit 967745e; keine aktive Codebearbeitung |
+| Gemini | Unbekannt | Unbekannt; bestehende Änderungen gelten als zu erhalten | Keine bestätigte Abstimmung |
+
+Codex beansprucht in diesem Zyklus keine anderen Implementierungsdateien. Andere Codex-Aufgabe im Projekt ist laut App-Status inaktiv; Gemini-Aktivität ist dadurch nicht feststellbar.
+
+## Bisherige Arbeit und Grenzen
+
+- 2026-09-21: Offline-Analyse ohne erfundene 2500-kW-Anlage/100%-Konsens; kritische Reviews und fehlende Daten blockieren Freigabe, Deployment und wartende Aufträge; keine KI-Zertifizierung im Audit. 14 gezielte isolierte Tests bestanden. Diese Änderungen sind noch uncommittet und mit dem vorherigen lokalen Arbeitsstand verschränkt; nicht pauschal mitcommitten.
+- Signed-Q-Korrektur stammt ebenfalls aus diesem Codex-Zyklus. controller.py war vor dieser Korrektur unverändert; sein aktueller Diff enthält ausschließlich die signed-Dekodierung. Deshalb lässt sich dieses Paket sicher isolieren.
+- Confluence-Inventur: CONFLUENCE_REQUIREMENTS.md, Stand 2026-09-21. 4 Spaces/35 Seiten inventarisiert, 30 Produktseiten textuell gelesen. Whiteboards, Bildanhänge und Norm-PDF bleiben inhaltlich offen. Keine vollständige Anforderungsabdeckung behaupten.
+- 2026-09-23: Jira-Backlog erneut live gelesen; passende bestehende Hierarchie EEP-38 -> EEP-40/EEP-48 bleibt bestehen. Neues Bug-Ticket EEP-76 unter EEP-38 erstellt: https://easy-eza.atlassian.net/browse/EEP-76.
+
+## Priorisierter Folge-Backlog (noch nicht beansprucht)
+
+1. Audit-/Freigabekorrekturen isolieren und nachvollziehbar committen; Quellen: EEP-34, Edge Cases 23199745. Eine verlässliche Trennung vom vorherigen Gemini-Stand ist erforderlich.
+2. TAB-Anwendung reparieren: backend/main.py fragt configurations/config_json ab; das Schema enthält eza_configurations/parameters_json. Quelle: Architecture and Features 1933313, EEP-40. Vorschlag für Prüfkriterien: richtigen Entwurf aktualisieren, Quellenversion dokumentieren, alte Freigabe verwerfen, keine angenommenen DSO-Werte als bestätigt behandeln.
+3. EEP-48: Konfigurationsimport/-export für Backup und Wiederverwendung. Vorschlag: versioniertes Format, strikte Validierung, Import als neuer ungeprüfter Entwurf; keine übernommene Deployment-Freigabe.
+4. EEP-23/EEP-34: nachvollziehbare Dokumentquellen, Komponenten-/Portzuordnung und geführte Inbetriebnahme. Der bestehende Code deckt nur Teile ab.
+5. Edge Cases 23199745: Offline-Nutzung sowie wöchentliche Backups/Reset; local_buffer.py ist bisher nicht im Heartbeat eingebunden. Puffergröße 50.000, BESS 95% und Timeout 5s sind Implementierungsannahmen, keine belegten Anforderungen der gelesenen Seiten.
+6. Quellenabdeckung vervollständigen: drei Whiteboards, Bildanhänge und VDE-PDF. Registerkarte in Confluence und lokaler Simulator unterscheiden sich; keine Hardware-Kompatibilität allein aus Simulation ableiten.
+
+## Übergabe
+
+Vor dem nächsten Arbeitspaket Status hier aktualisieren und Dateiinhalte erneut prüfen. Nicht automatisch annehmen, dass ein Jira-Backlogstatus den lokalen Implementierungsstand wiedergibt. Die komplette Testsuite ist nicht verifiziert.
 
 ## Ergebnis des Zyklus 2026-09-23 / EEP-76
 
@@ -59,3 +59,21 @@ Ticket: https://easy-eza.atlassian.net/browse/EEP-77, Epic EEP-38. Quelle: ausdr
 - Verifikation: `python -m unittest tests.test_simulator_service tests.test_phoenix_signed_config -v` — 5 Tests bestanden. Echte lokale Modbus-Verbindung mit Mock-Portal für Registrierung, Telemetrie und simulierten Konfigurationsauftrag. Shutdown und falsche Konfiguration geprüft.
 - Benutzer wünscht Betrieb auf Ubuntu IPC im lokalen Netz. Das ist über ausgehendes HTTPS möglich. SSH-IP/Benutzer noch nicht genannt; Docker ist hier nicht installiert. Deshalb kein Image-Build, kein Containerstart auf IPC und keine tatsächliche Portalregistrierung behaupten.
 - EEP-77 Implementierung abgeschlossen; Deployment wartet auf erreichbaren Docker-Host. Dateien freigegeben nach Commit. Fremde Änderungen weiterhin uncommittet erhalten.
+
+- EEP-77 Paket committed: 80c358b. IPC-Adresse vom Nutzer bestätigt: 192.168.8.186, SSH-Benutzer root. SSH erreichbar; Banner Debian OpenSSH. Betriebssystem/Docker und Schlüsselzugang werden vor Installation geprüft.
+
+## EEP-77 Fortsetzung: Offline-Image-Build
+
+IPC ist Debian 12 ARM64, nicht Ubuntu. Docker läuft nach autorisierter Umstellung ausschließlich von IPv4-iptables auf legacy; IPv6 unverändert. Kernel 6.1.118 hat weder NF_TABLES noch IP_NF_RAW. Bridge-Build/Container-Netzwerk scheitert an fehlendem raw-Filter. Keine Schutzfunktion deaktivieren. Codex beansprucht zusätzlich docker/Dockerfile.simulator-offline und dessen .dockerignore sowie die Docker-Anleitung. Offline-Build verwendet vorab geladene Wheels und network=none. Dauerhafte Portalverbindung bleibt bis zur unterstützten Laufzeit offen.
+
+Codex erweitert EEP-77 um Portal-UDS-Transport: edge/backend_client.py (unverändert gegenüber HEAD vor Bearbeitung), edge/simulator_service.py, edge/portal_tunnel.py, deploy/coneza-portal-tunnel.service, docker/compose.simulator-isolated.yml und zugehörige Tests. Container bleibt network=none; ein unprivilegierter Host-Dienst verbindet ausschließlich coneza.de:443. TLS bleibt Ende-zu-Ende verifiziert. Keine Firewall-Schutzfunktion deaktivieren.
+
+## EEP-77 Ergebnis: IPC-Simulator online
+
+2026-09-23: ARM64-Image e307cc022046b8c04e96ad29859c6f3bcd55570ad3b4c6488caabd2f52688b03 auf Debian-IPC 192.168.8.186 gebaut. Container coneza-simulator-eza-simulator-1 healthy, network=none, UID10001, read-only. Unprivilegierter lokaler Unix-Socket-Relay zu festem coneza.de:443; TLS-Ende-zu-Ende-Prüfung bleibt aktiv. Registrierung und wiederholte Heartbeats HTTP200; Portalgerät coneza-sim-ipc-186 / SIMULATION - IPC 192.168.8.186 virtual EZA. Keine physische PLC angesprochen. 9 lokale Tests bestanden; vorheriges Basisimage zusätzlich mit 4 Integrationstests direkt auf IPC geprüft. Keine vollständige Suite behaupten. Boot-Verhalten noch nicht durch Neustart geprüft.
+
+Frühere Statusangaben „kein Build/keine Registrierung“ sind damit überholt. Konfiguration/Abhängigkeiten wurden nur in getrennten simulator-spezifischen Verzeichnissen auf IPC abgelegt; keine lokalen Zugangsdaten mitkopiert. EEP-77-Dateien nach fokussiertem Commit freigeben. Dokumentation: SIMULATOR_DOCKER.md.
+
+## Aktuelle Übergabe nach Betriebsprüfung
+
+EEP-77: Installation und gezielte Tests abgeschlossen; nur Git-/Jira-Abschluss läuft. Alle beanspruchten Implementierungsdateien sind anschließend freigegeben. Erneute SSH-Prüfung bestätigt healthy und fortlaufende HTTP-200-Heartbeats. Andere Codex-Aufgabe inaktiv; Gemini-Zustand unbekannt. Fremde Änderungen bleiben erhalten. Kein weiteres Paket begonnen.

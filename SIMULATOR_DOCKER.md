@@ -36,3 +36,25 @@ docker compose -f docker/compose.simulator.yml down
 ```
 
 The portal may retain its device record and eventually show it offline. Stop does not delete any portal data.
+
+## Verified IPC deployment (EEP-77, 2026-09-23)
+
+Host `192.168.8.186` is Debian 12 on ARM64 (kernel 6.1.118), not Ubuntu. Its kernel lacks NF_TABLES and IP_NF_RAW. The authorized IPv4 iptables-legacy selection lets Docker start, but bridge networking still cannot create its raw filtering rules. IPv6 was not changed and no Docker filtering protection was disabled.
+
+The deployed image is `coneza-eza-simulator:isolated`, ID `sha256:e307cc022046b8c04e96ad29859c6f3bcd55570ad3b4c6488caabd2f52688b03`. It was built locally on the IPC with `Dockerfile.simulator-offline` using predownloaded ARM64-compatible wheels and `--network=none`. To reproduce: download wheels from requirements.simulator.txt into docker/wheels, then build with that Dockerfile. The wheel directory is an input artifact, not committed source.
+
+Active deployment: `/opt/coneza-simulator/isolated-eep77/docker/compose.simulator-isolated.yml`, Compose project `coneza-simulator`. The container uses network=none, non-root UID/GID 10001, read-only root filesystem, no capabilities and no published ports. A read-only bind mount provides a Unix socket. The unprivileged `coneza-portal-tunnel.service` relays this socket only to fixed destination coneza.de:443; the container still validates HTTPS certificates end-to-end. It is not a general network proxy and accepts no requested upstream address.
+
+Verified: container healthy; portal registration HTTP 200; repeated heartbeat HTTP 200. Portal device ID: `coneza-sim-ipc-186`; name: **SIMULATION - IPC 192.168.8.186 virtual EZA**. No physical PLC access or configuration performed. No portal plant assignment was changed.
+
+```bash
+# On the IPC: status and logs
+sudo docker compose -p coneza-simulator -f /opt/coneza-simulator/isolated-eep77/docker/compose.simulator-isolated.yml ps
+sudo docker logs --tail=30 coneza-simulator-eza-simulator-1
+sudo systemctl status coneza-portal-tunnel.service
+
+# Stop the simulator only
+sudo docker compose -p coneza-simulator -f /opt/coneza-simulator/isolated-eep77/docker/compose.simulator-isolated.yml stop
+```
+
+The image uses in-memory simulated settings and must not be represented as Phoenix PCU firmware or certified EZA control. Existing portal approval restrictions apply. Visual portal login/plant assignment and physical PCU compatibility were not tested.

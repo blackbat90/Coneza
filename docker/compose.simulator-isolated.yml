@@ -1,0 +1,23 @@
+services:
+  eza-simulator:
+    image: coneza-eza-simulator:isolated
+    network_mode: none
+    environment:
+      CONEZA_BACKEND_URL: https://coneza.de/portal
+      SIMULATOR_DEVICE_ID: coneza-sim-ipc-186
+      SIMULATOR_NAME: IPC 192.168.8.186 virtual EZA
+      SIMULATOR_PORTAL_SOCKET: /run/coneza-portal/portal.sock
+    volumes:
+      - type: bind
+        source: /run/coneza-portal
+        target: /run/coneza-portal
+        read_only: true
+        bind:
+          create_host_path: false
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

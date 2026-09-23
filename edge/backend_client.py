@@ -36,6 +36,9 @@ class EdgeBackendClient:
         self._task: Optional[asyncio.Task] = None
         self.last_sync_status: Dict[str, Any] = {"status": "INITIALIZING", "error": None}
 
+    def _http_client(self, **kwargs):
+        return httpx.AsyncClient(**kwargs)
+
     def get_local_ip(self) -> str:
         """Determines active local LAN IP address."""
         try:
@@ -58,7 +61,7 @@ class EdgeBackendClient:
             "controller_port": self.controller_port,
         }
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with self._http_client(timeout=5.0) as client:
                 resp = await client.post(f"{self.backend_url}/api/devices/register", json=payload)
                 if resp.status_code in (200, 201):
                     logger.info(f"Registered with backend: {self.device_id}")
@@ -92,7 +95,7 @@ class EdgeBackendClient:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with self._http_client(timeout=5.0) as client:
                 resp = await client.post(f"{self.backend_url}/api/devices/{self.device_id}/heartbeat", json=payload)
                 if resp.status_code == 200:
                     self.last_sync_status = {"status": "ONLINE", "error": None}
@@ -124,7 +127,7 @@ class EdgeBackendClient:
             "registers_updated": result["registers_updated"]
         }
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with self._http_client(timeout=5.0) as client:
                 await client.post(f"{self.backend_url}/api/devices/{self.device_id}/config-result", json=report_payload)
                 logger.info(f"Reported config job {job_id} result: success={result['success']}")
         except Exception as e:
@@ -139,7 +142,7 @@ class EdgeBackendClient:
                 "doc_type": doc_data.get("detected_type", "E8"),
                 "ocr_summary": str(doc_data.get("extracted_entities", {}))
             }
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with self._http_client(timeout=30.0) as client:
                 resp = await client.post(f"{self.backend_url}/api/documents/upload", files=files, data=data)
                 if resp.status_code in (200, 201):
                     return resp.json()

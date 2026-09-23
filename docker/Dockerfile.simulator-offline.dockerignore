@@ -1,0 +1,15 @@
+**
+!docker/
+!docker/Dockerfile.simulator
+!docker/requirements.simulator.txt
+!edge/
+!edge/backend_client.py
+!edge/simulator_service.py
+!edge/phoenix_eza/
+!edge/phoenix_eza/controller.py
+!edge/phoenix_eza/simulator.py
+!edge/phoenix_eza/register_map.py
+
+!docker/Dockerfile.simulator-offline
+!docker/wheels/
+!docker/wheels/*.whl
