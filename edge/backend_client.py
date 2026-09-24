@@ -133,7 +133,8 @@ class EdgeBackendClient:
         }
         try:
             async with self._http_client(timeout=5.0) as client:
-                await client.post(f"{self.backend_url}/api/devices/{self.device_id}/config-result", json=report_payload)
+                response = await client.post(f"{self.backend_url}/api/devices/{self.device_id}/config-result", json=report_payload)
+                response.raise_for_status()
                 logger.info(f"Reported config job {job_id} result: success={result['success']}")
         except Exception as e:
             logger.error(f"Failed to report config job {job_id} result to backend: {e}")

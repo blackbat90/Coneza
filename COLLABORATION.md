@@ -92,3 +92,8 @@ EEP-77 endpoints installed. Simulator FC03 verified on LAN5502, healthy/network=
 Codex claims only edge/backend_client.py and tests/test_edge_heartbeat_status.py plus this coordination file. Other Codex task idle; Gemini status unknown. Baseline regression proves HTTP rejection leaves stale ONLINE (7 cases). Local-only fix; no deployment or hardware access. Existing unrelated work preserved.
 
 EEP-77 result: rejected HTTP heartbeat now replaces stale ONLINE with HEARTBEAT_FAILED and numeric HTTP status only. Successful heartbeat recovers ONLINE; 404 registration preserved. Six focused tests passed, baseline failed in seven HTTP cases. No full-suite claim, no IPC or PLC deployment. Files released after focused commit.
+
+## 2026-09-24 EEP-77 result delivery logging
+Codex claims clean edge/backend_client.py plus new tests/test_edge_result_reporting.py. Baseline shows rejected config-result HTTP307/401/500 logged as delivered. Local-only work, controller fully mocked; unrelated modifications preserved.
+
+Result: HTTP success is now required before logging config-result delivery. Three targeted tests pass; regression failed on three rejected response codes before fix. No automatic retry or duplicate controller execution introduced. No deployment, real hardware access or full-suite claim. Files released after commit.
