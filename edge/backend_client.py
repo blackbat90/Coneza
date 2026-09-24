@@ -107,6 +107,11 @@ class EdgeBackendClient:
                 elif resp.status_code == 404:
                     # Device not registered in backend DB yet, re-register
                     await self.register_device()
+                else:
+                    # A rejected heartbeat must not leave an earlier ONLINE visible.
+                    self.last_sync_status = {
+                        "status": "HEARTBEAT_FAILED", "error": f"HTTP {resp.status_code}"
+                    }
         except Exception as e:
             self.last_sync_status = {"status": "HEARTBEAT_FAILED", "error": str(e)}
 

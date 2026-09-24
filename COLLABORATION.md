@@ -87,3 +87,8 @@ Lokale Weboberfläche EEP-77 abgeschlossen: http://192.168.8.186/ im Browser gepr
 User explicitly requested both endpoints: simulator :5502 and physical PCU :502. Codex owns only new modbus_access module, service, Docker overlay and tests. Existing modified simulator/controller and physical gateway files remain untouched. Physical gateway service observed active; simulator stopped before this work.
 
 EEP-77 endpoints installed. Simulator FC03 verified on LAN5502, healthy/network=none; physical forward LAN502 installed but target 192.168.1.10:502 refuses TCP. Two relay tests pass. No PLC writes or changes. New files released after commit; all pre-existing controller/simulator/gateway edits preserved.
+
+## 2026-09-24 EEP-77 heartbeat status correction
+Codex claims only edge/backend_client.py and tests/test_edge_heartbeat_status.py plus this coordination file. Other Codex task idle; Gemini status unknown. Baseline regression proves HTTP rejection leaves stale ONLINE (7 cases). Local-only fix; no deployment or hardware access. Existing unrelated work preserved.
+
+EEP-77 result: rejected HTTP heartbeat now replaces stale ONLINE with HEARTBEAT_FAILED and numeric HTTP status only. Successful heartbeat recovers ONLINE; 404 registration preserved. Six focused tests passed, baseline failed in seven HTTP cases. No full-suite claim, no IPC or PLC deployment. Files released after focused commit.
