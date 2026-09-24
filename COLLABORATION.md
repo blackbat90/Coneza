@@ -97,3 +97,8 @@ EEP-77 result: rejected HTTP heartbeat now replaces stale ONLINE with HEARTBEAT_
 Codex claims clean edge/backend_client.py plus new tests/test_edge_result_reporting.py. Baseline shows rejected config-result HTTP307/401/500 logged as delivered. Local-only work, controller fully mocked; unrelated modifications preserved.
 
 Result: HTTP success is now required before logging config-result delivery. Three targeted tests pass; regression failed on three rejected response codes before fix. No automatic retry or duplicate controller execution introduced. No deployment, real hardware access or full-suite claim. Files released after commit.
+
+## EEP-77 unexpected heartbeat failure
+Codex claims clean backend_client.py and new test_edge_loop_status.py only. Other project task not loaded; Gemini unknown. Unexpected heartbeat exceptions currently leave ONLINE stale; baseline regression reproduced. Local mocked tests only.
+
+Result: outer heartbeat exception now invalidates ONLINE with generic failure text. Five targeted tests pass; baseline failed. Cancellation propagation and loop continuation tested. No IPC/PLC access or deployment; unrelated modifications preserved. Files released after commit.

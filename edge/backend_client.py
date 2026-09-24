@@ -166,6 +166,7 @@ class EdgeBackendClient:
             try:
                 await self.send_heartbeat()
             except Exception as e:
+                self.last_sync_status = {"status": "HEARTBEAT_FAILED", "error": "Heartbeat processing failed"}
                 logger.error(f"Heartbeat loop error: {e}")
             await asyncio.sleep(self.heartbeat_interval_sec)
 
