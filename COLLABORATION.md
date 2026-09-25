@@ -102,3 +102,8 @@ Result: HTTP success is now required before logging config-result delivery. Thre
 Codex claims clean backend_client.py and new test_edge_loop_status.py only. Other project task not loaded; Gemini unknown. Unexpected heartbeat exceptions currently leave ONLINE stale; baseline regression reproduced. Local mocked tests only.
 
 Result: outer heartbeat exception now invalidates ONLINE with generic failure text. Five targeted tests pass; baseline failed. Cancellation propagation and loop continuation tested. No IPC/PLC access or deployment; unrelated modifications preserved. Files released after commit.
+
+## 2026-09-25 EEP-77 job envelope validation
+Live Jira EEP-77 verified under EEP-38 (simulation/config acknowledgments, source reference Dev. Approach 4096001). Codex claims clean edge/backend_client.py, tests/test_edge_job_validation.py and this file. Other project task not loaded; Gemini unknown. Baseline malformed envelopes reach mocked controller or fail with AttributeError. No hardware/network in tests. Existing modified files untouched.
+
+Result: invalid job envelopes rejected before controller/HTTP calls; requires object, nonblank string job_id, explicit parameters object. Six targeted tests passed, including twelve malformed cases and existing successful report/heartbeat regressions. Parameter values, approval authorization and idempotency are outside this change; empty explicit objects remain accepted. Baseline failed all twelve cases (nine failures, three errors). No deployment or PLC access. Files released after commit.

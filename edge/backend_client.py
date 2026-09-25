@@ -117,8 +117,14 @@ class EdgeBackendClient:
 
     async def _execute_pending_config(self, job: Dict[str, Any]):
         """Executes a pending EZA configuration job dispatched by the backend."""
+        if not isinstance(job, dict):
+            raise ValueError("Configuration job must be an object")
         job_id = job.get("job_id")
-        config_params = job.get("parameters", {})
+        config_params = job.get("parameters")
+        if not isinstance(job_id, str) or not job_id.strip():
+            raise ValueError("Configuration job requires a non-empty string job_id")
+        if not isinstance(config_params, dict):
+            raise ValueError("Configuration job requires a parameters object")
         logger.info(f"Executing pending EZA configuration job {job_id} on Phoenix controller...")
 
         result = await self.controller_client.apply_configuration(config_params, verify=True)
