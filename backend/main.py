@@ -66,6 +66,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+from backend.document_draft_routes import router as document_draft_router
+app.include_router(document_draft_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
