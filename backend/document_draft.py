@@ -43,6 +43,11 @@ def build_draft(documents, extract_entities):
         for page in doc['extraction'].get('pages', []):
             text = page.get('text', '')
             observations.append((doc, page.get('page_number'), extract_entities(text, doc['type'])))
+            # The legacy extractor returns the first match per entity. Inspect
+            # individual lines too, preserving page-wide extraction for wrapped values.
+            for line in text.splitlines():
+                if line.strip() and line.strip() != text.strip():
+                    observations.append((doc, page.get('page_number'), extract_entities(line, doc['type'])))
         if not any(p.get('text', '').strip() for p in doc['extraction'].get('pages', [])):
             warnings.append(f"{doc['filename']}: Kein auswertbarer Text; OCR oder manuelle Ergänzung erforderlich")
     rows = []
@@ -54,7 +59,9 @@ def build_draft(documents, extract_entities):
                 continue
             if isinstance(value, float) and not math.isfinite(value):
                 continue
-            candidates.append(dict(value=value, document=doc['filename'], document_type=doc['type'], page=page))
+            candidate = dict(value=value, document=doc['filename'], document_type=doc['type'], page=page)
+            if candidate not in candidates:
+                candidates.append(candidate)
         unique = []
         for candidate in candidates:
             if candidate['value'] not in unique:

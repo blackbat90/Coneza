@@ -31,3 +31,21 @@ class DraftTests(unittest.TestCase):
 
     def test_invalid_document_pair_rejected(self):
         with self.assertRaises(ValueError):build_draft([], lambda text,kind: {})
+
+    def test_conflicting_values_on_same_page_are_not_hidden(self):
+        from edge.ocr_engine import ocr_engine
+        draft=build_draft(self.documents('Wirkleistung: 75 kW\nWirkleistung: 100 kW', ''),
+                          ocr_engine._extract_grid_entities)
+        field=draft['fields'][0]
+        self.assertEqual(field['status'], 'conflict')
+        self.assertIsNone(field['value'])
+        self.assertEqual([s['value'] for s in field['sources']], [75, 100])
+        self.assertTrue(all(s['page']==1 for s in field['sources']))
+
+    def test_wrapped_values_still_detected_without_duplicate_sources(self):
+        from edge.ocr_engine import ocr_engine
+        draft=build_draft(self.documents('Wirkleistung:\n75 kW', 'Wirkleistung: 75 kW'),
+                          ocr_engine._extract_grid_entities)
+        field=draft['fields'][0]
+        self.assertEqual(field['value'],75)
+        self.assertEqual(len(field['sources']),2)
