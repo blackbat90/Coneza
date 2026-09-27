@@ -32,6 +32,16 @@ class DraftTests(unittest.TestCase):
     def test_invalid_document_pair_rejected(self):
         with self.assertRaises(ValueError):build_draft([], lambda text,kind: {})
 
+    def test_failed_extraction_cannot_contribute_partial_values(self):
+        documents=self.documents('75','100')
+        documents[0]['extraction']['success']=False
+        draft=build_draft(documents, lambda text,kind: {'active_power_kw':float(text)})
+        field=draft['fields'][0]
+        self.assertEqual(field['value'],100)
+        self.assertEqual(field['status'],'unreviewed')
+        self.assertEqual([s['document_type'] for s in field['sources']],['E8'])
+        self.assertTrue(any('nicht gelesen' in warning for warning in draft['warnings']))
+
     def test_conflicting_values_on_same_page_are_not_hidden(self):
         from edge.ocr_engine import ocr_engine
         draft=build_draft(self.documents('Wirkleistung: 75 kW\nWirkleistung: 100 kW', ''),

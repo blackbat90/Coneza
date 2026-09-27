@@ -40,6 +40,7 @@ def build_draft(documents, extract_entities):
     for doc in documents:
         if not doc['extraction'].get('success'):
             warnings.append(f"{doc['filename']}: Dokument konnte nicht gelesen werden")
+            continue
         for page in doc['extraction'].get('pages', []):
             text = page.get('text', '')
             observations.append((doc, page.get('page_number'), extract_entities(text, doc['type'])))

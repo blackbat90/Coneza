@@ -127,3 +127,8 @@ EEP-92 under EEP-38 created for document-driven PCU draft. New authenticated end
 Codex claims clean document_draft.py and test_document_draft.py only. Other portal task idle; main/template and all existing work untouched. Baseline proves repeated conflicting power values on separate lines of one page are silently reduced to first match.
 
 Result: page plus line extraction preserves conflicting values on separate lines of same page; exact duplicate sources deduplicated. Wrapped values retained. Ten focused tests passed; baseline regression failed. Multiple values within a single line and semantic distinction of nameplate vs feed-in remain limitations of legacy heuristic extraction. No deployment or physical writes. Files released after commit.
+
+## EEP-92 failed extraction isolation
+Codex claims clean document_draft.py and test_document_draft.py. Other portal task reports systemError; no competing implementation observed. Baseline regression shows partial text from a failed extraction can still influence draft values. Existing unrelated work untouched.
+
+Result: failed extraction now contributes warning only, never partial parameter observations. Successful companion document preserved. Eleven targeted tests pass; baseline regression failed. No deployment or real hardware access. Editing/persistence and real-document accuracy remain open. Files released after focused commit.
