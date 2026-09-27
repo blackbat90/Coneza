@@ -85,6 +85,7 @@ class EdgeBackendClient:
                 telemetry = await self.controller_client.read_telemetry()
             except Exception as e:
                 logger.warning(f"Failed to read telemetry during heartbeat: {e}")
+                controller_conn = {"connected": False, "controller_state": "TELEMETRY_UNAVAILABLE"}
 
         payload = {
             "device_id": self.device_id,

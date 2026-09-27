@@ -107,3 +107,8 @@ Result: outer heartbeat exception now invalidates ONLINE with generic failure te
 Live Jira EEP-77 verified under EEP-38 (simulation/config acknowledgments, source reference Dev. Approach 4096001). Codex claims clean edge/backend_client.py, tests/test_edge_job_validation.py and this file. Other project task not loaded; Gemini unknown. Baseline malformed envelopes reach mocked controller or fail with AttributeError. No hardware/network in tests. Existing modified files untouched.
 
 Result: invalid job envelopes rejected before controller/HTTP calls; requires object, nonblank string job_id, explicit parameters object. Six targeted tests passed, including twelve malformed cases and existing successful report/heartbeat regressions. Parameter values, approval authorization and idempotency are outside this change; empty explicit objects remain accepted. Baseline failed all twelve cases (nine failures, three errors). No deployment or PLC access. Files released after commit.
+
+## 2026-09-27 EEP-77 telemetry availability
+Codex claims clean backend_client.py and new test_edge_telemetry_failure.py only. Other project tasks not loaded; Gemini unknown. Mocked baseline proves failed telemetry read still publishes controller_connected=True. No deployment/hardware access.
+
+Result: telemetry read errors publish controller_connected=False / TELEMETRY_UNAVAILABLE with no fabricated values. Next successful read restores measured data and connectivity; portal connectivity remains separate. Seven focused tests pass, baseline regression failed. No deployment, hardware access, full-suite claim or changes to dispatch policy. Files released after commit.
