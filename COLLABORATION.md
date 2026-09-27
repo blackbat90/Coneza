@@ -112,3 +112,8 @@ Result: invalid job envelopes rejected before controller/HTTP calls; requires ob
 Codex claims clean backend_client.py and new test_edge_telemetry_failure.py only. Other project tasks not loaded; Gemini unknown. Mocked baseline proves failed telemetry read still publishes controller_connected=True. No deployment/hardware access.
 
 Result: telemetry read errors publish controller_connected=False / TELEMETRY_UNAVAILABLE with no fabricated values. Next successful read restores measured data and connectivity; portal connectivity remains separate. Seven focused tests pass, baseline regression failed. No deployment, hardware access, full-suite claim or changes to dispatch policy. Files released after commit.
+
+## 2026-09-27 EEP-77 controller probe failure
+Codex claims clean backend_client.py and new test_edge_probe_failure.py. Other tasks not loaded; Gemini unknown. Probe exceptions currently suppress entire portal heartbeat. Baseline reproduced with mocks; no hardware access.
+
+Result: probe exceptions produce disconnected/CONNECTION_CHECK_FAILED heartbeat without exception details or fabricated telemetry. Subsequent successful probe recovers; cancellation still propagates without HTTP access. Nine targeted mocked tests pass; baseline error reproduced. No deployment or hardware access. Job dispatch policy unchanged; full suite not asserted. Files released after focused commit.

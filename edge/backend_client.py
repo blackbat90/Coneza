@@ -78,7 +78,11 @@ class EdgeBackendClient:
 
     async def send_heartbeat(self):
         """Sends periodic heartbeat with live Phoenix Contact EZA telemetry."""
-        controller_conn = await self.controller_client.test_connection()
+        try:
+            controller_conn = await self.controller_client.test_connection()
+        except Exception:
+            logger.warning("Controller connection check failed during heartbeat")
+            controller_conn = {"connected": False, "controller_state": "CONNECTION_CHECK_FAILED"}
         telemetry = {}
         if controller_conn.get("connected"):
             try:
