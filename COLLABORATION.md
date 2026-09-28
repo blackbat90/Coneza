@@ -142,3 +142,6 @@ Result: per-field manual value and reason inputs added; JSON export retains sour
 Codex claims clean draft HTML/editor JS and associated JS test only. Other tasks not loaded; shared main/template untouched. Import stays browser-local with bounded size, structural validation and no approval transfer.
 
 Result: downloaded draft JSON can be reopened locally with evidence and manual annotations. Import limits size/structure, strips config IDs and approval state, remains DRAFT/deployable=false. Tests cover round-trip, malformed/oversized/duplicate/unknown fields and approval stripping; Node tests + UI syntax + 11 Python tests pass. Browser interaction not verified this cycle. No server persistence or deployment; files released after commit.
+
+## EEP-92 preserve document warnings on import
+Codex worked only on clean draft editor JS and its regression tests. Other tasks not loaded; existing main/template work untouched. Baseline proved extraction warnings discarded by import. Fixed: validated original warnings retained, repeated import notice deduplicated. All Node editor/import assertions pass, including malformed warnings and repeated import. No deployment or hardware access. Jira update pending: network permission not granted this cycle. Files released after focused commit.

@@ -45,8 +45,11 @@
             if (!document || !['SLD','E8','E9'].includes(document.type) || !string(document.filename)) fail();
             return {type:document.type, filename:document.filename};
         });
-        let result = {status:'DRAFT',deployable:false,fields,documents,
-            warnings:['Aus lokaler Datei geöffnet. Dokumentquellen und Ergänzungen sind nicht erneut geprüft.'],
+        if (data.warnings !== undefined && (!Array.isArray(data.warnings) ||
+            data.warnings.length > 1000 || !data.warnings.every(string))) fail();
+        const warnings = [...new Set([...(data.warnings || []),
+            'Aus lokaler Datei geöffnet. Dokumentquellen und Ergänzungen sind nicht erneut geprüft.'])];
+        let result = {status:'DRAFT',deployable:false,fields,documents,warnings,
             notice:'Importierter, ungeprüfter Entwurf. Keine Freigabe und keine Geräteübertragung.'};
         if (data.manual_overrides !== undefined && !Array.isArray(data.manual_overrides)) fail();
         const edited = new Set();

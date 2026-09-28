@@ -42,3 +42,11 @@ assert.throws(()=>restore(JSON.stringify({...exported,fields:[exported.fields[0]
 assert.throws(()=>restore(JSON.stringify({...exported,manual_overrides:[{key:'unknown',value:'1',note:''}]})));
 assert.throws(()=>restore(JSON.stringify({...exported,fields:[{...exported.fields[0],sources:[{}]}]})));
 console.log('Draft restore: evidence and annotations retained, approval stripped, invalid imports rejected');
+const withWarning = {...exported, warnings:['E8.pdf: Dokument konnte nicht gelesen werden']};
+const warningRestored = restore(JSON.stringify(withWarning));
+assert.ok(warningRestored.warnings.includes(withWarning.warnings[0]), 'Original extraction warning must survive import');
+assert.deepEqual(restore(JSON.stringify(warningRestored)).warnings,warningRestored.warnings,
+    'Repeated import must not duplicate notices');
+assert.throws(()=>restore(JSON.stringify({...exported,warnings:'not a list'})));
+assert.throws(()=>restore(JSON.stringify({...exported,warnings:[{message:'invalid'}]})));
+console.log('Draft restore: extraction warnings retained and validated across repeated imports');
