@@ -18,6 +18,45 @@
         }
         return result;
     }
-    if (typeof module !== 'undefined' && module.exports) module.exports = {annotate};
-    else root.PcuDraftEditor = {annotate};
+    function restore(text) {
+        if (typeof text !== 'string' || text.length > 1024 * 1024) throw new Error('Entwurf ist zu groß');
+        const data = JSON.parse(text);
+        const fail = () => { throw new Error('Ungültiger Dokumentenentwurf'); };
+        const string = value => typeof value === 'string' && value.length <= 10000;
+        const value = item => item === null || string(item) || (typeof item === 'number' && Number.isFinite(item)) ||
+            (Array.isArray(item) && item.length <= 200 && item.every(string));
+        if (!data || !Array.isArray(data.fields) || !data.fields.length || data.fields.length > 200) fail();
+        const keys = new Set();
+        const fields = data.fields.map(field => {
+            if (!field || !string(field.key) || !field.key || keys.has(field.key) || !string(field.label) ||
+                !string(field.unit) || !value(field.value) || !['missing','conflict','unreviewed'].includes(field.status) ||
+                !Array.isArray(field.sources) || field.sources.length > 1000) fail();
+            keys.add(field.key);
+            const sources = field.sources.map(source => {
+                if (!source || !value(source.value) || !string(source.document) ||
+                    !['SLD','E8','E9'].includes(source.document_type) ||
+                    !(source.page === null || (Number.isInteger(source.page) && source.page > 0))) fail();
+                return {value:source.value, document:source.document, document_type:source.document_type, page:source.page};
+            });
+            return {key:field.key,label:field.label,unit:field.unit,value:field.value,status:field.status,sources};
+        });
+        if (data.documents !== undefined && (!Array.isArray(data.documents) || data.documents.length > 2)) fail();
+        const documents = (data.documents || []).map(document => {
+            if (!document || !['SLD','E8','E9'].includes(document.type) || !string(document.filename)) fail();
+            return {type:document.type, filename:document.filename};
+        });
+        let result = {status:'DRAFT',deployable:false,fields,documents,
+            warnings:['Aus lokaler Datei geöffnet. Dokumentquellen und Ergänzungen sind nicht erneut geprüft.'],
+            notice:'Importierter, ungeprüfter Entwurf. Keine Freigabe und keine Geräteübertragung.'};
+        if (data.manual_overrides !== undefined && !Array.isArray(data.manual_overrides)) fail();
+        const edited = new Set();
+        for (const entry of data.manual_overrides || []) {
+            if (!entry || edited.has(entry.key)) fail();
+            edited.add(entry.key);
+            result = annotate(result, entry.key, entry.value, entry.note);
+        }
+        return result;
+    }
+    if (typeof module !== 'undefined' && module.exports) module.exports = {annotate, restore};
+    else root.PcuDraftEditor = {annotate, restore};
 })(typeof window === 'undefined' ? globalThis : window);
