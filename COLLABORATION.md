@@ -132,3 +132,8 @@ Result: page plus line extraction preserves conflicting values on separate lines
 Codex claims clean document_draft.py and test_document_draft.py. Other portal task reports systemError; no competing implementation observed. Baseline regression shows partial text from a failed extraction can still influence draft values. Existing unrelated work untouched.
 
 Result: failed extraction now contributes warning only, never partial parameter observations. Successful companion document preserved. Eleven targeted tests pass; baseline regression failed. No deployment or real hardware access. Editing/persistence and real-document accuracy remain open. Files released after focused commit.
+
+## EEP-92 manual draft annotations
+Codex claims clean pcu-draft.html plus new pcu-draft-editor.js and isolated JS tests. Other project task not loaded; Gemini unknown. Manual value/reason annotations remain separate from OCR evidence and unreviewed, no server persistence or device writes.
+
+Result: per-field manual value and reason inputs added; JSON export retains source evidence and separate unreviewed manual_overrides. Clearing removes annotation, changing replaces rather than duplicates. No automatic approval; deployable=false. Node tests cover immutability, evidence, edit/clear, invalid fields/types/length and approval reset; UI script syntax check passed; 11 Python tests passed. Browser interaction not verified this cycle. Server persistence remains open; reload discards inputs, stated in UI. No deployment/hardware access; files released after commit.
