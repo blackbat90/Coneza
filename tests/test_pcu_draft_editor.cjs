@@ -50,3 +50,10 @@ assert.deepEqual(restore(JSON.stringify(warningRestored)).warnings,warningRestor
 assert.throws(()=>restore(JSON.stringify({...exported,warnings:'not a list'})));
 assert.throws(()=>restore(JSON.stringify({...exported,warnings:[{message:'invalid'}]})));
 console.log('Draft restore: extraction warnings retained and validated across repeated imports');
+for (const version of [2, 0, -1, '1', null, true]) {
+    assert.throws(()=>restore(JSON.stringify({...exported,schema_version:version})),
+        'Unsupported or malformed version must not be silently accepted');
+}
+assert.equal(restore(JSON.stringify(exported)).schema_version,1);
+assert.equal(restore(JSON.stringify({...exported,schema_version:1})).schema_version,1);
+console.log('Draft format: legacy files migrated, version 1 retained, unknown versions rejected');

@@ -70,7 +70,7 @@ def build_draft(documents, extract_entities):
         state = 'missing' if not unique else 'conflict' if len(unique) > 1 else 'unreviewed'
         rows.append(dict(key=key, label=label, unit=unit, status=state,
                          value=unique[0] if len(unique) == 1 else None, sources=candidates))
-    return dict(status='DRAFT', deployable=False, fields=rows, warnings=warnings,
+    return dict(schema_version=1, status='DRAFT', deployable=False, fields=rows, warnings=warnings,
                 documents=[dict(type=d['type'], filename=d['filename']) for d in documents],
                 notice='Dokumentenentwurf: erkannte Angaben prüfen. Keine Freigabe, keine Übertragung. '
                        'Felder entsprechen dem Softwaremodell; keine vollständige Phoenix-Registerkompatibilität bestätigt.')

@@ -145,3 +145,8 @@ Result: downloaded draft JSON can be reopened locally with evidence and manual a
 
 ## EEP-92 preserve document warnings on import
 Codex worked only on clean draft editor JS and its regression tests. Other tasks not loaded; existing main/template work untouched. Baseline proved extraction warnings discarded by import. Fixed: validated original warnings retained, repeated import notice deduplicated. All Node editor/import assertions pass, including malformed warnings and repeated import. No deployment or hardware access. Jira update pending: network permission not granted this cycle. Files released after focused commit.
+
+## EEP-92 draft format version
+Codex claims clean document_draft.py, draft editor JS and their existing tests. Other tasks not loaded; no competing claim. Baseline confirms unsupported format versions are silently ignored. Local-only format guard with legacy compatibility planned.
+
+Result: generated drafts identify schema_version=1; restore accepts legacy absent version and explicit numeric 1 only. Unsupported/malformed versions rejected without silently interpreting them. Node regression reproduced before fix; all editor/import assertions and 11 Python tests pass. No deployment or hardware access. Files released after commit; Jira synchronization pending verification.

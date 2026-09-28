@@ -10,6 +10,7 @@ class DraftTests(unittest.TestCase):
     def test_missing_values_are_not_defaulted(self):
         draft=build_draft(self.documents('', ''), lambda text, kind: {})
         self.assertFalse(draft['deployable'])
+        self.assertEqual(draft['schema_version'],1)
         self.assertTrue(all(f['value'] is None and f['status']=='missing' for f in draft['fields']))
         self.assertEqual(len(draft['warnings']), 2)
 

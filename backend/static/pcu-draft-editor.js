@@ -21,6 +21,9 @@
     function restore(text) {
         if (typeof text !== 'string' || text.length > 1024 * 1024) throw new Error('Entwurf ist zu groß');
         const data = JSON.parse(text);
+        if (data && data.schema_version !== undefined && data.schema_version !== 1) {
+            throw new Error('Diese Entwurfsformat-Version wird nicht unterstützt');
+        }
         const fail = () => { throw new Error('Ungültiger Dokumentenentwurf'); };
         const string = value => typeof value === 'string' && value.length <= 10000;
         const value = item => item === null || string(item) || (typeof item === 'number' && Number.isFinite(item)) ||
@@ -49,7 +52,7 @@
             data.warnings.length > 1000 || !data.warnings.every(string))) fail();
         const warnings = [...new Set([...(data.warnings || []),
             'Aus lokaler Datei geöffnet. Dokumentquellen und Ergänzungen sind nicht erneut geprüft.'])];
-        let result = {status:'DRAFT',deployable:false,fields,documents,warnings,
+        let result = {schema_version:1,status:'DRAFT',deployable:false,fields,documents,warnings,
             notice:'Importierter, ungeprüfter Entwurf. Keine Freigabe und keine Geräteübertragung.'};
         if (data.manual_overrides !== undefined && !Array.isArray(data.manual_overrides)) fail();
         const edited = new Set();
