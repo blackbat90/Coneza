@@ -24,6 +24,7 @@ JIRA_EMAIL = os.getenv("JIRA_EMAIL", "")
 JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN", "")
 JIRA_PROJECT_KEY = os.getenv("JIRA_PROJECT_KEY", "EEP")
 JIRA_DEFAULT_ASSIGNEE_ID = os.getenv("JIRA_DEFAULT_ASSIGNEE_ID", "")
+JIRA_DEFAULT_EPIC_KEY = os.getenv("JIRA_DEFAULT_EPIC_KEY", "EEP-94")
 
 # Fallback to local jira_config.json if available
 if not (JIRA_URL and JIRA_EMAIL and JIRA_API_TOKEN):
@@ -37,6 +38,7 @@ if not (JIRA_URL and JIRA_EMAIL and JIRA_API_TOKEN):
                 JIRA_API_TOKEN = JIRA_API_TOKEN or cfg.get("JIRA_API_TOKEN", "")
                 JIRA_PROJECT_KEY = os.getenv("JIRA_PROJECT_KEY") or cfg.get("JIRA_PROJECT_KEY", "EEP")
                 JIRA_DEFAULT_ASSIGNEE_ID = JIRA_DEFAULT_ASSIGNEE_ID or cfg.get("JIRA_DEFAULT_ASSIGNEE_ID", "")
+                JIRA_DEFAULT_EPIC_KEY = os.getenv("JIRA_DEFAULT_EPIC_KEY") or cfg.get("JIRA_DEFAULT_EPIC_KEY", "EEP-94")
         except Exception:
             pass
 
@@ -49,6 +51,7 @@ class JiraService:
         self.token = JIRA_API_TOKEN
         self.project_key = JIRA_PROJECT_KEY
         self.assignee_id = JIRA_DEFAULT_ASSIGNEE_ID
+        self.default_epic_key = JIRA_DEFAULT_EPIC_KEY or "EEP-94"
 
     def is_configured(self) -> bool:
         """Checks if remote Jira API credentials are provided."""
@@ -66,15 +69,18 @@ class JiraService:
         priority: str = "Medium",
         assignee_id: Optional[str] = None,
         labels: Optional[List[str]] = None,
-        plant_id: Optional[str] = None
+        plant_id: Optional[str] = None,
+        epic_key: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Creates a ticket in Jira if configured; always records in local SQLite for auditability.
+        Links by default to Epic EEP-94 for AI continuous improvement and portal tasks.
         """
         ticket_id = f"ticket_{uuid.uuid4().hex[:8]}"
         now = datetime.utcnow().isoformat()
         labels = labels or ["coneza-portal", "automated"]
         assignee = assignee_id or self.assignee_id
+        target_epic = epic_key or self.default_epic_key or "EEP-94"
 
         jira_key = None
         synced = 0
@@ -107,6 +113,10 @@ class JiraService:
                     "labels": labels
                 }
 
+                # Link all AI tasks to Epic (default: EEP-94)
+                if target_epic and issue_type.lower() != "epic":
+                    fields["parent"] = {"key": target_epic}
+
                 if assignee:
                     fields["assignee"] = {"id": assignee}
 
@@ -125,7 +135,7 @@ class JiraService:
                     resp_data = json.loads(resp.read().decode("utf-8"))
                     jira_key = resp_data.get("key")
                     synced = 1
-                    logger.info(f"Created Jira ticket {jira_key}: {summary}")
+                    logger.info(f"Created Jira ticket {jira_key} under Epic {target_epic}: {summary}")
             except urllib.error.HTTPError as e:
                 err_body = e.read().decode("utf-8", errors="ignore")
                 logger.warning(f"Jira API HTTP error {e.code}: {err_body}")
@@ -139,8 +149,8 @@ class JiraService:
             INSERT INTO jira_tickets (
                 id, jira_key, summary, description, issue_type,
                 priority, status, assignee, labels_json, plant_id,
-                created_at, updated_at, synced_with_jira
-            ) VALUES (?, ?, ?, ?, ?, ?, 'OPEN', ?, ?, ?, ?, ?, ?)
+                created_at, updated_at, synced_with_jira, epic_key
+            ) VALUES (?, ?, ?, ?, ?, ?, 'OPEN', ?, ?, ?, ?, ?, ?, ?)
         """, (
             ticket_id,
             jira_key or f"{self.project_key}-LOCAL-{ticket_id[-4:].upper()}",
@@ -153,7 +163,8 @@ class JiraService:
             plant_id,
             now,
             now,
-            synced
+            synced,
+            target_epic
         ))
         conn.commit()
         conn.close()
@@ -164,6 +175,7 @@ class JiraService:
             "summary": summary,
             "status": "OPEN",
             "assignee": assignee or "Unassigned",
+            "epic_key": target_epic,
             "synced_with_jira": bool(synced)
         }
 
@@ -197,7 +209,7 @@ class JiraService:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, jira_key, summary, description, issue_type, priority,
-                   status, assignee, labels_json, plant_id, created_at, synced_with_jira
+                   status, assignee, labels_json, plant_id, created_at, synced_with_jira, epic_key
             FROM jira_tickets
             ORDER BY created_at DESC
             LIMIT ?
@@ -209,8 +221,14 @@ class JiraService:
         for r in rows:
             item = dict(r)
             item["labels"] = json.loads(item["labels_json"]) if item["labels_json"] else []
+            item["epic_key"] = item.get("epic_key") or "EEP-94"
             del item["labels_json"]
             results.append(item)
         return results
 
+    def create_issue(self, *args, **kwargs) -> Dict[str, Any]:
+        """Alias for create_ticket used by confluence_task_ai."""
+        return self.create_ticket(*args, **kwargs)
+
 jira_service = JiraService()
+

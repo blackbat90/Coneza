@@ -32,7 +32,7 @@ class TestJiraService(unittest.TestCase):
         self.assertIsInstance(tickets, list)
         self.assertGreaterEqual(len(tickets), 2)
         keys = [t["jira_key"] for t in tickets]
-        self.assertTrue(any("LOCAL" in k or "CON" in k for k in keys))
+        self.assertTrue(any("LOCAL" in k or "CON" in k or "EEP" in k for k in keys))
 
 if __name__ == "__main__":
     unittest.main()

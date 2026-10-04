@@ -28,6 +28,10 @@ class FleetDeviceManager:
                 UPDATE devices SET
                     name = ?,
                     local_ip = ?,
+                    device_category = ?,
+                    manufacturer = ?,
+                    model = ?,
+                    slave_id = ?,
                     os_platform = ?,
                     controller_host = ?,
                     controller_port = ?,
@@ -37,6 +41,10 @@ class FleetDeviceManager:
             """, (
                 data.get("name", "Edge Device"),
                 data.get("local_ip", "127.0.0.1"),
+                data.get("device_category", "EZA_CONTROLLER"),
+                data.get("manufacturer", "Phoenix Contact"),
+                data.get("model", "PLCnext SOL-SC-PCU"),
+                data.get("slave_id", 1),
                 data.get("os_platform", "Linux"),
                 data.get("controller_host", "127.0.0.1"),
                 data.get("controller_port", 5502),
@@ -46,14 +54,19 @@ class FleetDeviceManager:
         else:
             cursor.execute("""
                 INSERT INTO devices (
-                    device_id, name, local_ip, os_platform,
+                    device_id, name, local_ip, device_category,
+                    manufacturer, model, slave_id, os_platform,
                     controller_host, controller_port, status,
                     last_heartbeat, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 'ONLINE', ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE', ?, ?)
             """, (
                 data["device_id"],
                 data.get("name", "Edge Device"),
                 data.get("local_ip", "127.0.0.1"),
+                data.get("device_category", "EZA_CONTROLLER"),
+                data.get("manufacturer", "Phoenix Contact"),
+                data.get("model", "PLCnext SOL-SC-PCU"),
+                data.get("slave_id", 1),
                 data.get("os_platform", "Linux"),
                 data.get("controller_host", "127.0.0.1"),
                 data.get("controller_port", 5502),
@@ -77,6 +90,18 @@ class FleetDeviceManager:
             return None
 
         pending_config = json.loads(row["pending_config_json"]) if row["pending_config_json"] else None
+        if pending_config:
+            from backend.configuration_safety import require_reviewable_configuration
+            try:
+                reviewed = require_reviewable_configuration(conn, pending_config["job_id"])
+                state = conn.execute("SELECT status FROM eza_configurations WHERE id = ?",
+                                     (pending_config["job_id"],)).fetchone()
+                if state["status"] != "DEPLOYING" or pending_config.get("parameters") != reviewed:
+                    raise ValueError("Queued configuration is no longer eligible")
+            except (ValueError, KeyError, TypeError):
+                pending_config = None
+                cursor.execute("UPDATE devices SET pending_config_json = NULL WHERE device_id = ?", (device_id,))
+
 
         cursor.execute("""
             UPDATE devices SET
@@ -103,6 +128,16 @@ class FleetDeviceManager:
         """Queues an approved configuration to be pushed to the Phoenix EZA controller."""
         conn = get_connection()
         cursor = conn.cursor()
+
+        from backend.configuration_safety import require_reviewable_configuration
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            reviewed = require_reviewable_configuration(conn, config_id, require_approved=True)
+            if parameters != reviewed:
+                raise ValueError("Deployment parameters differ from approved configuration")
+        except Exception:
+            conn.close()
+            raise
 
         job_payload = {
             "job_id": config_id,

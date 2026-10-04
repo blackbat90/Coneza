@@ -29,7 +29,15 @@ class TestContinuousImprover(unittest.TestCase):
 
         # Login as Super User
         login_resp = cls.client.post("/api/auth/login", json={"username": "admin", "password": "conezaAdmin2026!"})
-        cls.token = login_resp.json()["access_token"]
+        data = login_resp.json()
+        if "access_token" in data:
+            cls.token = data["access_token"]
+        elif "temp_token" in data:
+            chg = cls.client.post("/api/auth/change-password", json={
+                "temp_token": data["temp_token"],
+                "new_password": "conezaAdmin2026!Updated"
+            })
+            cls.token = chg.json()["access_token"]
         cls.headers = {"Authorization": f"Bearer {cls.token}"}
 
     @classmethod

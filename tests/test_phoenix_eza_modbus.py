@@ -18,6 +18,7 @@ class TestPhoenixEZAModbus(unittest.IsolatedAsyncioTestCase):
         self.client = PhoenixEZAControllerClient(host="127.0.0.1", port=self.port)
 
     async def asyncTearDown(self):
+        await self.client.close()
         await self.sim.stop()
 
     async def test_controller_connectivity_and_telemetry(self):

@@ -1,0 +1,18 @@
+[Unit]
+Description=Coneza Plant Devices Simulator & Telemetry Sync (Siemens PAC, 2x Solinteg, BYD BESS)
+After=network-online.target coneza-portal-tunnel.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/coneza-edge
+Environment="PYTHONPATH=/opt/coneza-edge"
+Environment="CONEZA_BACKEND_URL=https://coneza.de/portal"
+Environment="PLANT_ID=plant-enbw-hybrid-01"
+ExecStart=/usr/bin/python3 -m edge.plant_devices_sim
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

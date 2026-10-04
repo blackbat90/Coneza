@@ -29,6 +29,7 @@ class PhoenixEZASimulator:
         # In-memory storage for holding registers (0..999) and input registers (0..999)
         self.holding_registers: Dict[int, int] = {i: 0 for i in range(1000)}
         self.input_registers: Dict[int, int] = {i: 0 for i in range(1000)}
+        self.client_writers: set = set()
 
         self._initialize_defaults()
 
@@ -95,6 +96,7 @@ class PhoenixEZASimulator:
         """Processes incoming Modbus TCP ADU packets."""
         addr = writer.get_extra_info('peername')
         logger.debug(f"Modbus client connected from {addr}")
+        self.client_writers.add(writer)
 
         try:
             while self.is_running:
@@ -126,6 +128,7 @@ class PhoenixEZASimulator:
         except Exception as e:
             logger.error(f"Error handling Modbus client: {e}")
         finally:
+            self.client_writers.discard(writer)
             writer.close()
             try:
                 await writer.wait_closed()
@@ -211,6 +214,11 @@ class PhoenixEZASimulator:
     async def stop(self):
         """Stops the simulator server."""
         self.is_running = False
+        for w in list(self.client_writers):
+            try:
+                w.close()
+            except Exception:
+                pass
         if self.server:
             self.server.close()
             await self.server.wait_closed()

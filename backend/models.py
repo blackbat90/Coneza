@@ -49,6 +49,10 @@ class DeviceRegister(BaseModel):
     name: str
     local_ip: str
     plant_id: Optional[str] = None
+    device_category: Optional[str] = "EZA_CONTROLLER"  # INVERTER, SMART_METER, EZA_CONTROLLER
+    manufacturer: Optional[str] = "Phoenix Contact"
+    model: Optional[str] = "PLCnext SOL-SC-PCU"
+    slave_id: Optional[int] = 1
     os_platform: Optional[str] = None
     controller_host: Optional[str] = "127.0.0.1"
     controller_port: Optional[int] = 5502
@@ -65,6 +69,10 @@ class DeviceResponse(BaseModel):
     plant_id: Optional[str] = None
     name: str
     local_ip: str
+    device_category: Optional[str] = "EZA_CONTROLLER"
+    manufacturer: Optional[str] = "Phoenix Contact"
+    model: Optional[str] = "PLCnext SOL-SC-PCU"
+    slave_id: Optional[int] = 1
     os_platform: Optional[str]
     controller_host: Optional[str]
     controller_port: Optional[int]
@@ -72,6 +80,11 @@ class DeviceResponse(BaseModel):
     controller_state: str
     last_heartbeat: Optional[str]
     telemetry: Optional[Dict[str, Any]]
+
+class DeviceProbeRequest(BaseModel):
+    host: str
+    port: int = 502
+    slave_id: int = 1
 
 class DocumentResponse(BaseModel):
     id: str
@@ -147,6 +160,7 @@ class JiraTicketCreate(BaseModel):
     assignee_id: Optional[str] = None
     labels: Optional[List[str]] = None
     plant_id: Optional[str] = None
+    epic_key: Optional[str] = "EEP-94"
 
 class JiraTicketResponse(BaseModel):
     id: str
@@ -161,6 +175,7 @@ class JiraTicketResponse(BaseModel):
     plant_id: Optional[str] = None
     created_at: str
     synced_with_jira: int = 0
+    epic_key: Optional[str] = "EEP-94"
 
 class ConfluenceImprovementLog(BaseModel):
     feature_title: str
@@ -168,4 +183,24 @@ class ConfluenceImprovementLog(BaseModel):
     jira_key: Optional[str] = None
     commit_hash: Optional[str] = None
     status: Optional[str] = "Live in Production"
+
+class PcuDirectDeployRequest(BaseModel):
+    plant_id: Optional[str] = None
+    config_id: Optional[str] = None
+    configuration_id: Optional[str] = None
+    target_device_id: Optional[str] = None
+    device_id: Optional[str] = None
+
+class DocumentChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+class DocumentChatRequest(BaseModel):
+    message: str
+    history: Optional[List[DocumentChatMessage]] = []
+
+class DocumentChatResponse(BaseModel):
+    response: str
+    suggested_followups: List[str] = []
+    referenced_clauses: List[str] = []
 

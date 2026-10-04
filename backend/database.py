@@ -76,6 +76,10 @@ def init_db():
         controller_port INTEGER,
         status TEXT DEFAULT 'OFFLINE', -- 'ONLINE', 'OFFLINE', 'SYNCING'
         controller_state TEXT DEFAULT 'UNKNOWN',
+        device_category TEXT DEFAULT 'EZA_CONTROLLER', -- 'INVERTER', 'SMART_METER', 'EZA_CONTROLLER'
+        manufacturer TEXT DEFAULT 'Phoenix Contact',
+        model TEXT DEFAULT 'PLCnext SOL-SC-PCU',
+        slave_id INTEGER DEFAULT 1,
         last_heartbeat TIMESTAMP,
         telemetry_json TEXT DEFAULT '{}',
         pending_config_json TEXT DEFAULT NULL,
@@ -84,11 +88,19 @@ def init_db():
     );
     """)
 
-    # Migration for devices.plant_id
+    # Migration for devices
     cursor.execute("PRAGMA table_info(devices)")
     dev_cols = [r[1] for r in cursor.fetchall()]
     if "plant_id" not in dev_cols:
         cursor.execute("ALTER TABLE devices ADD COLUMN plant_id TEXT DEFAULT NULL")
+    if "device_category" not in dev_cols:
+        cursor.execute("ALTER TABLE devices ADD COLUMN device_category TEXT DEFAULT 'EZA_CONTROLLER'")
+    if "manufacturer" not in dev_cols:
+        cursor.execute("ALTER TABLE devices ADD COLUMN manufacturer TEXT DEFAULT 'Phoenix Contact'")
+    if "model" not in dev_cols:
+        cursor.execute("ALTER TABLE devices ADD COLUMN model TEXT DEFAULT 'PLCnext SOL-SC-PCU'")
+    if "slave_id" not in dev_cols:
+        cursor.execute("ALTER TABLE devices ADD COLUMN slave_id INTEGER DEFAULT 1")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS documents (
@@ -122,11 +134,23 @@ def init_db():
         discrepancies_json TEXT DEFAULT '[]',
         recommended_eza_config_json TEXT DEFAULT '{}',
         gemini_summary TEXT,
+        cross_eval_json TEXT DEFAULT '{}',
+        consensus_score REAL DEFAULT 1.0,
+        models_used TEXT DEFAULT '[]',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP,
         FOREIGN KEY (device_id) REFERENCES devices (device_id)
     );
     """)
+
+    cursor.execute("PRAGMA table_info(analysis_jobs)")
+    job_cols = [r[1] for r in cursor.fetchall()]
+    if "cross_eval_json" not in job_cols:
+        cursor.execute("ALTER TABLE analysis_jobs ADD COLUMN cross_eval_json TEXT DEFAULT '{}'")
+    if "consensus_score" not in job_cols:
+        cursor.execute("ALTER TABLE analysis_jobs ADD COLUMN consensus_score REAL DEFAULT 1.0")
+    if "models_used" not in job_cols:
+        cursor.execute("ALTER TABLE analysis_jobs ADD COLUMN models_used TEXT DEFAULT '[]'")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS eza_configurations (
@@ -181,9 +205,15 @@ def init_db():
         plant_id TEXT DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        synced_with_jira INTEGER DEFAULT 0
+        synced_with_jira INTEGER DEFAULT 0,
+        epic_key TEXT DEFAULT 'EEP-94'
     );
     """)
+
+    cursor.execute("PRAGMA table_info(jira_tickets)")
+    jira_cols = [r[1] for r in cursor.fetchall()]
+    if "epic_key" not in jira_cols:
+        cursor.execute("ALTER TABLE jira_tickets ADD COLUMN epic_key TEXT DEFAULT 'EEP-94'")
 
     conn.commit()
     conn.close()

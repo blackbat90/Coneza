@@ -1,0 +1,22 @@
+[Unit]
+Description=Coneza Physical Phoenix Contact EZA Controller Gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/coneza-edge
+Environment="PYTHONPATH=/opt/coneza-edge"
+Environment="CONEZA_BACKEND_URL=https://coneza.de/portal"
+Environment="DEVICE_ID=coneza-phoenix-axcf2152"
+Environment="DEVICE_NAME=Phoenix Contact AXC F 2152 (EZA-Regler)"
+Environment="EZA_CONTROLLER_HOST=192.168.1.10"
+Environment="EZA_CONTROLLER_PORT=502"
+Environment="PLANT_ID=plant-solar-west-01"
+ExecStart=/usr/bin/python3 -m edge.physical_gateway
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -26,49 +26,72 @@ class PhoenixEZAControllerClient:
         self.unit_id = unit_id
         self.timeout = timeout
         self._trans_id = 0
+        self._reader: Optional[asyncio.StreamReader] = None
+        self._writer: Optional[asyncio.StreamWriter] = None
+        self._lock = asyncio.Lock()
 
     def _next_trans_id(self) -> int:
         self._trans_id = (self._trans_id + 1) & 0xFFFF
         return self._trans_id
 
-    async def _execute_modbus_request(self, pdu: bytes) -> bytes:
-        """Sends a Modbus TCP request ADU and returns response PDU."""
-        trans_id = self._next_trans_id()
-        proto_id = 0
-        pdu_len = len(pdu) + 1  # includes unit_id
-        mbap = struct.pack(">HHHB", trans_id, proto_id, pdu_len, self.unit_id)
-        request_adu = mbap + pdu
-
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(self.host, self.port),
-            timeout=self.timeout
-        )
-
-        try:
-            writer.write(request_adu)
-            await writer.drain()
-
-            # Read response MBAP (7 bytes)
-            resp_mbap = await asyncio.wait_for(reader.read(7), timeout=self.timeout)
-            if len(resp_mbap) < 7:
-                raise ConnectionError(f"Incomplete Modbus MBAP response from {self.host}:{self.port}")
-
-            r_trans_id, r_proto_id, r_pdu_len, r_unit_id = struct.unpack(">HHHB", resp_mbap)
-            resp_pdu = await asyncio.wait_for(reader.read(r_pdu_len - 1), timeout=self.timeout)
-
-            # Check for Modbus exception (high bit set on function code)
-            func_code = resp_pdu[0]
-            if func_code & 0x80:
-                exc_code = resp_pdu[1] if len(resp_pdu) > 1 else 0
-                raise RuntimeError(f"Modbus Exception 0x{exc_code:02X} for Function 0x{func_code & 0x7F:02X}")
-
-            return resp_pdu
-        finally:
-            writer.close()
+    async def _close_connection(self):
+        if self._writer:
             try:
-                await writer.wait_closed()
+                self._writer.close()
+                await self._writer.wait_closed()
             except Exception:
                 pass
+        self._writer = None
+        self._reader = None
+
+    async def close(self):
+        async with self._lock:
+            await self._close_connection()
+
+    async def _ensure_connected(self):
+        if self._writer is None or self._writer.is_closing():
+            self._reader, self._writer = await asyncio.wait_for(
+                asyncio.open_connection(self.host, self.port),
+                timeout=self.timeout
+            )
+
+    async def _execute_modbus_request(self, pdu: bytes) -> bytes:
+        """Sends a Modbus TCP request ADU and returns response PDU using persistent connection."""
+        async with self._lock:
+            last_err = None
+            for attempt in range(2):
+                try:
+                    await self._ensure_connected()
+                    trans_id = self._next_trans_id()
+                    proto_id = 0
+                    pdu_len = len(pdu) + 1  # includes unit_id
+                    mbap = struct.pack(">HHHB", trans_id, proto_id, pdu_len, self.unit_id)
+                    request_adu = mbap + pdu
+
+                    self._writer.write(request_adu)
+                    await self._writer.drain()
+
+                    # Read response MBAP (7 bytes)
+                    resp_mbap = await asyncio.wait_for(self._reader.read(7), timeout=self.timeout)
+                    if len(resp_mbap) < 7:
+                        raise ConnectionError(f"Incomplete Modbus MBAP response from {self.host}:{self.port}")
+
+                    r_trans_id, r_proto_id, r_pdu_len, r_unit_id = struct.unpack(">HHHB", resp_mbap)
+                    resp_pdu = await asyncio.wait_for(self._reader.read(r_pdu_len - 1), timeout=self.timeout)
+
+                    # Check for Modbus exception (high bit set on function code)
+                    func_code = resp_pdu[0]
+                    if func_code & 0x80:
+                        exc_code = resp_pdu[1] if len(resp_pdu) > 1 else 0
+                        raise RuntimeError(f"Modbus Exception 0x{exc_code:02X} for Function 0x{func_code & 0x7F:02X}")
+
+                    return resp_pdu
+                except Exception as e:
+                    last_err = e
+                    await self._close_connection()
+                    if attempt == 0:
+                        await asyncio.sleep(0.1)
+            raise last_err
 
     async def test_connection(self) -> Dict[str, Any]:
         """Tests TCP connectivity and basic register read."""
@@ -163,39 +186,61 @@ class PhoenixEZAControllerClient:
     async def read_active_configuration(self) -> Dict[str, Any]:
         """Reads current setpoints and regulation curves from holding registers."""
         sys_vals = await self.read_holding_registers(0, 7)
-        p_vals = await self.read_holding_registers(100, 6)
-        q_vals = await self.read_holding_registers(200, 7)
-        qu_curve = await self.read_holding_registers(220, 8)
-        pf_vals = await self.read_holding_registers(300, 4)
-        prot_vals = await self.read_holding_registers(400, 6)
-
-        return {
+        res: Dict[str, Any] = {
             "system_status": sys_vals[0],
             "grid_voltage_nominal_volts": sys_vals[3],
             "grid_frequency_nominal_hz": sys_vals[4] / 100.0,
             "rated_active_power_kw": sys_vals[5],
             "rated_apparent_power_kva": sys_vals[6],
-            "p_control_mode": p_vals[0],
-            "p_setpoint_kw": p_vals[1],
-            "p_max_feed_in_limit_kw": p_vals[3],
-            "p_ramp_rate_kw_per_sec": p_vals[4],
-            "q_control_mode": q_vals[0],
-            "q_control_mode_text": Q_MODES_DESCRIPTION.get(q_vals[0], "Unknown"),
-            "cos_phi_setpoint": q_vals[1] / 1000.0,
-            "q_setpoint_kvar": self._signed16(q_vals[3]),
-            "q_u_curve": {
+        }
+
+        try:
+            p_vals = await self.read_holding_registers(100, 6)
+            res.update({
+                "p_control_mode": p_vals[0],
+                "p_setpoint_kw": p_vals[1],
+                "p_max_feed_in_limit_kw": p_vals[3],
+                "p_ramp_rate_kw_per_sec": p_vals[4],
+            })
+        except Exception as e:
+            logger.debug(f"P parameters block unmapped or failed: {e}")
+
+        try:
+            q_vals = await self.read_holding_registers(200, 7)
+            res.update({
+                "q_control_mode": q_vals[0],
+                "q_control_mode_text": Q_MODES_DESCRIPTION.get(q_vals[0], "Unknown"),
+                "cos_phi_setpoint": q_vals[1] / 1000.0,
+                "q_setpoint_kvar": self._signed16(q_vals[3]),
+            })
+        except Exception as e:
+            logger.debug(f"Q parameters block unmapped or failed: {e}")
+
+        try:
+            qu_curve = await self.read_holding_registers(220, 8)
+            res["q_u_curve"] = {
                 "u1_percent": qu_curve[0] / 10.0, "q1_percent": self._signed16(qu_curve[1]) / 10.0,
                 "u2_percent": qu_curve[2] / 10.0, "q2_percent": self._signed16(qu_curve[3]) / 10.0,
                 "u3_percent": qu_curve[4] / 10.0, "q3_percent": self._signed16(qu_curve[5]) / 10.0,
                 "u4_percent": qu_curve[6] / 10.0, "q4_percent": self._signed16(qu_curve[7]) / 10.0,
-            },
-            "p_f_droop": {
+            }
+        except Exception as e:
+            logger.debug(f"QU curve block unmapped or failed: {e}")
+
+        try:
+            pf_vals = await self.read_holding_registers(300, 4)
+            res["p_f_droop"] = {
                 "overfreq_start_hz": pf_vals[0] / 100.0,
                 "overfreq_droop_percent": pf_vals[1] / 10.0,
                 "underfreq_start_hz": pf_vals[2] / 100.0,
                 "underfreq_droop_percent": pf_vals[3] / 10.0,
-            },
-            "protection": {
+            }
+        except Exception as e:
+            logger.debug(f"PF droop block unmapped or failed: {e}")
+
+        try:
+            prot_vals = await self.read_holding_registers(400, 6)
+            res["protection"] = {
                 "u_max_percent": prot_vals[0] / 10.0,
                 "u_max_trip_ms": prot_vals[1],
                 "u_min_percent": prot_vals[2] / 10.0,
@@ -203,7 +248,10 @@ class PhoenixEZAControllerClient:
                 "f_max_hz": prot_vals[4] / 100.0,
                 "f_min_hz": prot_vals[5] / 100.0,
             }
-        }
+        except Exception as e:
+            logger.debug(f"Protection block unmapped or failed: {e}")
+
+        return res
 
     async def apply_configuration(self, config: Dict[str, Any], verify: bool = True) -> Dict[str, Any]:
         """
