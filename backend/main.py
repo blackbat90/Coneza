@@ -2092,8 +2092,7 @@ async def get_document_details(
 
 @app.post("/api/chat", response_model=DocumentChatResponse)
 async def general_coneza_chat(
-    payload: DocumentChatRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user_flexible)
+    payload: DocumentChatRequest
 ):
     """
     General Coneza AI Copilot chat endpoint for VDE-AR-N 4110 / 4120 questions,
