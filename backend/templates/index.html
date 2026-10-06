@@ -1147,6 +1147,77 @@
             50% { transform: scale(1.12); }
         }
     
+        /* Floating Coneza Copilot Chat Launcher Button */
+        .coneza-chat-launcher {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 9999;
+            display: none; /* Only shown when login is successful */
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.42rem 0.85rem;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 4px 18px rgba(2, 132, 199, 0.35), 0 0 10px rgba(13, 148, 136, 0.2);
+            cursor: pointer;
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            user-select: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: chatLauncherBreathing 4s ease-in-out infinite;
+        }
+
+        .coneza-chat-launcher:hover {
+            transform: translateY(-3px) scale(1.06);
+            box-shadow: 0 8px 25px rgba(2, 132, 199, 0.55), 0 0 18px rgba(16, 185, 129, 0.45);
+            border-color: rgba(255, 255, 255, 0.6);
+            background: linear-gradient(135deg, #0369a1 0%, #059669 100%);
+        }
+
+        .coneza-chat-launcher:hover .chat-icon {
+            transform: rotate(-12deg) scale(1.18);
+        }
+
+        .coneza-chat-launcher:active {
+            transform: translateY(1px) scale(0.93);
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+            transition: all 0.08s ease;
+        }
+
+        .coneza-chat-launcher.chat-open {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border-color: rgba(37, 199, 201, 0.5);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .coneza-chat-launcher .chat-icon {
+            font-size: 1.05rem;
+            display: inline-block;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .coneza-chat-launcher .chat-badge {
+            background: rgba(255, 255, 255, 0.22);
+            font-size: 0.62rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 9999px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
+        @keyframes chatLauncherBreathing {
+            0%, 100% {
+                box-shadow: 0 4px 18px rgba(2, 132, 199, 0.35), 0 0 10px rgba(13, 148, 136, 0.2);
+            }
+            50% {
+                box-shadow: 0 6px 24px rgba(2, 132, 199, 0.5), 0 0 16px rgba(16, 185, 129, 0.35);
+            }
+        }
     </style>
 </head>
 <body>
@@ -4100,6 +4171,11 @@
             const loginHeaderBtn = document.getElementById("btnLoginHeaderBtn");
             if (loginHeaderBtn) loginHeaderBtn.style.display = "inline-flex";
 
+            const chatBtn = document.getElementById("conezaChatLauncherBtn");
+            if (chatBtn) chatBtn.style.display = "none";
+            const chatWidget = document.getElementById("conezaChatboxWidget");
+            if (chatWidget) chatWidget.style.display = "none";
+
             openAuthModal('login');
         }
 
@@ -4117,6 +4193,9 @@
             if (btnPw) btnPw.style.display = "inline-flex";
             const loginHeaderBtn = document.getElementById("btnLoginHeaderBtn");
             if (loginHeaderBtn) loginHeaderBtn.style.display = "none";
+
+            const chatBtn = document.getElementById("conezaChatLauncherBtn");
+            if (chatBtn) chatBtn.style.display = "inline-flex";
 
             const canManagePlants = currentUser.role === 'ENGINEER' || currentUser.role === 'SUPER_ADMIN';
             const plantBtn = document.getElementById("btnCreatePlantHeader");
@@ -8940,11 +9019,11 @@
     <!-- Coneza AI Copilot Chatbox Widget                                          -->
     <!-- ========================================================================= -->
 
-    <!-- Floating Chatbox Launcher Pill Button -->
-    <div id="conezaChatLauncherBtn" onclick="toggleConezaChatbox()" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1.25rem; border-radius: 9999px; background: linear-gradient(135deg, #0284c7, #10b981); color: #ffffff; font-weight: 700; font-size: 0.92rem; box-shadow: 0 8px 25px rgba(2, 132, 199, 0.4); cursor: pointer; transition: all 0.25s ease; border: 1.5px solid rgba(255, 255, 255, 0.3); user-select: none;" onmouseover="this.style.transform='translateY(-2px) scale(1.03)';" onmouseout="this.style.transform='none';">
-        <span style="font-size: 1.25rem;">💬</span>
-        <span>Coneza Copilot</span>
-        <span style="background: rgba(255, 255, 255, 0.25); font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 9999px; font-weight: 800; letter-spacing: 0.03em;">KI</span>
+    <!-- Floating Chatbox Launcher Pill Button (Compact & Animated) -->
+    <div id="conezaChatLauncherBtn" class="coneza-chat-launcher" onclick="toggleConezaChatbox()" title="Coneza EZA-Copilot öffnen">
+        <span class="chat-icon" id="conezaChatIcon">💬</span>
+        <span id="conezaChatLabel">Copilot</span>
+        <span class="chat-badge">KI</span>
     </div>
 
     <!-- Floating Chatbox Window -->
@@ -9005,9 +9084,15 @@
 
         function toggleConezaChatbox() {
             const widget = document.getElementById("conezaChatboxWidget");
+            const btn = document.getElementById("conezaChatLauncherBtn");
+            const icon = document.getElementById("conezaChatIcon");
+            const label = document.getElementById("conezaChatLabel");
             if (!widget) return;
             const isOpen = widget.style.display === "flex";
             widget.style.display = isOpen ? "none" : "flex";
+            if (btn) btn.classList.toggle("chat-open", !isOpen);
+            if (icon) icon.textContent = !isOpen ? "✕" : "💬";
+            if (label) label.textContent = !isOpen ? "Schließen" : "Copilot";
             if (!isOpen) {
                 setTimeout(() => {
                     const input = document.getElementById("conezaChatInput");
