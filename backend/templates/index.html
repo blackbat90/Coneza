@@ -1226,29 +1226,6 @@
                 </div>
             </div>
 
-            <!-- 1-Click Fast Configuration Hero Card -->
-            <div style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(37, 99, 235, 0.1) 50%, rgba(15, 23, 42, 0.6) 100%); border: 1.5px solid rgba(6, 182, 212, 0.35); border-radius: 14px; padding: 1.5rem 1.75rem; margin-bottom: 1.75rem; box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.15); display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
-                <div style="max-width: 680px;">
-                    <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.65rem; border-radius: 9999px; background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.4); font-size: 0.76rem; font-weight: 700; color: var(--cyan-accent); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.65rem;">
-                        ⚡ VDE-AR-N 4110 Express-Inbetriebnahme
-                    </div>
-                    <h3 style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-bottom: 0.35rem; letter-spacing: -0.01em;">
-                        Anlage konfigurieren mit nur SLD & E.9 / E.8 Bogen
-                    </h3>
-                    <p style="font-size: 0.88rem; color: #94a3b8; margin: 0; line-height: 1.5;">
-                        Kein manuelles Eintippen von Dutzenden Parametern. Laden Sie Ihr <strong>Einliniendiagramm (SLD)</strong> und das <strong>Inbetriebsetzungsprotokoll (E.9)</strong> oder <strong>Datenblatt (E.8)</strong> hoch. Das System extrahiert Wirk-, Schein- und Blindleistungsparameter und erzeugt <strong>direkt die vollständige PCU-Reglerkonfiguration</strong> (Phoenix Contact AXC F 2152) inklusive aller 35 Modbus Holding Register.
-                    </p>
-                </div>
-                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                    <button type="button" class="btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; font-weight: 600;" onclick="runQuickConfigDemo()">
-                        🧪 Musterdaten testen
-                    </button>
-                    <button type="button" class="btn btn-primary" style="background: linear-gradient(135deg, #06b6d4, #2563eb); border: none; font-weight: 700; box-shadow: 0 4px 14px rgba(6, 182, 212, 0.4); padding: 0.65rem 1.35rem;" onclick="openQuickConfigModal()">
-                        🚀 Express mit SLD-Upload
-                    </button>
-                </div>
-            </div>
-
             <!-- KPI Tiles -->
             <div class="grid-4">
                 <div class="metric-tile">
@@ -2347,6 +2324,22 @@
                     </p>
                 </div>
                 <button type="button" class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.95rem; border-radius: 8px;" onclick="closePlantQuestionnaireModal()">✕</button>
+            </div>
+
+            <!-- Option: Express-Inbetriebnahme mit vorhandenem SLD / E.9 Dokument -->
+            <div style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(37, 99, 235, 0.05)); border: 1.5px solid rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 0.85rem 1.25rem; margin-bottom: 1.15rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.4rem;">⚡</span>
+                    <div>
+                        <div style="font-size: 0.88rem; font-weight: 700; color: var(--navy);">Option: Express-Inbetriebnahme mit vorhandenem SLD / E.9 Bogen</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">Haben Sie bereits einen PDF-Übersichtsschaltplan oder Netzanschlussbogen? Das System extrahiert alle technischen Daten automatisch.</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-sm btn-primary" style="font-size: 0.82rem; font-weight: 700; background: linear-gradient(135deg, #06b6d4, #2563eb); border: none; padding: 0.45rem 1rem; box-shadow: 0 2px 8px rgba(6, 182, 212, 0.35); cursor: pointer;" onclick="closePlantQuestionnaireModal(); openQuickConfigModal();">
+                        🚀 Express via SLD-Upload öffnen
+                    </button>
+                </div>
             </div>
 
             <!-- Schnellvorlagen (Presets) Bar -->
