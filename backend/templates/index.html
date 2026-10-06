@@ -975,11 +975,8 @@
             <button class="btn" id="btnLoginHeaderBtn" onclick="openAuthModal('login')">
                 🔐 Anmelden
             </button>
-            <button class="btn" id="btnQuestionnaireHeader" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 182, 212, 0.18)); border: 1.5px solid #10b981; color: #10b981; font-weight: 700;" onclick="openPlantQuestionnaireModal()">
-                📋 Fragebogen (Kein SLD nötig)
-            </button>
             <button class="btn btn-primary" id="btnCreatePlantHeader" style="display: none;" onclick="openPlantQuestionnaireModal()">
-                🧙‍♂️ + Neue Anlage (Wizard)
+                + Neue Anlage
             </button>
             <button class="btn btn-primary" id="btnProvisionDevice" style="display: none;" onclick="openProvisionModal()">
                 + Provision Linux Device
@@ -1225,8 +1222,7 @@
                 </div>
                 <div style="display: flex; gap: 0.75rem; align-items: center;">
                     <button class="btn" onclick="loadPlants()">🔄 Aktualisieren</button>
-                    <button class="btn" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15)); border: 1.5px solid #10b981; color: #10b981; font-weight: 700;" onclick="openPlantQuestionnaireModal()">📋 Fragebogen (Kein SLD nötig)</button>
-                    <button class="btn btn-primary" id="btnCreatePlantInTab" onclick="openPlantQuestionnaireModal()">🧙‍♂️ + Neue Anlage (Wizard)</button>
+                    <button class="btn btn-primary" id="btnCreatePlantInTab" onclick="openPlantQuestionnaireModal()">+ Neue Anlage</button>
                 </div>
             </div>
 
@@ -1246,9 +1242,6 @@
                 <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                     <button type="button" class="btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; font-weight: 600;" onclick="runQuickConfigDemo()">
                         🧪 Musterdaten testen
-                    </button>
-                    <button type="button" class="btn" style="background: linear-gradient(135deg, #10b981, #0ea5e9); color: #fff; font-weight: 700; border: none; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); padding: 0.65rem 1.35rem;" onclick="openPlantQuestionnaireModal()">
-                        📋 Interaktiver Fragebogen (Kein SLD nötig)
                     </button>
                     <button type="button" class="btn btn-primary" style="background: linear-gradient(135deg, #06b6d4, #2563eb); border: none; font-weight: 700; box-shadow: 0 4px 14px rgba(6, 182, 212, 0.4); padding: 0.65rem 1.35rem;" onclick="openQuickConfigModal()">
                         🚀 Express mit SLD-Upload
@@ -2236,7 +2229,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn" style="background: #10b981; color: #fff; font-size: 0.82rem; font-weight: 700; white-space: nowrap; padding: 0.45rem 0.95rem; border: none; border-radius: 6px; cursor: pointer;" onclick="closeQuickConfigModal(); openPlantQuestionnaireModal();">
-                    Fragebogen öffnen ➔
+                    + Neue Anlage anlegen ➔
                 </button>
             </div>
 
@@ -3850,8 +3843,7 @@
             const canManagePlants = currentUser.role === 'ENGINEER' || currentUser.role === 'SUPER_ADMIN';
             const plantBtn = document.getElementById("btnCreatePlantHeader");
             if (plantBtn) plantBtn.style.display = canManagePlants ? 'inline-flex' : 'none';
-            const questBtnHeader = document.getElementById("btnQuestionnaireHeader");
-            if (questBtnHeader) questBtnHeader.style.display = 'inline-flex';
+
             const quickBtnHeader = document.getElementById("btnQuickConfigHeader");
             if (quickBtnHeader) quickBtnHeader.style.display = canManagePlants ? 'inline-flex' : 'none';
             const plantTabBtn = document.getElementById("btnCreatePlantInTab");
