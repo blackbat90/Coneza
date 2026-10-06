@@ -20,7 +20,7 @@ async def document_draft(sld_file: UploadFile = File(...), grid_doc_file: Upload
                          grid_doc_type: str = Form(...), user=Depends(require_viewer)):
     if grid_doc_type not in ('E8', 'E9'):
         raise HTTPException(422, 'Bitte E8 oder E9 auswählen')
-    documents = []
+    uploads = []
     for kind, upload in [('SLD', sld_file), (grid_doc_type, grid_doc_file)]:
         data = await upload.read(MAX_BYTES + 1)
         if len(data) > MAX_BYTES:
@@ -28,6 +28,9 @@ async def document_draft(sld_file: UploadFile = File(...), grid_doc_file: Upload
         if not data.startswith(b'%PDF-'):
             raise HTTPException(422, 'Bitte gültige PDF-Dokumente hochladen')
         name = (upload.filename or kind + '.pdf').replace('\\', '/').split('/')[-1]
+        uploads.append((kind, name, data))
+    documents = []
+    for kind, name, data in uploads:
         extracted = await run_in_threadpool(ocr_engine.extract_document, data, name)
         documents.append(dict(type=kind, filename=name, extraction=extracted))
     return build_draft(documents, ocr_engine._extract_grid_entities)

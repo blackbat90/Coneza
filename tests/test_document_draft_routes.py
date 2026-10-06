@@ -40,3 +40,14 @@ class DraftRouteTests(unittest.TestCase):
         response=self.client.get('/pcu-draft')
         self.assertEqual(response.status_code,200)
         self.assertIn('PCU-Konfiguration',response.text)
+
+    def test_invalid_second_file_is_rejected_before_any_ocr(self):
+        self.app.dependency_overrides[require_viewer]=lambda: {'role':'VIEWER'}
+        for content, limit, expected in [(b'not pdf', 100, 422), (b'%PDF-too-large', 8, 413)]:
+            with self.subTest(expected=expected), patch('backend.document_draft_routes.MAX_BYTES',limit), patch(
+                'backend.document_draft_routes.ocr_engine.extract_document'
+            ) as extract:
+                response=self.client.post('/api/pcu/document-draft',data={'grid_doc_type':'E8'},files={
+                    'sld_file':('SLD.pdf',b'%PDF-ok'), 'grid_doc_file':('E8.pdf',content)})
+                self.assertEqual(response.status_code,expected)
+                extract.assert_not_called()

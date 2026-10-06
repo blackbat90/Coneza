@@ -155,3 +155,8 @@ Result: generated drafts identify schema_version=1; restore accepts legacy absen
 Codex claims clean draft editor JS and existing JS tests only. Current repository commits advanced through EEP-94; two unrelated untracked scripts preserved. No competing active project task observed. Baseline reproduced acceptance of values inconsistent with sources. Minimal import guard planned; no deployment.
 
 Result: imported value/status must agree with distinct source values; inconsistent files rejected, valid missing/conflict states preserved. All Node assertions and 11 Python tests pass; baseline failed. This checks internal consistency only, not authenticity of imported document evidence. No production deployment, hardware access or full coverage claim. Files released after focused commit. Jira synchronization to be verified.
+
+## 2026-10-06 EEP-92 validate upload pair before OCR
+Codex claims clean document_draft_routes.py and its existing tests. Other tasks idle; working tree clean before test. Baseline reproduced unnecessary OCR on first file before rejecting invalid/oversized second file. Local change only; no device access.
+
+Result: both bounded upload buffers validated before OCR. Invalid PDF header or oversized second file triggers no OCR calls; existing valid upload behavior retained. Twelve focused tests pass; baseline failed two cases. Bounds apply per file; PDF validity still determined by extractor, not header alone. No production deployment or hardware access. Files released after commit.
