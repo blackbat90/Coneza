@@ -54,6 +54,7 @@ from backend.confluence_task_ai import confluence_task_ai
 from edge.ocr_engine import ocr_engine
 from backend.component_catalog import get_full_catalog
 from backend.questionnaire_service import process_questionnaire, generate_virtual_sld_svg
+from backend.energy_history import get_plant_energy_history
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("coneza_backend_server")
@@ -944,6 +945,17 @@ async def unassign_device_from_plant(
     conn.commit()
     conn.close()
     return {"status": "success", "message": f"Device {device_id} unlinked from plant {plant_id}"}
+
+@app.get("/api/plants/{plant_id}/energy-history")
+async def get_plant_history_endpoint(
+    plant_id: str,
+    days: int = 30
+):
+    """
+    Returns recorded 1-, 7-, or 30-day energy flow and generation telemetry history for a plant.
+    Supports plant_id='ALL' for the aggregated fleet history.
+    """
+    return get_plant_energy_history(plant_id, days)
 
 # ----------------- Interactive Plant Questionnaire (SLD Replacement) ----------------- #
 

@@ -215,5 +215,28 @@ def init_db():
     if "epic_key" not in jira_cols:
         cursor.execute("ALTER TABLE jira_tickets ADD COLUMN epic_key TEXT DEFAULT 'EEP-94'")
 
+    # Plant 30-Day Historical Energy & Telemetry Log
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS plant_energy_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plant_id TEXT NOT NULL,
+        date TEXT NOT NULL,          -- 'YYYY-MM-DD'
+        hour INTEGER NOT NULL,        -- 0..23
+        pv_energy_kwh REAL NOT NULL DEFAULT 0.0,
+        pv_peak_kw REAL NOT NULL DEFAULT 0.0,
+        bat_charge_kwh REAL NOT NULL DEFAULT 0.0,
+        bat_discharge_kwh REAL NOT NULL DEFAULT 0.0,
+        load_energy_kwh REAL NOT NULL DEFAULT 0.0,
+        grid_feedin_kwh REAL NOT NULL DEFAULT 0.0,
+        grid_import_kwh REAL NOT NULL DEFAULT 0.0,
+        avg_voltage_kv REAL NOT NULL DEFAULT 20.0,
+        avg_frequency_hz REAL NOT NULL DEFAULT 50.0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(plant_id, date, hour)
+    );
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_plant_hist_date ON plant_energy_history (plant_id, date);")
+
     conn.commit()
     conn.close()
+
