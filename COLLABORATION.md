@@ -150,3 +150,8 @@ Codex worked only on clean draft editor JS and its regression tests. Other tasks
 Codex claims clean document_draft.py, draft editor JS and their existing tests. Other tasks not loaded; no competing claim. Baseline confirms unsupported format versions are silently ignored. Local-only format guard with legacy compatibility planned.
 
 Result: generated drafts identify schema_version=1; restore accepts legacy absent version and explicit numeric 1 only. Unsupported/malformed versions rejected without silently interpreting them. Node regression reproduced before fix; all editor/import assertions and 11 Python tests pass. No deployment or hardware access. Files released after commit; Jira synchronization pending verification.
+
+## 2026-10-06 EEP-92 import evidence consistency
+Codex claims clean draft editor JS and existing JS tests only. Current repository commits advanced through EEP-94; two unrelated untracked scripts preserved. No competing active project task observed. Baseline reproduced acceptance of values inconsistent with sources. Minimal import guard planned; no deployment.
+
+Result: imported value/status must agree with distinct source values; inconsistent files rejected, valid missing/conflict states preserved. All Node assertions and 11 Python tests pass; baseline failed. This checks internal consistency only, not authenticity of imported document evidence. No production deployment, hardware access or full coverage claim. Files released after focused commit. Jira synchronization to be verified.

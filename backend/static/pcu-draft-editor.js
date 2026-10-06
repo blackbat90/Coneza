@@ -41,6 +41,10 @@
                     !(source.page === null || (Number.isInteger(source.page) && source.page > 0))) fail();
                 return {value:source.value, document:source.document, document_type:source.document_type, page:source.page};
             });
+            const values = [...new Set(sources.map(source => JSON.stringify(source.value)))];
+            const expectedStatus = values.length === 0 ? 'missing' : values.length === 1 ? 'unreviewed' : 'conflict';
+            const expectedValue = values.length === 1 ? values[0] : 'null';
+            if (field.status !== expectedStatus || JSON.stringify(field.value) !== expectedValue) fail();
             return {key:field.key,label:field.label,unit:field.unit,value:field.value,status:field.status,sources};
         });
         if (data.documents !== undefined && (!Array.isArray(data.documents) || data.documents.length > 2)) fail();

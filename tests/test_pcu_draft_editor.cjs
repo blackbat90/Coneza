@@ -57,3 +57,15 @@ for (const version of [2, 0, -1, '1', null, true]) {
 assert.equal(restore(JSON.stringify(exported)).schema_version,1);
 assert.equal(restore(JSON.stringify({...exported,schema_version:1})).schema_version,1);
 console.log('Draft format: legacy files migrated, version 1 retained, unknown versions rejected');
+const source = exported.fields[0].sources[0];
+for (const field of [
+    {...exported.fields[0],value:100},
+    {...exported.fields[0],sources:[]},
+    {...exported.fields[0],sources:[source,{...source,value:100}]},
+    {...exported.fields[0],status:'missing'},
+]) assert.throws(()=>restore(JSON.stringify({...exported,fields:[field]})), 'Inconsistent evidence must be rejected');
+const conflict = {...exported.fields[0],value:null,status:'conflict',sources:[source,{...source,value:100}]};
+assert.equal(restore(JSON.stringify({...exported,fields:[conflict]})).fields[0].status,'conflict');
+const missing = {...exported.fields[0],value:null,status:'missing',sources:[]};
+assert.equal(restore(JSON.stringify({...exported,fields:[missing]})).fields[0].status,'missing');
+console.log('Draft import: values and statuses must agree with source evidence');
