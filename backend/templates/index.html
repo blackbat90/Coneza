@@ -510,6 +510,71 @@
             position: relative;
         }
 
+                /* Direct Histogram Day-by-Day Navigation Arrows (Links & Rechts) */
+        .hist-nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 48px;
+            background: rgba(8, 21, 34, 0.88);
+            border: 1.5px solid rgba(37, 199, 201, 0.45);
+            color: #38bdf8;
+            border-radius: 8px;
+            font-size: 1.85rem;
+            font-weight: 700;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 15;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+            padding: 0;
+            user-select: none;
+            outline: none;
+        }
+        .hist-nav-arrow:hover:not(:disabled) {
+            background: rgba(37, 199, 201, 0.28);
+            border-color: #25c7c9;
+            color: #ffffff;
+            box-shadow: 0 0 18px rgba(37, 199, 201, 0.6);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .hist-nav-arrow:active:not(:disabled) {
+            transform: translateY(-50%) scale(0.96);
+        }
+        .hist-nav-arrow:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #64748b;
+            box-shadow: none;
+        }
+        .hist-nav-arrow-left {
+            left: 8px;
+        }
+        .hist-nav-arrow-right {
+            right: 8px;
+        }
+        .btn-today-pill {
+            background: rgba(2, 132, 199, 0.25);
+            border: 1px solid rgba(2, 132, 199, 0.5);
+            color: #38bdf8;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-today-pill:hover {
+            background: #0284c7;
+            color: #ffffff;
+        }
+
         .energy-flow-histogram-svg {
             width: 100%;
             height: auto;
@@ -1343,7 +1408,7 @@
                         <!-- 30-Day / 7-Day / 24h Time Range Selector -->
                         <div class="flow-range-pills" id="flowRangePills" style="display: none;">
                             <button type="button" class="flow-range-pill" id="btnRange24h" onclick="setHistogramTimeRange(1)">
-                                Heute (24h)
+                                📅 Tag für Tag (24h)
                             </button>
                             <button type="button" class="flow-range-pill" id="btnRange7d" onclick="setHistogramTimeRange(7)">
                                 7 Tage
@@ -1367,6 +1432,7 @@
                             <span id="histPlantBadge" style="font-weight: 700; color: #38bdf8;">🌐 Gesamtflotte</span>
                             <span style="color: #64748b;">·</span>
                             <span id="histRangeBadge" style="color: #94a3b8;">Aufzeichnung letzte 30 Tage</span>
+                            <button type="button" id="btnHistJumpToday" class="btn-today-pill" onclick="jumpHistogramToToday()" style="display: none;">Heute ↺</button>
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.75rem; font-family: var(--font-mono);">
                             <span>☀️ PV: <strong id="histSummaryPv" style="color: #fbbf24;">-- MWh</strong></span>
@@ -1452,8 +1518,16 @@
                         </svg>
                     </div>
 
-                    <!-- View 2: Interactive 24h Energy Flow Histogram & Time-Series Graph -->
+                    <!-- View 2: Interactive Energy Flow Histogram & Time-Series Graph mit Tages-Pfeilen -->
                     <div class="energy-flow-histogram-wrap" id="energyFlowHistogramWrap" style="display: none;">
+                        <!-- Day Navigation Arrows Directly on Left and Right of Histogram -->
+                        <button type="button" class="hist-nav-arrow hist-nav-arrow-left" id="btnHistArrowLeft" onclick="stepHistogramDay(-1)" title="Vorheriger Tag (1 Tag zurück)">
+                            ‹
+                        </button>
+                        <button type="button" class="hist-nav-arrow hist-nav-arrow-right" id="btnHistArrowRight" onclick="stepHistogramDay(1)" title="Nächster Tag (1 Tag vor)">
+                            ›
+                        </button>
+
                         <svg viewBox="0 0 660 215" class="energy-flow-histogram-svg" id="flowHistogramSvg" xmlns="http://www.w3.org/2000/svg">
                             <!-- Populated dynamically via renderEnergyFlowHistogram() -->
                         </svg>
@@ -6275,6 +6349,7 @@
 
         async function openPlantDetail(plantId) {
             activePlantId = plantId;
+            try { onEnergyFlowPlantChange(plantId); } catch (e) {}
             try {
                 const res = await fetch(`${API_BASE}/api/plants/${plantId}`, {
                     headers: { "Authorization": `Bearer ${authToken}` }
@@ -8274,6 +8349,9 @@
         let activeFlowView = "synoptic"; // "synoptic" | "histogram"
         let selectedHistDays = 30; // 1 | 7 | 30
         let cachedEnergyHistoryData = null;
+        let histSelectedDateOffset = 0; // 0 = today, 1 = yesterday, ... up to 30
+        let histAvailableDates = []; // List of YYYY-MM-DD from backend
+        let histCurrentDateStr = null;
 
         function setHistogramTimeRange(days) {
             selectedHistDays = days;
@@ -8285,14 +8363,79 @@
             if (btn7) btn7.classList.toggle("active", days === 7);
             if (btn30) btn30.classList.toggle("active", days === 30);
 
-            const rangeBadge = document.getElementById("histRangeBadge");
-            if (rangeBadge) {
-                if (days === 1) rangeBadge.textContent = "Heute (24-Stunden Lastgang)";
-                else if (days === 7) rangeBadge.textContent = "Aufzeichnung letzte 7 Tage";
-                else rangeBadge.textContent = "Aufzeichnung letzte 30 Tage";
+            updateDayNavigationArrows();
+            renderEnergyFlowHistogram();
+        }
+
+        function stepHistogramDay(step) {
+            // step = -1 -> 1 day back into past (increase offset)
+            // step = +1 -> 1 day forward toward today (decrease offset)
+            if (selectedHistDays !== 1) {
+                selectedHistDays = 1;
+                const btn24 = document.getElementById("btnRange24h");
+                const btn7 = document.getElementById("btnRange7d");
+                const btn30 = document.getElementById("btnRange30d");
+                if (btn24) btn24.classList.add("active");
+                if (btn7) btn7.classList.remove("active");
+                if (btn30) btn30.classList.remove("active");
             }
 
+            if (step < 0) {
+                histSelectedDateOffset = Math.min(30, histSelectedDateOffset + 1);
+            } else {
+                histSelectedDateOffset = Math.max(0, histSelectedDateOffset - 1);
+            }
+
+            updateDayNavigationArrows();
             renderEnergyFlowHistogram();
+        }
+
+        function jumpHistogramToToday() {
+            histSelectedDateOffset = 0;
+            updateDayNavigationArrows();
+            renderEnergyFlowHistogram();
+        }
+
+        function drillIntoHistogramDay(dateStr) {
+            if (!dateStr) return;
+            selectedHistDays = 1;
+            const btn24 = document.getElementById("btnRange24h");
+            const btn7 = document.getElementById("btnRange7d");
+            const btn30 = document.getElementById("btnRange30d");
+            if (btn24) btn24.classList.add("active");
+            if (btn7) btn7.classList.remove("active");
+            if (btn30) btn30.classList.remove("active");
+
+            // Find offset from today
+            if (histAvailableDates && histAvailableDates.length > 0) {
+                const idx = histAvailableDates.indexOf(dateStr);
+                if (idx !== -1) {
+                    histSelectedDateOffset = Math.max(0, histAvailableDates.length - 1 - idx);
+                }
+            }
+            histCurrentDateStr = dateStr;
+            updateDayNavigationArrows();
+            renderEnergyFlowHistogram();
+        }
+
+        function updateDayNavigationArrows() {
+            const btnLeft = document.getElementById("btnHistArrowLeft");
+            const btnRight = document.getElementById("btnHistArrowRight");
+            const btnJump = document.getElementById("btnHistJumpToday");
+
+            if (btnLeft) {
+                btnLeft.disabled = (histSelectedDateOffset >= 30);
+                btnLeft.style.opacity = (selectedHistDays === 1) ? "1" : "0.75";
+                btnLeft.title = `Vorheriger Tag (${histSelectedDateOffset + 1} Tage zurück)`;
+            }
+            if (btnRight) {
+                btnRight.disabled = (histSelectedDateOffset <= 0);
+                btnRight.style.opacity = (selectedHistDays === 1) ? "1" : "0.75";
+                btnRight.title = histSelectedDateOffset > 0 ? "Nächster Tag (Vorwärts)" : "Bereits auf aktuellem Tag (Heute)";
+            }
+            if (btnJump) {
+                btnJump.style.display = (selectedHistDays === 1 && histSelectedDateOffset > 0) ? "inline-block" : "none";
+            }
         }
 
         function switchEnergyFlowView(viewName) {
@@ -8313,6 +8456,7 @@
                 if (legend) legend.style.display = "flex";
                 if (rangePills) rangePills.style.display = "inline-flex";
                 if (summaryHeader) summaryHeader.style.display = "flex";
+                updateDayNavigationArrows();
                 renderEnergyFlowHistogram();
             } else {
                 if (btnSyn) btnSyn.classList.add("active");
@@ -8335,16 +8479,34 @@
                 const siteType = histData ? histData.site_type : ((flowBaseline && flowBaseline.site_type) || "HYBRID");
                 const hasBess = (siteType === "BESS" || siteType === "HYBRID");
 
-                // Update Summary Header Badge
+                // Update Summary Header Badge & Plant Tag
                 const plantBadge = document.getElementById("histPlantBadge");
                 if (plantBadge) plantBadge.textContent = `📍 ${plantName} (${(cap/1000).toFixed(2)} MWp)`;
 
-                if (histData && histData.summary) {
-                    const elPv = document.getElementById("histSummaryPv");
+                const rangeBadge = document.getElementById("histRangeBadge");
+                if (rangeBadge) {
+                    if (days === 1) {
+                        const dateLabel = (histData && histData.selected_date_label) ? histData.selected_date_label : (histSelectedDateOffset === 0 ? "Heute (24-Stunden Lastgang)" : `Tag -${histSelectedDateOffset}`);
+                        rangeBadge.textContent = `📅 ${dateLabel}`;
+                    } else if (days === 7) {
+                        rangeBadge.textContent = "Aufzeichnung letzte 7 Tage";
+                    } else {
+                        rangeBadge.textContent = "Aufzeichnung letzte 30 Tage";
+                    }
+                }
+
+                // Update Summary KPIs (for days === 1, use that day's totals; for 7/30d use range totals)
+                const elPv = document.getElementById("histSummaryPv");
+                const elGrid = document.getElementById("histSummaryGrid");
+                const elBat = document.getElementById("histSummaryBat");
+
+                if (days === 1 && histData && histData.day_summary) {
+                    if (elPv) elPv.textContent = `${Number(histData.day_summary.total_pv_kwh || 0).toLocaleString('de-DE')} kWh`;
+                    if (elGrid) elGrid.textContent = `${Number(histData.day_summary.total_grid_feedin_kwh || 0).toLocaleString('de-DE')} kWh`;
+                    if (elBat) elBat.textContent = `${Number(histData.day_summary.total_bat_throughput_kwh || 0).toLocaleString('de-DE')} kWh`;
+                } else if (histData && histData.summary) {
                     if (elPv) elPv.textContent = `${Number(histData.summary.total_pv_mwh || 0).toLocaleString('de-DE')} MWh`;
-                    const elGrid = document.getElementById("histSummaryGrid");
                     if (elGrid) elGrid.textContent = `${Number(histData.summary.total_grid_feedin_mwh || 0).toLocaleString('de-DE')} MWh`;
-                    const elBat = document.getElementById("histSummaryBat");
                     if (elBat) elBat.textContent = `${Number(histData.summary.total_bat_throughput_mwh || 0).toLocaleString('de-DE')} MWh`;
                 }
 
@@ -8364,7 +8526,7 @@
                 let maxScaleLabel = "+2.200 kW";
 
                 if (days === 1) {
-                    // ==================== 1 DAY (24-STUNDEN LASTGANG) ====================
+                    // ==================== 1 DAY (24-STUNDEN LASTGANG FÜR GEWÄHLTEN TAG) ====================
                     const hourly = (histData && histData.hourly_today && histData.hourly_today.length === 24)
                         ? histData.hourly_today
                         : Array.from({ length: 24 }, (_, h) => ({
@@ -8381,6 +8543,7 @@
 
                     const colW = xPlotW / 24; // 25px
                     const barW = 16;
+                    const isTodayView = (!histData || histData.is_today || histSelectedDateOffset === 0);
                     const currentHour = new Date().getHours() || 14;
 
                     hourly.forEach(pt => {
@@ -8427,13 +8590,22 @@
                         xLabelsHtml += `<text x="${xC}" y="206" fill="#64748b" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">${h.toString().padStart(2, '0')}:00</text>`;
                     });
 
-                    // Now Marker
-                    const xNow = xStart + currentHour * colW + colW / 2;
-                    barsHtml += `
-                        <line x1="${xNow}" y1="18" x2="${xNow}" y2="194" stroke="#0ea5e9" stroke-width="1.8" stroke-dasharray="3 3" />
-                        <rect x="${xNow - 28}" y="12" width="56" height="15" rx="4" fill="#0284c7" />
-                        <text x="${xNow}" y="22.5" fill="#ffffff" font-size="7.8" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">JETZT · ${currentHour}:00</text>
-                    `;
+                    // Current Time Marker (Only shown on Today)
+                    if (isTodayView) {
+                        const xNow = xStart + currentHour * colW + colW / 2;
+                        barsHtml += `
+                            <line x1="${xNow}" y1="18" x2="${xNow}" y2="194" stroke="#0ea5e9" stroke-width="1.8" stroke-dasharray="3 3" />
+                            <rect x="${xNow - 28}" y="12" width="56" height="15" rx="4" fill="#0284c7" />
+                            <text x="${xNow}" y="22.5" fill="#ffffff" font-size="7.8" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">JETZT · ${currentHour}:00</text>
+                        `;
+                    } else {
+                        // Tag-Badge oben links im Diagramm
+                        const dateBadgeText = (histData && histData.selected_date_label) ? histData.selected_date_label : `Tag -${histSelectedDateOffset}`;
+                        barsHtml += `
+                            <rect x="${xStart}" y="14" width="160" height="17" rx="4" fill="rgba(2, 132, 199, 0.3)" stroke="#0284c7" stroke-width="1" />
+                            <text x="${xStart + 8}" y="25.5" fill="#38bdf8" font-size="8.2" font-weight="800" font-family="'JetBrains Mono', monospace">📅 ${dateBadgeText}</text>
+                        `;
+                    }
 
                 } else {
                     // ==================== 7 TAGE oder 30 TAGE HISTORIE ====================
@@ -8495,11 +8667,12 @@
                         if (hBatChg > 0.5) barsHtml += `<rect x="${xBar}" y="${yZero}" width="${barW}" height="${hBatChg}" rx="2" fill="#059669" />`;
                         if (hLoad > 0.5) barsHtml += `<rect x="${xBar}" y="${yLoad}" width="${barW}" height="${hLoad}" rx="2" fill="#f43f5e" fill-opacity="0.8" />`;
 
-                        // Overlay tooltip
+                        // Overlay tooltip + click to drill into 24h day-view
                         const dateTitle = pt.date ? `Datum: ${pt.date}` : pt.label;
                         overlayHtml += `
                             <rect x="${xStart + idx * colW}" y="12" width="${colW}" height="182" fill="transparent" class="hist-col-hover"
                                   style="cursor: pointer;"
+                                  onclick="drillIntoHistogramDay('${pt.date}')"
                                   onmouseenter="showHistDailyTooltip(event, '${dateTitle}', ${pvKwh}, ${batDis}, ${batChg}, ${loadKwh}, ${gridKwh})"
                                   onmousemove="moveHistTooltip(event)"
                                   onmouseleave="hideHistTooltip()" />
@@ -8514,12 +8687,13 @@
                 }
 
                 // Gridlines & Axis labels
+                const dayTagText = (days === 1 && histData && histData.selected_date_label) ? ` · ${histData.selected_date_label}` : '';
                 const gridLines = `
                     <!-- Background & Border -->
                     <rect x="0" y="0" width="${wTotal}" height="${hTotal}" rx="10" fill="#071320" />
                     
                     <!-- Plant Identification Tag inside SVG -->
-                    <text x="${xStart}" y="10" fill="#38bdf8" font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">📍 ${plantName} (P_inst: ${cap >= 1000 ? (cap/1000).toFixed(2) + ' MWp' : Math.round(cap) + ' kW'})</text>
+                    <text x="${xStart}" y="10" fill="#38bdf8" font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">📍 ${plantName}${dayTagText} (P_inst: ${cap >= 1000 ? (cap/1000).toFixed(2) + ' MWp' : Math.round(cap) + ' kW'})</text>
 
                     <!-- Zero Axis (0 kWh / kW) -->
                     <line x1="${xStart}" y1="${yZero}" x2="${xEnd}" y2="${yZero}" stroke="rgba(255, 255, 255, 0.22)" stroke-width="1.2" stroke-dasharray="3 3" />
@@ -8569,8 +8743,17 @@
             const plantId = selectedFlowPlantId || "ALL";
             const days = selectedHistDays || 30;
 
+            // Compute target date string if browsing day-by-day
+            let targetDate = null;
+            if (days === 1) {
+                if (histAvailableDates && histAvailableDates.length > 0) {
+                    const idx = Math.max(0, histAvailableDates.length - 1 - histSelectedDateOffset);
+                    targetDate = histAvailableDates[idx];
+                }
+            }
+
             // 1. Instant-render cached or baseline state so user never sees a blank screen
-            if (cachedEnergyHistoryData && cachedEnergyHistoryData.plant_id === plantId && cachedEnergyHistoryData.days === days) {
+            if (cachedEnergyHistoryData && cachedEnergyHistoryData.plant_id === plantId && cachedEnergyHistoryData.days === days && (!targetDate || cachedEnergyHistoryData.selected_date === targetDate)) {
                 drawEnergyFlowHistogramSvg(cachedEnergyHistoryData, days, plantId);
             } else {
                 drawEnergyFlowHistogramSvg(null, days, plantId);
@@ -8579,14 +8762,26 @@
             // 2. Fetch live telemetry history asynchronously from backend
             try {
                 const headers = (typeof authToken !== "undefined" && authToken) ? { "Authorization": `Bearer ${authToken}` } : {};
-                const res = await fetch(`${API_BASE}/api/plants/${encodeURIComponent(plantId)}/energy-history?days=${days}`, {
-                    headers: headers
-                });
+                let fetchUrl = `${API_BASE}/api/plants/${encodeURIComponent(plantId)}/energy-history?days=${days}`;
+                if (days === 1 && targetDate) {
+                    fetchUrl += `&date=${encodeURIComponent(targetDate)}`;
+                }
+
+                const res = await fetch(fetchUrl, { headers: headers });
                 if (res.ok) {
                     const data = await res.json();
                     cachedEnergyHistoryData = data;
-                    // Only re-render if user hasn't switched away or changed filters in the meantime
-                    if (activeFlowView === "histogram" && selectedHistDays === days && (selectedFlowPlantId || "ALL") === plantId) {
+                    if (data.available_dates && data.available_dates.length > 0) {
+                        histAvailableDates = data.available_dates;
+                    }
+                    if (data.selected_date) {
+                        histCurrentDateStr = data.selected_date;
+                    }
+
+                    updateDayNavigationArrows();
+
+                    // Re-render with freshly received telemetry data
+                    if ((selectedFlowPlantId || "ALL") === plantId && selectedHistDays === days) {
                         drawEnergyFlowHistogramSvg(data, days, plantId);
                     }
                 }
@@ -8600,7 +8795,7 @@
             if (!tip) return;
 
             tip.innerHTML = `
-                <div style="font-weight: 800; color: #38bdf8; margin-bottom: 3px; font-family: var(--font-mono); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">📅 ${dateLabel}</div>
+                <div style="font-weight: 800; color: #38bdf8; margin-bottom: 3px; font-family: var(--font-mono); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">📅 ${dateLabel} <span style="font-size: 0.65rem; color:#94a3b8; font-weight: normal;">(Klick für 24h)</span></div>
                 <div style="display: flex; justify-content: space-between; gap: 14px;"><span style="color:#fbbf24;">☀️ Solar PV Ertrag:</span> <strong>+${pvKwh.toLocaleString('de-DE')} kWh</strong></div>
                 <div style="display: flex; justify-content: space-between; gap: 14px;"><span style="color:#10b981;">🔋 BESS Entladung:</span> <strong>+${batDisKwh.toLocaleString('de-DE')} kWh</strong></div>
                 <div style="display: flex; justify-content: space-between; gap: 14px;"><span style="color:#059669;">🔋 BESS Ladung:</span> <strong>-${batChgKwh.toLocaleString('de-DE')} kWh</strong></div>
@@ -8685,6 +8880,10 @@
             const select = document.getElementById("flowPlantSelect");
             if (select && select.value !== plantId) select.value = plantId;
 
+            // Clear old plant data so fresh telemetry is loaded immediately
+            cachedEnergyHistoryData = null;
+            histSelectedDateOffset = 0; // Reset day offset to today
+
             if (plantId === "ALL" || !cachedPlants || cachedPlants.length === 0) {
                 const totalCapKw = (cachedPlants || []).reduce((acc, p) => acc + (Number(p.installed_capacity_kw) || 0), 0);
                 flowBaseline = {
@@ -8696,7 +8895,7 @@
                     status: "ONLINE_REGULATING"
                 };
             } else {
-                const plant = cachedPlants.find(p => p.id === plantId);
+                const plant = (cachedPlants || []).find(p => p.id === plantId);
                 if (plant) {
                     let vKv = 20.0;
                     const vStr = String(plant.voltage_level || "").toLowerCase();
@@ -8714,13 +8913,24 @@
                         site_type: plant.site_type || "PV",
                         status: plant.status || "ONLINE_REGULATING"
                     };
+                } else {
+                    flowBaseline = {
+                        name: `Anlage (${plantId})`,
+                        capacity_kw: 2200.0,
+                        voltage_kv: 20.0,
+                        grid_operator: "Verteilnetzbetreiber",
+                        site_type: "HYBRID",
+                        status: "ONLINE_REGULATING"
+                    };
                 }
             }
 
             // Recalculate simulation state based on baseline
             applySimulationModeToState(flowSimulationMode);
             updateEnergyFlowUI();
-            if (activeFlowView === "histogram") renderEnergyFlowHistogram();
+
+            // ALWAYS trigger histogram update when plant changes
+            renderEnergyFlowHistogram();
         }
 
         function selectPlantForEnergyFlow(plantId) {

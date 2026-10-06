@@ -949,13 +949,15 @@ async def unassign_device_from_plant(
 @app.get("/api/plants/{plant_id}/energy-history")
 async def get_plant_history_endpoint(
     plant_id: str,
-    days: int = 30
+    days: int = 30,
+    date: Optional[str] = None
 ):
     """
     Returns recorded 1-, 7-, or 30-day energy flow and generation telemetry history for a plant.
-    Supports plant_id='ALL' for the aggregated fleet history.
+    Supports plant_id='ALL' for the aggregated fleet history and date='YYYY-MM-DD' for day-specific 24h history.
     """
-    return get_plant_energy_history(plant_id, days)
+    return get_plant_energy_history(plant_id, days, date)
+
 
 # ----------------- Interactive Plant Questionnaire (SLD Replacement) ----------------- #
 
