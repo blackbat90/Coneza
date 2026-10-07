@@ -916,6 +916,7 @@
         @media (max-width: 900px) {
             .hero-banner { grid-template-columns: 1fr; gap: 1.5rem; }
             .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            header { flex-direction: column; align-items: stretch; gap: 1rem; }
             .header-actions { flex-wrap: wrap; }
             footer .container { flex-direction: column; gap: 0.8rem; text-align: center; }
         }
@@ -1008,6 +1009,73 @@
             50% { transform: scale(1.12); }
         }
     
+        /* Smartphone layout: keep controls readable within the viewport. */
+        @media (max-width: 600px) {
+            header {
+                position: static;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            .brand { gap: 0.65rem; min-width: 0; }
+            .brand > div:last-child { min-width: 0; }
+            .brand-logo-img { height: 32px; }
+            .brand-title { font-size: 1.25rem; }
+            .brand-subtitle { font-size: 0.7rem; overflow-wrap: anywhere; }
+            .header-actions { gap: 0.5rem; }
+            .container { padding: 1rem; }
+            .tab-content, .modal, .controller-screen { overflow-wrap: anywhere; }
+            .tab-content .mobile-actions { flex-wrap: wrap; }
+            .hero-banner { padding: 1.1rem; gap: 1.25rem; margin-bottom: 1.25rem; }
+            .hero-banner > *, .grid-2 > *, .grid-3 > *, .grid-4 > * { min-width: 0; }
+            .hero-banner h1 { font-size: clamp(1.5rem, 7vw, 2rem); overflow-wrap: anywhere; }
+            .hero-banner .btn { width: 100%; justify-content: center; }
+            .hero-compliance-bar { grid-template-columns: 1fr; }
+            .btn { min-height: 44px; max-width: 100%; padding: 0.65rem 0.85rem; }
+            .tab-btn { flex-shrink: 0; min-height: 44px; padding: 0.65rem 1rem; }
+            .nav-tabs { gap: 0.5rem; margin-bottom: 1.25rem; }
+            .card { padding: 1rem; }
+            .controller-card { padding: 0.65rem; }
+            .controller-screen { padding: 0.75rem; min-height: 0; }
+            .screen-top { flex-wrap: wrap; }
+            .screen-top > div { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+            .screen-top select { max-width: 100%; }
+            .controller-screen > label { display: block; margin-bottom: 0.5rem; }
+            #dashboardPlantSelect { display: block; width: 100%; }
+            .sim-mode-select { min-height: 44px; font-size: 16px !important; }
+            #flowPlantSelect, #flowSimSelect { width: 100% !important; max-width: 100% !important; }
+            .metrics-row { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .flow-params-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .flow-param-box { min-width: 0; }
+            .flow-param-title { flex-wrap: wrap; }
+            .flow-param-value { font-size: 0.85rem; overflow-wrap: anywhere; }
+            .table-wrap { max-width: 100%; }
+            .mobile-grid, #dispatchUnitsList { grid-template-columns: minmax(0, 1fr) !important; }
+            .mobile-grid > * { min-width: 0; }
+            input, select, textarea { min-width: 0 !important; max-width: 100%; font-size: 16px !important; }
+            .modal { padding: 1rem !important; max-height: 90dvh !important; }
+            .modal [style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+            .modal [style*="grid-template-columns"] > * { min-width: 0; }
+            .modal .card { padding: 1rem !important; }
+            .modal .mobile-actions { flex-wrap: wrap; max-width: 100%; }
+            .wizard-stepper { padding: 0.75rem; overflow-x: auto; }
+            .wizard-stepper > div { min-width: 560px; }
+            footer { padding: 1.5rem 1rem 5rem; }
+            #conezaChatLauncherBtn { right: 12px !important; bottom: max(12px, env(safe-area-inset-bottom)) !important; }
+            #conezaChatboxWidget {
+                right: 12px !important;
+                bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+                width: calc(100vw - 24px) !important;
+                max-width: none !important;
+                max-height: calc(100dvh - 100px - env(safe-area-inset-bottom)) !important;
+            }
+            #conezaChatboxWidget > div { min-width: 0; flex-shrink: 0; }
+            #conezaChatboxWidget > div:first-child { padding: 0.75rem !important; flex-wrap: wrap; gap: 0.5rem; }
+            #conezaChatboxWidget > div:first-child > div:first-child { flex-wrap: wrap; min-width: 0; }
+            #conezaChatMessages { min-height: 0; flex-shrink: 1 !important; overflow-wrap: anywhere; }
+            #conezaChatInput { margin-bottom: 0; }
+        }
     </style>
 </head>
 <body>
@@ -1312,7 +1380,7 @@
                     <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">Erzeugungsanlagen & Standorte (EZA)</h2>
                     <p style="color: var(--text-muted); font-size: 0.88rem;">Zentrale Übersicht über Solar- und BESS-Parks mit zugewiesenen Coneza-Steuergeräten und VDE-AR-N 4110/4120 Netzanschlussdokumenten.</p>
                 </div>
-                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <div class="mobile-actions" style="display: flex; gap: 0.75rem; align-items: center;">
                     <button class="btn" onclick="loadPlants()">🔄 Aktualisieren</button>
                     <button class="btn btn-primary" id="btnCreatePlantInTab" onclick="openPlantQuestionnaireModal()">+ Neue Anlage</button>
                 </div>
@@ -1351,7 +1419,7 @@
                     <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">Linux Edge Gateways &amp; Industrial Hardware</h2>
                     <p style="color: var(--text-muted); font-size: 0.88rem;">Local edge devices wired to EZA controllers, commercial solar inverters, and power quality meters.</p>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
+                <div class="mobile-actions" style="display: flex; gap: 0.5rem;">
                     <button class="btn" onclick="openHardwareCatalogModal()">📖 Hardware-Katalog</button>
                     <button class="btn btn-primary" onclick="openProbeModal()">🔍 Netzwerk-Scan / Probe</button>
                     <button class="btn" onclick="loadDevices()">🔄 Aktualisieren</button>
@@ -1623,7 +1691,7 @@
                     <span class="badge badge-super" id="dispatchStatusBadge">● NETZKONFORM</span>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center; margin-bottom: 1.25rem;">
+                <div class="mobile-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center; margin-bottom: 1.25rem;">
                     <div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                             <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">DSO Abregelungs-Sollwert (Einspeisebegrenzung am NAP)</label>
@@ -1747,7 +1815,7 @@
                     <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">Benutzerverwaltung & Rollen-RBAC</h2>
                     <p style="color: var(--text-muted); font-size: 0.88rem;">Verwalten Sie autorisierte Ingenieure, Beobachter und Administratoren.</p>
                 </div>
-                <div style="display: flex; gap: 0.75rem;">
+                <div class="mobile-actions" style="display: flex; gap: 0.75rem;">
                     <button class="btn" onclick="loadUsers()">🔄 Aktualisieren</button>
                     <button class="btn btn-primary" onclick="openCreateUserModal()">+ Neuer Benutzer</button>
                 </div>
@@ -1788,7 +1856,7 @@
                     <h2 style="font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em;">📋 Jira Issue Tracker &amp; Kontinuierliche Portal-Roadmap</h2>
                     <p style="color: var(--text-muted); font-size: 0.88rem;">Automatische Aufgabenverfolgung, Freigaben und Feature-Tickets mit direkter Atlassian Jira-Integration.</p>
                 </div>
-                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <div class="mobile-actions" style="display: flex; gap: 0.75rem; align-items: center;">
                     <button class="btn" onclick="loadJiraTickets()">🔄 Aktualisieren</button>
                     <button class="btn btn-primary" onclick="openCreateJiraTicketModal()">+ Neues Ticket anlegen</button>
                 </div>
@@ -2384,7 +2452,7 @@
                 <!-- Action Bar -->
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 1.2rem; margin-top: 0.5rem;">
                     <button type="button" class="btn" onclick="closeQuickConfigModal()">Abbrechen</button>
-                    <div style="display: flex; gap: 0.75rem;">
+                    <div class="mobile-actions" style="display: flex; gap: 0.75rem;">
                         <button type="button" class="btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);" onclick="runQuickConfigDemo()">
                             🧪 Schnelldemo mit Mustern
                         </button>
@@ -2817,7 +2885,7 @@
                             ✕ Abbrechen
                         </button>
                     </div>
-                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <div class="mobile-actions" style="display: flex; gap: 0.75rem; align-items: center;">
                         <span id="wizardStepCounter" style="font-size: 0.84rem; font-weight: 700; color: var(--navy); margin-right: 0.35rem;">
                             Schritt 1 von 5
                         </span>
@@ -2856,7 +2924,7 @@
                 <!-- Interactive Zoom & Action Controls -->
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                     <!-- Zoom Controls -->
-                    <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.25rem 0.55rem;">
+                    <div class="mobile-actions" style="display: inline-flex; align-items: center; gap: 0.35rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.25rem 0.55rem;">
                         <button type="button" class="btn btn-sm" onclick="changeSldZoom(-0.25)" title="Verkleinern (Zoom Out)" style="padding: 0.25rem 0.5rem; font-weight: 700; font-size: 0.9rem;">➖</button>
                         <input type="range" id="sldZoomRange" min="40" max="300" step="5" value="100" style="width: 110px; cursor: pointer;" oninput="onSldZoomSlider(this.value)">
                         <span id="sldZoomValueText" style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; width: 46px; text-align: center; color: var(--navy);">100%</span>
@@ -2985,7 +3053,7 @@
 
             <!-- Footer Action Bar -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 1.25rem; flex-wrap: wrap; gap: 0.85rem;">
-                <div style="display: flex; gap: 0.65rem;">
+                <div class="mobile-actions" style="display: flex; gap: 0.65rem;">
                     <button type="button" class="btn" onclick="exportPcuConfigJson()">
                         📥 JSON Export
                     </button>
@@ -3119,7 +3187,7 @@
                     <h2 style="font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; color: var(--navy);" id="detailPlantName">Anlagenname</h2>
                     <p style="color: var(--text-muted); font-size: 0.86rem; margin-top: 0.2rem;" id="detailPlantLocation">Standort</p>
                 </div>
-                <div style="display: flex; gap: 0.6rem; align-items: center;">
+                <div class="mobile-actions" style="display: flex; gap: 0.6rem; align-items: center;">
                     <button type="button" class="btn" style="padding: 0.35rem 0.8rem; font-size: 0.88rem;" onclick="closePlantDetailModal()">✕ Schließen</button>
                 </div>
             </div>
