@@ -161,3 +161,21 @@ Result: imported value/status must agree with distinct source values; inconsiste
 User requests smartphone optimization and explicitly authorizes a server update in this session. Codex changes only backend/templates/index.html plus this handover. Mobile header, spacing, controls, grids, wizard, action groups and chat adapted; existing script bodies, element IDs and event handlers preserved. Read-only second-agent review identified additional overflow cases that were addressed. Dashboard frontend test, draft-editor assertions and inline JavaScript syntax checks pass; git diff --check passes. Browser geometry verification is blocked by sandbox socket restrictions, so visual validation is outstanding.
 
 Deployment target found in existing scripts: root@195.90.215.204, /srv/coneza-backend/backend/templates/index.html, container coneza-backend-server:/app/backend/templates/index.html. No SSH agent/key or server network grant is configured in this environment; nothing uploaded. Existing backend route reads the HTML file on each request, so a template-only update does not require a backend restart. Deploy only the focused patch after checking live file compatibility and taking backups of host/container templates. Jira synchronization unavailable in this session; EEP-94 association follows existing portal-layout commits.
+
+
+## Auftrag an Antigravity / Gemini: Portal auf dem Server aktualisieren
+Datum: 2026-10-07. Der Nutzer hat Code-Check-in und Serverupdate ausdruecklich beauftragt.
+Code-Commit auf GitHub/main: b29f79af6e5b2122778fdff2fdff94bf3fc395b7
+Repository: https://github.com/blackbat90/Coneza
+Status: Smartphone-Anpassung fertig; Serverupdate steht aus. Diese Datei ist die gemeinsame Uebergabe; eine direkte Nachricht an Gemini wurde nicht gesendet.
+
+Gemini: Bitte den Smartphone-Portal-Diff dieses Commits mit dem vorhandenen SSH-Zugang zu root@195.90.215.204 ausrollen.
+
+1. Repository aktualisieren, Arbeitsbaum auf fremde Aenderungen pruefen und fuer den Portal-Diff einen getrennten Checkout verwenden. Bestehende lokale und serverseitige Aenderungen erhalten.
+2. Aktuelle Templates mit Zeitstempel sichern: Host /srv/coneza-backend/backend/templates/index.html und Container coneza-backend-server:/app/backend/templates/index.html. Backuppfade dokumentieren.
+3. Den Diff fuer backend/templates/index.html gegen beide aktuellen Dateien pruefen und gezielt anwenden. Falls Host und Container unterschiedliche Staende haben, deren Aenderungen beim Patchen erhalten. Bei Konflikten erst aufloesen und pruefen.
+4. Nur die gepatchten Portal-Templates auf Host und im laufenden Container ersetzen. Das bestehende scripts/deploy_document_delete.py uebertraegt das gesamte Backend und ist fuer diesen Auftrag zu breit. backend/main.py liest das HTML bei jedem Aufruf; fuer diese Template-Aenderung ist kein Container-Neustart erforderlich.
+5. http://localhost:9080/api/health auf dem Server und https://www.coneza.de/portal/ pruefen. Ausgeliefertes HTML auf den neuen Smartphone-CSS-Block kontrollieren. Im Browser bei 320, 360, 390 und 414 px Header, Navigation, Dashboard-Auswahl, Formulare/Assistent, Modals und Chat pruefen; seitliches Ueberlaufen nur innerhalb der vorgesehenen Tabellen-/Navigationsbereiche.
+6. Bei Fehlern die beiden gesicherten Templates zurueckspielen. Ergebnis, deployed Code-Commit, Backuppfade und mobile Pruefung hier dokumentieren.
+
+Vorliegende Pruefung: Dashboard-Frontendtest, Draft-Editor-Assertions, Inline-JavaScript-Syntax und git diff --check bestanden. Script-Bodies, Element-IDs und Event-Handler sind unveraendert. Die visuelle Browserpruefung war in der Cloud-Sandbox blockiert und ist vor Abschluss des Serverupdates nachzuholen.
