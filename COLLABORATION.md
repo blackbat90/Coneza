@@ -160,3 +160,8 @@ Result: imported value/status must agree with distinct source values; inconsiste
 Codex claims clean document_draft_routes.py and its existing tests. Other tasks idle; working tree clean before test. Baseline reproduced unnecessary OCR on first file before rejecting invalid/oversized second file. Local change only; no device access.
 
 Result: both bounded upload buffers validated before OCR. Invalid PDF header or oversized second file triggers no OCR calls; existing valid upload behavior retained. Twelve focused tests pass; baseline failed two cases. Bounds apply per file; PDF validity still determined by extractor, not header alone. No production deployment or hardware access. Files released after commit.
+
+## 2026-10-07 EEP-92 draft processing off event loop
+Codex claims clean document_draft_routes.py and existing route tests. Other tasks idle; two unrelated staged scripts must remain staged and excluded from commit. Baseline confirms synchronous page/line extraction in build_draft runs on request event loop. Reuse existing threadpool helper; no new dependency.
+
+Result: build_draft reuses run_in_threadpool, like OCR, so synchronous extraction does not run on request event loop. Regression fails on baseline and passes after fix; 13 focused tests pass. No throughput/latency benchmark claim. No production deployment or hardware access. Files released after path-limited commit; unrelated staged scripts retained.

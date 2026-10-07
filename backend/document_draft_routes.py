@@ -33,4 +33,4 @@ async def document_draft(sld_file: UploadFile = File(...), grid_doc_file: Upload
     for kind, name, data in uploads:
         extracted = await run_in_threadpool(ocr_engine.extract_document, data, name)
         documents.append(dict(type=kind, filename=name, extraction=extracted))
-    return build_draft(documents, ocr_engine._extract_grid_entities)
+    return await run_in_threadpool(build_draft, documents, ocr_engine._extract_grid_entities)

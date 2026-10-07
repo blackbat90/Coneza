@@ -41,6 +41,24 @@ class DraftRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code,200)
         self.assertIn('PCU-Konfiguration',response.text)
 
+    def test_draft_processing_runs_off_event_loop(self):
+        import asyncio
+        from backend.document_draft import build_draft
+        self.app.dependency_overrides[require_viewer]=lambda: {'role':'VIEWER'}
+        def checked_build(*args):
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                return build_draft(*args)
+            raise AssertionError('Document processing blocks the request event loop')
+        extraction={'success':True,'pages':[{'page_number':1,'text':'Wirkleistung: 75 kW'}]}
+        with patch('backend.document_draft_routes.build_draft',side_effect=checked_build), patch(
+            'backend.document_draft_routes.ocr_engine.extract_document',return_value=extraction
+        ):
+            response=self.client.post('/api/pcu/document-draft',data={'grid_doc_type':'E8'},files={
+                'sld_file':('SLD.pdf',b'%PDF-test'), 'grid_doc_file':('E8.pdf',b'%PDF-test')})
+        self.assertEqual(response.status_code,200)
+
     def test_invalid_second_file_is_rejected_before_any_ocr(self):
         self.app.dependency_overrides[require_viewer]=lambda: {'role':'VIEWER'}
         for content, limit, expected in [(b'not pdf', 100, 422), (b'%PDF-too-large', 8, 413)]:
