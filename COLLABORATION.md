@@ -1,172 +1,195 @@
-# Gemeinsame Zusammenarbeit: Codex / Gemini
-
-Stand: 2026-09-23. Gemeinsamer lokaler Arbeitsbaum: C:/Workplace/Coneza/Coneza.
-
-## Verbindliche Arbeitsvereinbarung
-
-- Vor Änderungen aktuellen Dateistand und Git-Diff prüfen; fremde Änderungen erhalten. Keine konkurrierende Umsetzung desselben Pakets.
-- Jeder Schritt hat einen Jira-Schlüssel, Quellen, Prüfkriterien, passende Tests und fokussierte lokale Commits. Bestehende passende Epics wiederverwenden; sinnvolle fremde Zuordnungen erhalten.
-- Keine pauschalen Commits des Arbeitsbaums, kein Umschreiben der Historie, kein Produktionsdeployment und keine Steuerung realer Anlagen.
-- Jira-Aufgabenorganisation, Fortschrittskommentare und Commit-Verknüpfung sind autorisiert. Zugangsdaten nie in Dokumente oder Ausgaben übernehmen.
-- Diese Datei ist eine gemeinsame Übergabemöglichkeit. Es besteht keine direkte Verbindung zu Gemini; ob Gemini sie gelesen hat, ist unbekannt.
-
-## Aktive Zuständigkeiten
-
-| Agent | Paket | Dateien | Status |
-|---|---|---|---|
-| Codex | EEP-76: signed Q-Rücklesung; Epic EEP-38 | edge/phoenix_eza/controller.py; tests/test_phoenix_signed_config.py; COLLABORATION.md | Abgeschlossen: Commit 967745e; keine aktive Codebearbeitung |
-| Gemini | Unbekannt | Unbekannt; bestehende Änderungen gelten als zu erhalten | Keine bestätigte Abstimmung |
-
-Codex beansprucht in diesem Zyklus keine anderen Implementierungsdateien. Andere Codex-Aufgabe im Projekt ist laut App-Status inaktiv; Gemini-Aktivität ist dadurch nicht feststellbar.
-
-## Bisherige Arbeit und Grenzen
-
-- 2026-09-21: Offline-Analyse ohne erfundene 2500-kW-Anlage/100%-Konsens; kritische Reviews und fehlende Daten blockieren Freigabe, Deployment und wartende Aufträge; keine KI-Zertifizierung im Audit. 14 gezielte isolierte Tests bestanden. Diese Änderungen sind noch uncommittet und mit dem vorherigen lokalen Arbeitsstand verschränkt; nicht pauschal mitcommitten.
-- Signed-Q-Korrektur stammt ebenfalls aus diesem Codex-Zyklus. controller.py war vor dieser Korrektur unverändert; sein aktueller Diff enthält ausschließlich die signed-Dekodierung. Deshalb lässt sich dieses Paket sicher isolieren.
-- Confluence-Inventur: CONFLUENCE_REQUIREMENTS.md, Stand 2026-09-21. 4 Spaces/35 Seiten inventarisiert, 30 Produktseiten textuell gelesen. Whiteboards, Bildanhänge und Norm-PDF bleiben inhaltlich offen. Keine vollständige Anforderungsabdeckung behaupten.
-- 2026-09-23: Jira-Backlog erneut live gelesen; passende bestehende Hierarchie EEP-38 -> EEP-40/EEP-48 bleibt bestehen. Neues Bug-Ticket EEP-76 unter EEP-38 erstellt: https://easy-eza.atlassian.net/browse/EEP-76.
-
-## Priorisierter Folge-Backlog (noch nicht beansprucht)
-
-1. Audit-/Freigabekorrekturen isolieren und nachvollziehbar committen; Quellen: EEP-34, Edge Cases 23199745. Eine verlässliche Trennung vom vorherigen Gemini-Stand ist erforderlich.
-2. TAB-Anwendung reparieren: backend/main.py fragt configurations/config_json ab; das Schema enthält eza_configurations/parameters_json. Quelle: Architecture and Features 1933313, EEP-40. Vorschlag für Prüfkriterien: richtigen Entwurf aktualisieren, Quellenversion dokumentieren, alte Freigabe verwerfen, keine angenommenen DSO-Werte als bestätigt behandeln.
-3. EEP-48: Konfigurationsimport/-export für Backup und Wiederverwendung. Vorschlag: versioniertes Format, strikte Validierung, Import als neuer ungeprüfter Entwurf; keine übernommene Deployment-Freigabe.
-4. EEP-23/EEP-34: nachvollziehbare Dokumentquellen, Komponenten-/Portzuordnung und geführte Inbetriebnahme. Der bestehende Code deckt nur Teile ab.
-5. Edge Cases 23199745: Offline-Nutzung sowie wöchentliche Backups/Reset; local_buffer.py ist bisher nicht im Heartbeat eingebunden. Puffergröße 50.000, BESS 95% und Timeout 5s sind Implementierungsannahmen, keine belegten Anforderungen der gelesenen Seiten.
-6. Quellenabdeckung vervollständigen: drei Whiteboards, Bildanhänge und VDE-PDF. Registerkarte in Confluence und lokaler Simulator unterscheiden sich; keine Hardware-Kompatibilität allein aus Simulation ableiten.
-
-## Übergabe
-
-Vor dem nächsten Arbeitspaket Status hier aktualisieren und Dateiinhalte erneut prüfen. Nicht automatisch annehmen, dass ein Jira-Backlogstatus den lokalen Implementierungsstand wiedergibt. Die komplette Testsuite ist nicht verifiziert.
-
-## Ergebnis des Zyklus 2026-09-23 / EEP-76
-
-- Driver-only-Test: `python -m unittest tests.test_phoenix_signed_config -v` — 1 Test bestanden. Er prüft alle vier Q-Punkte und den Q-Sollwert mit -32768, -100, -1, 0, 1, 32767 sowie Q4=-100%; U-Punkte bleiben unverändert. Modbus-Netzwerkzugriffe sind im Test verboten.
-- Gegenprobe: Derselbe Test mit controller.py aus HEAD schlägt erwartungsgemäß fehl (1 Assertion-Fehler, keine Ausführungsfehler). Damit erkennt der Test die konkrete Regression.
-- Fokussierter Commit vorgesehen: `EEP-76 fix signed reactive-power configuration readback`, ausschließlich controller.py und test_phoenix_signed_config.py.
-- Commit NICHT erstellt. `git add` scheiterte an `.git/index.lock: Permission denied`; zwei Berechtigungsanfragen erteilten keinen Dateisystem-Schreibzugriff. Kein Umgehen der Beschränkung, kein Push. Git-Index blieb unverändert.
-- Fortsetzung: Nach tatsächlich erteiltem Git-Schreibzugriff Dateien erneut vergleichen, Test ausführen, genau diese beiden Dateien committen und Commit-ID im Jira-Ticket dokumentieren. Andere lokale Änderungen nicht übernehmen. Testüberschneidung mit dem noch uncommitteten test_safety_regressions.py später beim Isolieren des Audit-Pakets bereinigen.
-
-## Aktives Paket EEP-77: Docker-Simulator (2026-09-23)
-
-Codex beansprucht ausschließlich neue Dateien: edge/simulator_service.py, docker/Dockerfile.simulator, docker/Dockerfile.simulator.dockerignore, docker/requirements.simulator.txt, docker/compose.simulator.yml, tests/test_simulator_service.py, SIMULATOR_DOCKER.md. Gemeinsame Koordinationsdatei wird aktualisiert. Keine fremden Implementierungsdateien ändern.
-Ticket: https://easy-eza.atlassian.net/browse/EEP-77, Epic EEP-38. Quelle: ausdrücklicher Nutzerauftrag plus EEP-24 / Confluence Dev. Approach 4096001. Zielgerät: Ubuntu IPC; SSH-Adresse noch offen. Docker ist in dieser Windows-Arbeitsumgebung nicht verfügbar. Image-Build und dauerhafte Portal-Erreichbarkeit erst nach tatsächlicher Prüfung melden.
-
-## Aktualisierung EEP-76 / EEP-77
-
-- Git-Schreibblocker durch genehmigte Befehlseskalation gelöst. EEP-76 fokussiert committed: 967745e (controller.py und eigenständiger signed-Q-Test). Vorherige Blockerangaben sind historisch.
-- EEP-77: Simulator-Service, selektiver Docker-Buildkontext, Compose-Datei und Anleitung implementiert. Controller ausschließlich 127.0.0.1:5502 innerhalb des Containers; feste Simulator-ID-Präfixprüfung; Portalname SIMULATION. Kein Host-Port veröffentlicht, kein physischer PLC-Zugriff.
-- Verifikation: `python -m unittest tests.test_simulator_service tests.test_phoenix_signed_config -v` — 5 Tests bestanden. Echte lokale Modbus-Verbindung mit Mock-Portal für Registrierung, Telemetrie und simulierten Konfigurationsauftrag. Shutdown und falsche Konfiguration geprüft.
-- Benutzer wünscht Betrieb auf Ubuntu IPC im lokalen Netz. Das ist über ausgehendes HTTPS möglich. SSH-IP/Benutzer noch nicht genannt; Docker ist hier nicht installiert. Deshalb kein Image-Build, kein Containerstart auf IPC und keine tatsächliche Portalregistrierung behaupten.
-- EEP-77 Implementierung abgeschlossen; Deployment wartet auf erreichbaren Docker-Host. Dateien freigegeben nach Commit. Fremde Änderungen weiterhin uncommittet erhalten.
-
-- EEP-77 Paket committed: 80c358b. IPC-Adresse vom Nutzer bestätigt: 192.168.8.186, SSH-Benutzer root. SSH erreichbar; Banner Debian OpenSSH. Betriebssystem/Docker und Schlüsselzugang werden vor Installation geprüft.
-
-## EEP-77 Fortsetzung: Offline-Image-Build
-
-IPC ist Debian 12 ARM64, nicht Ubuntu. Docker läuft nach autorisierter Umstellung ausschließlich von IPv4-iptables auf legacy; IPv6 unverändert. Kernel 6.1.118 hat weder NF_TABLES noch IP_NF_RAW. Bridge-Build/Container-Netzwerk scheitert an fehlendem raw-Filter. Keine Schutzfunktion deaktivieren. Codex beansprucht zusätzlich docker/Dockerfile.simulator-offline und dessen .dockerignore sowie die Docker-Anleitung. Offline-Build verwendet vorab geladene Wheels und network=none. Dauerhafte Portalverbindung bleibt bis zur unterstützten Laufzeit offen.
-
-Codex erweitert EEP-77 um Portal-UDS-Transport: edge/backend_client.py (unverändert gegenüber HEAD vor Bearbeitung), edge/simulator_service.py, edge/portal_tunnel.py, deploy/coneza-portal-tunnel.service, docker/compose.simulator-isolated.yml und zugehörige Tests. Container bleibt network=none; ein unprivilegierter Host-Dienst verbindet ausschließlich coneza.de:443. TLS bleibt Ende-zu-Ende verifiziert. Keine Firewall-Schutzfunktion deaktivieren.
-
-## EEP-77 Ergebnis: IPC-Simulator online
-
-2026-09-23: ARM64-Image e307cc022046b8c04e96ad29859c6f3bcd55570ad3b4c6488caabd2f52688b03 auf Debian-IPC 192.168.8.186 gebaut. Container coneza-simulator-eza-simulator-1 healthy, network=none, UID10001, read-only. Unprivilegierter lokaler Unix-Socket-Relay zu festem coneza.de:443; TLS-Ende-zu-Ende-Prüfung bleibt aktiv. Registrierung und wiederholte Heartbeats HTTP200; Portalgerät coneza-sim-ipc-186 / SIMULATION - IPC 192.168.8.186 virtual EZA. Keine physische PLC angesprochen. 9 lokale Tests bestanden; vorheriges Basisimage zusätzlich mit 4 Integrationstests direkt auf IPC geprüft. Keine vollständige Suite behaupten. Boot-Verhalten noch nicht durch Neustart geprüft.
-
-Frühere Statusangaben „kein Build/keine Registrierung“ sind damit überholt. Konfiguration/Abhängigkeiten wurden nur in getrennten simulator-spezifischen Verzeichnissen auf IPC abgelegt; keine lokalen Zugangsdaten mitkopiert. EEP-77-Dateien nach fokussiertem Commit freigeben. Dokumentation: SIMULATOR_DOCKER.md.
-
-## Aktuelle Übergabe nach Betriebsprüfung
-
-EEP-77: Installation und gezielte Tests abgeschlossen; nur Git-/Jira-Abschluss läuft. Alle beanspruchten Implementierungsdateien sind anschließend freigegeben. Erneute SSH-Prüfung bestätigt healthy und fortlaufende HTTP-200-Heartbeats. Andere Codex-Aufgabe inaktiv; Gemini-Zustand unbekannt. Fremde Änderungen bleiben erhalten. Kein weiteres Paket begonnen.
-
-## Lokale Simulator-Weboberfl�che (Nutzerauftrag)
-Codex beansprucht simulator_web.py, simulator_web_relay.py, zugeh�rigen Dienst und Tests sowie Simulator-Service, Dockerdateien und Anleitung. Nur lesender LAN-Zugang zu simulierten Messwerten und Einstellungen. Keine PLC-Zugriffe. Keine konkurrierende Codex-Arbeit festgestellt.
-
-Lokale Weboberfl�che EEP-77 abgeschlossen: http://192.168.8.186/ im Browser gepr�ft, ONLINE und synthetische Messwerte sichtbar. 13 Tests bestanden. Schreibgesch�tzt, LAN-Bindung nur 192.168.8.186:80, isolierter Container unver�ndert network=none. Neuer unprivilegierter Hostdienst mit ausschlie�lich CAP_NET_BIND_SERVICE. Image 24d4dfab81056cfa0da9ea58ba4471976e63bdfaed3ca5186999aafc5622dabb. Autostart eingerichtet, Reboot nicht getestet. Dateien nach fokussiertem Commit freigegeben; fremde �nderungen erhalten.
-
-## EEP-77 Modbus LAN access
-User explicitly requested both endpoints: simulator :5502 and physical PCU :502. Codex owns only new modbus_access module, service, Docker overlay and tests. Existing modified simulator/controller and physical gateway files remain untouched. Physical gateway service observed active; simulator stopped before this work.
-
-EEP-77 endpoints installed. Simulator FC03 verified on LAN5502, healthy/network=none; physical forward LAN502 installed but target 192.168.1.10:502 refuses TCP. Two relay tests pass. No PLC writes or changes. New files released after commit; all pre-existing controller/simulator/gateway edits preserved.
-
-## 2026-09-24 EEP-77 heartbeat status correction
-Codex claims only edge/backend_client.py and tests/test_edge_heartbeat_status.py plus this coordination file. Other Codex task idle; Gemini status unknown. Baseline regression proves HTTP rejection leaves stale ONLINE (7 cases). Local-only fix; no deployment or hardware access. Existing unrelated work preserved.
-
-EEP-77 result: rejected HTTP heartbeat now replaces stale ONLINE with HEARTBEAT_FAILED and numeric HTTP status only. Successful heartbeat recovers ONLINE; 404 registration preserved. Six focused tests passed, baseline failed in seven HTTP cases. No full-suite claim, no IPC or PLC deployment. Files released after focused commit.
-
-## 2026-09-24 EEP-77 result delivery logging
-Codex claims clean edge/backend_client.py plus new tests/test_edge_result_reporting.py. Baseline shows rejected config-result HTTP307/401/500 logged as delivered. Local-only work, controller fully mocked; unrelated modifications preserved.
-
-Result: HTTP success is now required before logging config-result delivery. Three targeted tests pass; regression failed on three rejected response codes before fix. No automatic retry or duplicate controller execution introduced. No deployment, real hardware access or full-suite claim. Files released after commit.
-
-## EEP-77 unexpected heartbeat failure
-Codex claims clean backend_client.py and new test_edge_loop_status.py only. Other project task not loaded; Gemini unknown. Unexpected heartbeat exceptions currently leave ONLINE stale; baseline regression reproduced. Local mocked tests only.
-
-Result: outer heartbeat exception now invalidates ONLINE with generic failure text. Five targeted tests pass; baseline failed. Cancellation propagation and loop continuation tested. No IPC/PLC access or deployment; unrelated modifications preserved. Files released after commit.
-
-## 2026-09-25 EEP-77 job envelope validation
-Live Jira EEP-77 verified under EEP-38 (simulation/config acknowledgments, source reference Dev. Approach 4096001). Codex claims clean edge/backend_client.py, tests/test_edge_job_validation.py and this file. Other project task not loaded; Gemini unknown. Baseline malformed envelopes reach mocked controller or fail with AttributeError. No hardware/network in tests. Existing modified files untouched.
-
-Result: invalid job envelopes rejected before controller/HTTP calls; requires object, nonblank string job_id, explicit parameters object. Six targeted tests passed, including twelve malformed cases and existing successful report/heartbeat regressions. Parameter values, approval authorization and idempotency are outside this change; empty explicit objects remain accepted. Baseline failed all twelve cases (nine failures, three errors). No deployment or PLC access. Files released after commit.
-
-## 2026-09-27 EEP-77 telemetry availability
-Codex claims clean backend_client.py and new test_edge_telemetry_failure.py only. Other project tasks not loaded; Gemini unknown. Mocked baseline proves failed telemetry read still publishes controller_connected=True. No deployment/hardware access.
-
-Result: telemetry read errors publish controller_connected=False / TELEMETRY_UNAVAILABLE with no fabricated values. Next successful read restores measured data and connectivity; portal connectivity remains separate. Seven focused tests pass, baseline regression failed. No deployment, hardware access, full-suite claim or changes to dispatch policy. Files released after commit.
-
-## 2026-09-27 EEP-77 controller probe failure
-Codex claims clean backend_client.py and new test_edge_probe_failure.py. Other tasks not loaded; Gemini unknown. Probe exceptions currently suppress entire portal heartbeat. Baseline reproduced with mocks; no hardware access.
-
-Result: probe exceptions produce disconnected/CONNECTION_CHECK_FAILED heartbeat without exception details or fabricated telemetry. Subsequent successful probe recovers; cancellation still propagates without HTTP access. Nine targeted mocked tests pass; baseline error reproduced. No deployment or hardware access. Job dispatch policy unchanged; full suite not asserted. Files released after focused commit.
-
-## Document-driven PCU draft (explicit user request)
-Codex claims new backend/document_draft.py, backend/document_draft_routes.py, backend/static/pcu-draft.html and isolated tests. Integration only adds router registration and a link; existing uncommitted main/template content must remain preserved. Other portal task idle after observing concurrent edits; no competing implementation started. Draft shows missing/conflicting/source-linked values without deployment.
-
-EEP-92 under EEP-38 created for document-driven PCU draft. New authenticated endpoint and source-linked view implemented; 8 focused tests pass. Upload view opened in browser. Existing main/template changes verified byte-equivalent after removing only our insertions (text newline normalization); only our insertions staged. No deployment or physical writes. Existing heuristic extraction only; most detailed settings remain missing. Editing, persistence, formal approval and actual PCU register compatibility remain future work. No complete requirements coverage claim. Files released after commit.
-
-## EEP-92 same-page conflicting values
-Codex claims clean document_draft.py and test_document_draft.py only. Other portal task idle; main/template and all existing work untouched. Baseline proves repeated conflicting power values on separate lines of one page are silently reduced to first match.
-
-Result: page plus line extraction preserves conflicting values on separate lines of same page; exact duplicate sources deduplicated. Wrapped values retained. Ten focused tests passed; baseline regression failed. Multiple values within a single line and semantic distinction of nameplate vs feed-in remain limitations of legacy heuristic extraction. No deployment or physical writes. Files released after commit.
-
-## EEP-92 failed extraction isolation
-Codex claims clean document_draft.py and test_document_draft.py. Other portal task reports systemError; no competing implementation observed. Baseline regression shows partial text from a failed extraction can still influence draft values. Existing unrelated work untouched.
-
-Result: failed extraction now contributes warning only, never partial parameter observations. Successful companion document preserved. Eleven targeted tests pass; baseline regression failed. No deployment or real hardware access. Editing/persistence and real-document accuracy remain open. Files released after focused commit.
-
-## EEP-92 manual draft annotations
-Codex claims clean pcu-draft.html plus new pcu-draft-editor.js and isolated JS tests. Other project task not loaded; Gemini unknown. Manual value/reason annotations remain separate from OCR evidence and unreviewed, no server persistence or device writes.
-
-Result: per-field manual value and reason inputs added; JSON export retains source evidence and separate unreviewed manual_overrides. Clearing removes annotation, changing replaces rather than duplicates. No automatic approval; deployable=false. Node tests cover immutability, evidence, edit/clear, invalid fields/types/length and approval reset; UI script syntax check passed; 11 Python tests passed. Browser interaction not verified this cycle. Server persistence remains open; reload discards inputs, stated in UI. No deployment/hardware access; files released after commit.
-
-## EEP-92 reopen downloaded draft
-Codex claims clean draft HTML/editor JS and associated JS test only. Other tasks not loaded; shared main/template untouched. Import stays browser-local with bounded size, structural validation and no approval transfer.
-
-Result: downloaded draft JSON can be reopened locally with evidence and manual annotations. Import limits size/structure, strips config IDs and approval state, remains DRAFT/deployable=false. Tests cover round-trip, malformed/oversized/duplicate/unknown fields and approval stripping; Node tests + UI syntax + 11 Python tests pass. Browser interaction not verified this cycle. No server persistence or deployment; files released after commit.
-
-## EEP-92 preserve document warnings on import
-Codex worked only on clean draft editor JS and its regression tests. Other tasks not loaded; existing main/template work untouched. Baseline proved extraction warnings discarded by import. Fixed: validated original warnings retained, repeated import notice deduplicated. All Node editor/import assertions pass, including malformed warnings and repeated import. No deployment or hardware access. Jira update pending: network permission not granted this cycle. Files released after focused commit.
-
-## EEP-92 draft format version
-Codex claims clean document_draft.py, draft editor JS and their existing tests. Other tasks not loaded; no competing claim. Baseline confirms unsupported format versions are silently ignored. Local-only format guard with legacy compatibility planned.
-
-Result: generated drafts identify schema_version=1; restore accepts legacy absent version and explicit numeric 1 only. Unsupported/malformed versions rejected without silently interpreting them. Node regression reproduced before fix; all editor/import assertions and 11 Python tests pass. No deployment or hardware access. Files released after commit; Jira synchronization pending verification.
-
-## 2026-10-06 EEP-92 import evidence consistency
-Codex claims clean draft editor JS and existing JS tests only. Current repository commits advanced through EEP-94; two unrelated untracked scripts preserved. No competing active project task observed. Baseline reproduced acceptance of values inconsistent with sources. Minimal import guard planned; no deployment.
-
-Result: imported value/status must agree with distinct source values; inconsistent files rejected, valid missing/conflict states preserved. All Node assertions and 11 Python tests pass; baseline failed. This checks internal consistency only, not authenticity of imported document evidence. No production deployment, hardware access or full coverage claim. Files released after focused commit. Jira synchronization to be verified.
-
-## 2026-10-06 EEP-92 validate upload pair before OCR
-Codex claims clean document_draft_routes.py and its existing tests. Other tasks idle; working tree clean before test. Baseline reproduced unnecessary OCR on first file before rejecting invalid/oversized second file. Local change only; no device access.
-
-Result: both bounded upload buffers validated before OCR. Invalid PDF header or oversized second file triggers no OCR calls; existing valid upload behavior retained. Twelve focused tests pass; baseline failed two cases. Bounds apply per file; PDF validity still determined by extractor, not header alone. No production deployment or hardware access. Files released after commit.
-
-## 2026-10-07 EEP-92 draft processing off event loop
-Codex claims clean document_draft_routes.py and existing route tests. Other tasks idle; two unrelated staged scripts must remain staged and excluded from commit. Baseline confirms synchronous page/line extraction in build_draft runs on request event loop. Reuse existing threadpool helper; no new dependency.
-
-Result: build_draft reuses run_in_threadpool, like OCR, so synchronous extraction does not run on request event loop. Regression fails on baseline and passes after fix; 13 focused tests pass. No throughput/latency benchmark claim. No production deployment or hardware access. Files released after path-limited commit; unrelated staged scripts retained.
-
-## 2026-10-13 EEP-92 draft review filter
-Codex claims clean backend/static/pcu-draft.html only. Other local tasks idle at coordination check; prior claims released. Live Jira EEP-92 parent EEP-38 verified. Two unrelated staged scripts preserved. Add status filter to focus document review; no deployment or hardware access.
-
+# Gemeinsame Zusammenarbeit: Codex / Gemini
+
+Stand: 2026-09-23. Gemeinsamer lokaler Arbeitsbaum: C:/Workplace/Coneza/Coneza.
+
+## Verbindliche Arbeitsvereinbarung
+
+- Vor Ã„nderungen aktuellen Dateistand und Git-Diff prÃ¼fen; fremde Ã„nderungen erhalten. Keine konkurrierende Umsetzung desselben Pakets.
+- Jeder Schritt hat einen Jira-SchlÃ¼ssel, Quellen, PrÃ¼fkriterien, passende Tests und fokussierte lokale Commits. Bestehende passende Epics wiederverwenden; sinnvolle fremde Zuordnungen erhalten.
+- Keine pauschalen Commits des Arbeitsbaums, kein Umschreiben der Historie, kein Produktionsdeployment und keine Steuerung realer Anlagen.
+- Jira-Aufgabenorganisation, Fortschrittskommentare und Commit-VerknÃ¼pfung sind autorisiert. Zugangsdaten nie in Dokumente oder Ausgaben Ã¼bernehmen.
+- Diese Datei ist eine gemeinsame ÃœbergabemÃ¶glichkeit. Es besteht keine direkte Verbindung zu Gemini; ob Gemini sie gelesen hat, ist unbekannt.
+
+## Aktive ZustÃ¤ndigkeiten
+
+| Agent | Paket | Dateien | Status |
+|---|---|---|---|
+| Codex | EEP-76: signed Q-RÃ¼cklesung; Epic EEP-38 | edge/phoenix_eza/controller.py; tests/test_phoenix_signed_config.py; COLLABORATION.md | Abgeschlossen: Commit 967745e; keine aktive Codebearbeitung |
+| Gemini | Unbekannt | Unbekannt; bestehende Ã„nderungen gelten als zu erhalten | Keine bestÃ¤tigte Abstimmung |
+
+Codex beansprucht in diesem Zyklus keine anderen Implementierungsdateien. Andere Codex-Aufgabe im Projekt ist laut App-Status inaktiv; Gemini-AktivitÃ¤t ist dadurch nicht feststellbar.
+
+## Bisherige Arbeit und Grenzen
+
+- 2026-09-21: Offline-Analyse ohne erfundene 2500-kW-Anlage/100%-Konsens; kritische Reviews und fehlende Daten blockieren Freigabe, Deployment und wartende AuftrÃ¤ge; keine KI-Zertifizierung im Audit. 14 gezielte isolierte Tests bestanden. Diese Ã„nderungen sind noch uncommittet und mit dem vorherigen lokalen Arbeitsstand verschrÃ¤nkt; nicht pauschal mitcommitten.
+- Signed-Q-Korrektur stammt ebenfalls aus diesem Codex-Zyklus. controller.py war vor dieser Korrektur unverÃ¤ndert; sein aktueller Diff enthÃ¤lt ausschlieÃŸlich die signed-Dekodierung. Deshalb lÃ¤sst sich dieses Paket sicher isolieren.
+- Confluence-Inventur: CONFLUENCE_REQUIREMENTS.md, Stand 2026-09-21. 4 Spaces/35 Seiten inventarisiert, 30 Produktseiten textuell gelesen. Whiteboards, BildanhÃ¤nge und Norm-PDF bleiben inhaltlich offen. Keine vollstÃ¤ndige Anforderungsabdeckung behaupten.
+- 2026-09-23: Jira-Backlog erneut live gelesen; passende bestehende Hierarchie EEP-38 -> EEP-40/EEP-48 bleibt bestehen. Neues Bug-Ticket EEP-76 unter EEP-38 erstellt: https://easy-eza.atlassian.net/browse/EEP-76.
+
+## Priorisierter Folge-Backlog (noch nicht beansprucht)
+
+1. Audit-/Freigabekorrekturen isolieren und nachvollziehbar committen; Quellen: EEP-34, Edge Cases 23199745. Eine verlÃ¤ssliche Trennung vom vorherigen Gemini-Stand ist erforderlich.
+2. TAB-Anwendung reparieren: backend/main.py fragt configurations/config_json ab; das Schema enthÃ¤lt eza_configurations/parameters_json. Quelle: Architecture and Features 1933313, EEP-40. Vorschlag fÃ¼r PrÃ¼fkriterien: richtigen Entwurf aktualisieren, Quellenversion dokumentieren, alte Freigabe verwerfen, keine angenommenen DSO-Werte als bestÃ¤tigt behandeln.
+3. EEP-48: Konfigurationsimport/-export fÃ¼r Backup und Wiederverwendung. Vorschlag: versioniertes Format, strikte Validierung, Import als neuer ungeprÃ¼fter Entwurf; keine Ã¼bernommene Deployment-Freigabe.
+4. EEP-23/EEP-34: nachvollziehbare Dokumentquellen, Komponenten-/Portzuordnung und gefÃ¼hrte Inbetriebnahme. Der bestehende Code deckt nur Teile ab.
+5. Edge Cases 23199745: Offline-Nutzung sowie wÃ¶chentliche Backups/Reset; local_buffer.py ist bisher nicht im Heartbeat eingebunden. PuffergrÃ¶ÃŸe 50.000, BESS 95% und Timeout 5s sind Implementierungsannahmen, keine belegten Anforderungen der gelesenen Seiten.
+6. Quellenabdeckung vervollstÃ¤ndigen: drei Whiteboards, BildanhÃ¤nge und VDE-PDF. Registerkarte in Confluence und lokaler Simulator unterscheiden sich; keine Hardware-KompatibilitÃ¤t allein aus Simulation ableiten.
+
+## Ãœbergabe
+
+Vor dem nÃ¤chsten Arbeitspaket Status hier aktualisieren und Dateiinhalte erneut prÃ¼fen. Nicht automatisch annehmen, dass ein Jira-Backlogstatus den lokalen Implementierungsstand wiedergibt. Die komplette Testsuite ist nicht verifiziert.
+
+## Ergebnis des Zyklus 2026-09-23 / EEP-76
+
+- Driver-only-Test: `python -m unittest tests.test_phoenix_signed_config -v` â€” 1 Test bestanden. Er prÃ¼ft alle vier Q-Punkte und den Q-Sollwert mit -32768, -100, -1, 0, 1, 32767 sowie Q4=-100%; U-Punkte bleiben unverÃ¤ndert. Modbus-Netzwerkzugriffe sind im Test verboten.
+- Gegenprobe: Derselbe Test mit controller.py aus HEAD schlÃ¤gt erwartungsgemÃ¤ÃŸ fehl (1 Assertion-Fehler, keine AusfÃ¼hrungsfehler). Damit erkennt der Test die konkrete Regression.
+- Fokussierter Commit vorgesehen: `EEP-76 fix signed reactive-power configuration readback`, ausschlieÃŸlich controller.py und test_phoenix_signed_config.py.
+- Commit NICHT erstellt. `git add` scheiterte an `.git/index.lock: Permission denied`; zwei Berechtigungsanfragen erteilten keinen Dateisystem-Schreibzugriff. Kein Umgehen der BeschrÃ¤nkung, kein Push. Git-Index blieb unverÃ¤ndert.
+- Fortsetzung: Nach tatsÃ¤chlich erteiltem Git-Schreibzugriff Dateien erneut vergleichen, Test ausfÃ¼hren, genau diese beiden Dateien committen und Commit-ID im Jira-Ticket dokumentieren. Andere lokale Ã„nderungen nicht Ã¼bernehmen. TestÃ¼berschneidung mit dem noch uncommitteten test_safety_regressions.py spÃ¤ter beim Isolieren des Audit-Pakets bereinigen.
+
+## Aktives Paket EEP-77: Docker-Simulator (2026-09-23)
+
+Codex beansprucht ausschlieÃŸlich neue Dateien: edge/simulator_service.py, docker/Dockerfile.simulator, docker/Dockerfile.simulator.dockerignore, docker/requirements.simulator.txt, docker/compose.simulator.yml, tests/test_simulator_service.py, SIMULATOR_DOCKER.md. Gemeinsame Koordinationsdatei wird aktualisiert. Keine fremden Implementierungsdateien Ã¤ndern.
+Ticket: https://easy-eza.atlassian.net/browse/EEP-77, Epic EEP-38. Quelle: ausdrÃ¼cklicher Nutzerauftrag plus EEP-24 / Confluence Dev. Approach 4096001. ZielgerÃ¤t: Ubuntu IPC; SSH-Adresse noch offen. Docker ist in dieser Windows-Arbeitsumgebung nicht verfÃ¼gbar. Image-Build und dauerhafte Portal-Erreichbarkeit erst nach tatsÃ¤chlicher PrÃ¼fung melden.
+
+## Aktualisierung EEP-76 / EEP-77
+
+- Git-Schreibblocker durch genehmigte Befehlseskalation gelÃ¶st. EEP-76 fokussiert committed: 967745e (controller.py und eigenstÃ¤ndiger signed-Q-Test). Vorherige Blockerangaben sind historisch.
+- EEP-77: Simulator-Service, selektiver Docker-Buildkontext, Compose-Datei und Anleitung implementiert. Controller ausschlieÃŸlich 127.0.0.1:5502 innerhalb des Containers; feste Simulator-ID-PrÃ¤fixprÃ¼fung; Portalname SIMULATION. Kein Host-Port verÃ¶ffentlicht, kein physischer PLC-Zugriff.
+- Verifikation: `python -m unittest tests.test_simulator_service tests.test_phoenix_signed_config -v` â€” 5 Tests bestanden. Echte lokale Modbus-Verbindung mit Mock-Portal fÃ¼r Registrierung, Telemetrie und simulierten Konfigurationsauftrag. Shutdown und falsche Konfiguration geprÃ¼ft.
+- Benutzer wÃ¼nscht Betrieb auf Ubuntu IPC im lokalen Netz. Das ist Ã¼ber ausgehendes HTTPS mÃ¶glich. SSH-IP/Benutzer noch nicht genannt; Docker ist hier nicht installiert. Deshalb kein Image-Build, kein Containerstart auf IPC und keine tatsÃ¤chliche Portalregistrierung behaupten.
+- EEP-77 Implementierung abgeschlossen; Deployment wartet auf erreichbaren Docker-Host. Dateien freigegeben nach Commit. Fremde Ã„nderungen weiterhin uncommittet erhalten.
+
+- EEP-77 Paket committed: 80c358b. IPC-Adresse vom Nutzer bestÃ¤tigt: 192.168.8.186, SSH-Benutzer root. SSH erreichbar; Banner Debian OpenSSH. Betriebssystem/Docker und SchlÃ¼sselzugang werden vor Installation geprÃ¼ft.
+
+## EEP-77 Fortsetzung: Offline-Image-Build
+
+IPC ist Debian 12 ARM64, nicht Ubuntu. Docker lÃ¤uft nach autorisierter Umstellung ausschlieÃŸlich von IPv4-iptables auf legacy; IPv6 unverÃ¤ndert. Kernel 6.1.118 hat weder NF_TABLES noch IP_NF_RAW. Bridge-Build/Container-Netzwerk scheitert an fehlendem raw-Filter. Keine Schutzfunktion deaktivieren. Codex beansprucht zusÃ¤tzlich docker/Dockerfile.simulator-offline und dessen .dockerignore sowie die Docker-Anleitung. Offline-Build verwendet vorab geladene Wheels und network=none. Dauerhafte Portalverbindung bleibt bis zur unterstÃ¼tzten Laufzeit offen.
+
+Codex erweitert EEP-77 um Portal-UDS-Transport: edge/backend_client.py (unverÃ¤ndert gegenÃ¼ber HEAD vor Bearbeitung), edge/simulator_service.py, edge/portal_tunnel.py, deploy/coneza-portal-tunnel.service, docker/compose.simulator-isolated.yml und zugehÃ¶rige Tests. Container bleibt network=none; ein unprivilegierter Host-Dienst verbindet ausschlieÃŸlich coneza.de:443. TLS bleibt Ende-zu-Ende verifiziert. Keine Firewall-Schutzfunktion deaktivieren.
+
+## EEP-77 Ergebnis: IPC-Simulator online
+
+2026-09-23: ARM64-Image e307cc022046b8c04e96ad29859c6f3bcd55570ad3b4c6488caabd2f52688b03 auf Debian-IPC 192.168.8.186 gebaut. Container coneza-simulator-eza-simulator-1 healthy, network=none, UID10001, read-only. Unprivilegierter lokaler Unix-Socket-Relay zu festem coneza.de:443; TLS-Ende-zu-Ende-PrÃ¼fung bleibt aktiv. Registrierung und wiederholte Heartbeats HTTP200; PortalgerÃ¤t coneza-sim-ipc-186 / SIMULATION - IPC 192.168.8.186 virtual EZA. Keine physische PLC angesprochen. 9 lokale Tests bestanden; vorheriges Basisimage zusÃ¤tzlich mit 4 Integrationstests direkt auf IPC geprÃ¼ft. Keine vollstÃ¤ndige Suite behaupten. Boot-Verhalten noch nicht durch Neustart geprÃ¼ft.
+
+FrÃ¼here Statusangaben â€žkein Build/keine Registrierungâ€œ sind damit Ã¼berholt. Konfiguration/AbhÃ¤ngigkeiten wurden nur in getrennten simulator-spezifischen Verzeichnissen auf IPC abgelegt; keine lokalen Zugangsdaten mitkopiert. EEP-77-Dateien nach fokussiertem Commit freigeben. Dokumentation: SIMULATOR_DOCKER.md.
+
+## Aktuelle Ãœbergabe nach BetriebsprÃ¼fung
+
+EEP-77: Installation und gezielte Tests abgeschlossen; nur Git-/Jira-Abschluss lÃ¤uft. Alle beanspruchten Implementierungsdateien sind anschlieÃŸend freigegeben. Erneute SSH-PrÃ¼fung bestÃ¤tigt healthy und fortlaufende HTTP-200-Heartbeats. Andere Codex-Aufgabe inaktiv; Gemini-Zustand unbekannt. Fremde Ã„nderungen bleiben erhalten. Kein weiteres Paket begonnen.
+
+## Lokale Simulator-Weboberfläche (Nutzerauftrag)
+Codex beansprucht simulator_web.py, simulator_web_relay.py, zugehörigen Dienst und Tests sowie Simulator-Service, Dockerdateien und Anleitung. Nur lesender LAN-Zugang zu simulierten Messwerten und Einstellungen. Keine PLC-Zugriffe. Keine konkurrierende Codex-Arbeit festgestellt.
+
+Lokale Weboberfläche EEP-77 abgeschlossen: http://192.168.8.186/ im Browser geprüft, ONLINE und synthetische Messwerte sichtbar. 13 Tests bestanden. Schreibgeschützt, LAN-Bindung nur 192.168.8.186:80, isolierter Container unverändert network=none. Neuer unprivilegierter Hostdienst mit ausschließlich CAP_NET_BIND_SERVICE. Image 24d4dfab81056cfa0da9ea58ba4471976e63bdfaed3ca5186999aafc5622dabb. Autostart eingerichtet, Reboot nicht getestet. Dateien nach fokussiertem Commit freigegeben; fremde Änderungen erhalten.
+
+## EEP-77 Modbus LAN access
+User explicitly requested both endpoints: simulator :5502 and physical PCU :502. Codex owns only new modbus_access module, service, Docker overlay and tests. Existing modified simulator/controller and physical gateway files remain untouched. Physical gateway service observed active; simulator stopped before this work.
+
+EEP-77 endpoints installed. Simulator FC03 verified on LAN5502, healthy/network=none; physical forward LAN502 installed but target 192.168.1.10:502 refuses TCP. Two relay tests pass. No PLC writes or changes. New files released after commit; all pre-existing controller/simulator/gateway edits preserved.
+
+## 2026-09-24 EEP-77 heartbeat status correction
+Codex claims only edge/backend_client.py and tests/test_edge_heartbeat_status.py plus this coordination file. Other Codex task idle; Gemini status unknown. Baseline regression proves HTTP rejection leaves stale ONLINE (7 cases). Local-only fix; no deployment or hardware access. Existing unrelated work preserved.
+
+EEP-77 result: rejected HTTP heartbeat now replaces stale ONLINE with HEARTBEAT_FAILED and numeric HTTP status only. Successful heartbeat recovers ONLINE; 404 registration preserved. Six focused tests passed, baseline failed in seven HTTP cases. No full-suite claim, no IPC or PLC deployment. Files released after focused commit.
+
+## 2026-09-24 EEP-77 result delivery logging
+Codex claims clean edge/backend_client.py plus new tests/test_edge_result_reporting.py. Baseline shows rejected config-result HTTP307/401/500 logged as delivered. Local-only work, controller fully mocked; unrelated modifications preserved.
+
+Result: HTTP success is now required before logging config-result delivery. Three targeted tests pass; regression failed on three rejected response codes before fix. No automatic retry or duplicate controller execution introduced. No deployment, real hardware access or full-suite claim. Files released after commit.
+
+## EEP-77 unexpected heartbeat failure
+Codex claims clean backend_client.py and new test_edge_loop_status.py only. Other project task not loaded; Gemini unknown. Unexpected heartbeat exceptions currently leave ONLINE stale; baseline regression reproduced. Local mocked tests only.
+
+Result: outer heartbeat exception now invalidates ONLINE with generic failure text. Five targeted tests pass; baseline failed. Cancellation propagation and loop continuation tested. No IPC/PLC access or deployment; unrelated modifications preserved. Files released after commit.
+
+## 2026-09-25 EEP-77 job envelope validation
+Live Jira EEP-77 verified under EEP-38 (simulation/config acknowledgments, source reference Dev. Approach 4096001). Codex claims clean edge/backend_client.py, tests/test_edge_job_validation.py and this file. Other project task not loaded; Gemini unknown. Baseline malformed envelopes reach mocked controller or fail with AttributeError. No hardware/network in tests. Existing modified files untouched.
+
+Result: invalid job envelopes rejected before controller/HTTP calls; requires object, nonblank string job_id, explicit parameters object. Six targeted tests passed, including twelve malformed cases and existing successful report/heartbeat regressions. Parameter values, approval authorization and idempotency are outside this change; empty explicit objects remain accepted. Baseline failed all twelve cases (nine failures, three errors). No deployment or PLC access. Files released after commit.
+
+## 2026-09-27 EEP-77 telemetry availability
+Codex claims clean backend_client.py and new test_edge_telemetry_failure.py only. Other project tasks not loaded; Gemini unknown. Mocked baseline proves failed telemetry read still publishes controller_connected=True. No deployment/hardware access.
+
+Result: telemetry read errors publish controller_connected=False / TELEMETRY_UNAVAILABLE with no fabricated values. Next successful read restores measured data and connectivity; portal connectivity remains separate. Seven focused tests pass, baseline regression failed. No deployment, hardware access, full-suite claim or changes to dispatch policy. Files released after commit.
+
+## 2026-09-27 EEP-77 controller probe failure
+Codex claims clean backend_client.py and new test_edge_probe_failure.py. Other tasks not loaded; Gemini unknown. Probe exceptions currently suppress entire portal heartbeat. Baseline reproduced with mocks; no hardware access.
+
+Result: probe exceptions produce disconnected/CONNECTION_CHECK_FAILED heartbeat without exception details or fabricated telemetry. Subsequent successful probe recovers; cancellation still propagates without HTTP access. Nine targeted mocked tests pass; baseline error reproduced. No deployment or hardware access. Job dispatch policy unchanged; full suite not asserted. Files released after focused commit.
+
+## Document-driven PCU draft (explicit user request)
+Codex claims new backend/document_draft.py, backend/document_draft_routes.py, backend/static/pcu-draft.html and isolated tests. Integration only adds router registration and a link; existing uncommitted main/template content must remain preserved. Other portal task idle after observing concurrent edits; no competing implementation started. Draft shows missing/conflicting/source-linked values without deployment.
+
+EEP-92 under EEP-38 created for document-driven PCU draft. New authenticated endpoint and source-linked view implemented; 8 focused tests pass. Upload view opened in browser. Existing main/template changes verified byte-equivalent after removing only our insertions (text newline normalization); only our insertions staged. No deployment or physical writes. Existing heuristic extraction only; most detailed settings remain missing. Editing, persistence, formal approval and actual PCU register compatibility remain future work. No complete requirements coverage claim. Files released after commit.
+
+## EEP-92 same-page conflicting values
+Codex claims clean document_draft.py and test_document_draft.py only. Other portal task idle; main/template and all existing work untouched. Baseline proves repeated conflicting power values on separate lines of one page are silently reduced to first match.
+
+Result: page plus line extraction preserves conflicting values on separate lines of same page; exact duplicate sources deduplicated. Wrapped values retained. Ten focused tests passed; baseline regression failed. Multiple values within a single line and semantic distinction of nameplate vs feed-in remain limitations of legacy heuristic extraction. No deployment or physical writes. Files released after commit.
+
+## EEP-92 failed extraction isolation
+Codex claims clean document_draft.py and test_document_draft.py. Other portal task reports systemError; no competing implementation observed. Baseline regression shows partial text from a failed extraction can still influence draft values. Existing unrelated work untouched.
+
+Result: failed extraction now contributes warning only, never partial parameter observations. Successful companion document preserved. Eleven targeted tests pass; baseline regression failed. No deployment or real hardware access. Editing/persistence and real-document accuracy remain open. Files released after focused commit.
+
+## EEP-92 manual draft annotations
+Codex claims clean pcu-draft.html plus new pcu-draft-editor.js and isolated JS tests. Other project task not loaded; Gemini unknown. Manual value/reason annotations remain separate from OCR evidence and unreviewed, no server persistence or device writes.
+
+Result: per-field manual value and reason inputs added; JSON export retains source evidence and separate unreviewed manual_overrides. Clearing removes annotation, changing replaces rather than duplicates. No automatic approval; deployable=false. Node tests cover immutability, evidence, edit/clear, invalid fields/types/length and approval reset; UI script syntax check passed; 11 Python tests passed. Browser interaction not verified this cycle. Server persistence remains open; reload discards inputs, stated in UI. No deployment/hardware access; files released after commit.
+
+## EEP-92 reopen downloaded draft
+Codex claims clean draft HTML/editor JS and associated JS test only. Other tasks not loaded; shared main/template untouched. Import stays browser-local with bounded size, structural validation and no approval transfer.
+
+Result: downloaded draft JSON can be reopened locally with evidence and manual annotations. Import limits size/structure, strips config IDs and approval state, remains DRAFT/deployable=false. Tests cover round-trip, malformed/oversized/duplicate/unknown fields and approval stripping; Node tests + UI syntax + 11 Python tests pass. Browser interaction not verified this cycle. No server persistence or deployment; files released after commit.
+
+## EEP-92 preserve document warnings on import
+Codex worked only on clean draft editor JS and its regression tests. Other tasks not loaded; existing main/template work untouched. Baseline proved extraction warnings discarded by import. Fixed: validated original warnings retained, repeated import notice deduplicated. All Node editor/import assertions pass, including malformed warnings and repeated import. No deployment or hardware access. Jira update pending: network permission not granted this cycle. Files released after focused commit.
+
+## EEP-92 draft format version
+Codex claims clean document_draft.py, draft editor JS and their existing tests. Other tasks not loaded; no competing claim. Baseline confirms unsupported format versions are silently ignored. Local-only format guard with legacy compatibility planned.
+
+Result: generated drafts identify schema_version=1; restore accepts legacy absent version and explicit numeric 1 only. Unsupported/malformed versions rejected without silently interpreting them. Node regression reproduced before fix; all editor/import assertions and 11 Python tests pass. No deployment or hardware access. Files released after commit; Jira synchronization pending verification.
+
+## 2026-10-06 EEP-92 import evidence consistency
+Codex claims clean draft editor JS and existing JS tests only. Current repository commits advanced through EEP-94; two unrelated untracked scripts preserved. No competing active project task observed. Baseline reproduced acceptance of values inconsistent with sources. Minimal import guard planned; no deployment.
+
+Result: imported value/status must agree with distinct source values; inconsistent files rejected, valid missing/conflict states preserved. All Node assertions and 11 Python tests pass; baseline failed. This checks internal consistency only, not authenticity of imported document evidence. No production deployment, hardware access or full coverage claim. Files released after focused commit. Jira synchronization to be verified.
+
+## 2026-10-06 EEP-92 validate upload pair before OCR
+Codex claims clean document_draft_routes.py and its existing tests. Other tasks idle; working tree clean before test. Baseline reproduced unnecessary OCR on first file before rejecting invalid/oversized second file. Local change only; no device access.
+
+Result: both bounded upload buffers validated before OCR. Invalid PDF header or oversized second file triggers no OCR calls; existing valid upload behavior retained. Twelve focused tests pass; baseline failed two cases. Bounds apply per file; PDF validity still determined by extractor, not header alone. No production deployment or hardware access. Files released after commit.
+
+## 2026-10-07 EEP-92 draft processing off event loop
+Codex claims clean document_draft_routes.py and existing route tests. Other tasks idle; two unrelated staged scripts must remain staged and excluded from commit. Baseline confirms synchronous page/line extraction in build_draft runs on request event loop. Reuse existing threadpool helper; no new dependency.
+
+Result: build_draft reuses run_in_threadpool, like OCR, so synchronous extraction does not run on request event loop. Regression fails on baseline and passes after fix; 13 focused tests pass. No throughput/latency benchmark claim. No production deployment or hardware access. Files released after path-limited commit; unrelated staged scripts retained.
+
+## 2026-10-13 EEP-92 draft review filter
+Codex claims clean backend/static/pcu-draft.html only. Other local tasks idle at coordination check; prior claims released. Live Jira EEP-92 parent EEP-38 verified. Two unrelated staged scripts preserved. Add status filter to focus document review; no deployment or hardware access.
+
 Result: status filter narrows table to missing, conflicting or unreviewed document values, with visible count and empty-state message. Rows are hidden in place so manual inputs and full export remain preserved. New draft resets filter to all. Inline script syntax and mocked DOM filter checks passed, all Node editor/import assertions and 13 Python tests pass. No browser interaction verification, deployment or hardware access. Files released after path-limited commit.
+
+## 2026-10-07 EEP-94 smartphone portal layout
+User requests smartphone optimization and explicitly authorizes a server update in this session. Codex changes only backend/templates/index.html plus this handover. Mobile header, spacing, controls, grids, wizard, action groups and chat adapted; existing script bodies, element IDs and event handlers preserved. Read-only second-agent review identified additional overflow cases that were addressed. Dashboard frontend test, draft-editor assertions and inline JavaScript syntax checks pass; git diff --check passes. Browser geometry verification is blocked by sandbox socket restrictions, so visual validation is outstanding.
+
+Deployment target found in existing scripts: root@195.90.215.204, /srv/coneza-backend/backend/templates/index.html, container coneza-backend-server:/app/backend/templates/index.html. No SSH agent/key or server network grant is configured in this environment; nothing uploaded. Existing backend route reads the HTML file on each request, so a template-only update does not require a backend restart. Deploy only the focused patch after checking live file compatibility and taking backups of host/container templates. Jira synchronization unavailable in this session; EEP-94 association follows existing portal-layout commits.
+
+
+## Auftrag an Antigravity / Gemini: Portal auf dem Server aktualisieren
+Datum: 2026-10-07. Der Nutzer hat Code-Check-in und Serverupdate ausdruecklich beauftragt.
+Code-Commit auf GitHub/main: b29f79af6e5b2122778fdff2fdff94bf3fc395b7
+Repository: https://github.com/blackbat90/Coneza
+Status: Smartphone-Anpassung fertig; Serverupdate steht aus. Diese Datei ist die gemeinsame Uebergabe; eine direkte Nachricht an Gemini wurde nicht gesendet.
+
+Gemini: Bitte den Smartphone-Portal-Diff dieses Commits mit dem vorhandenen SSH-Zugang zu root@195.90.215.204 ausrollen.
+
+1. Repository aktualisieren, Arbeitsbaum auf fremde Aenderungen pruefen und fuer den Portal-Diff einen getrennten Checkout verwenden. Bestehende lokale und serverseitige Aenderungen erhalten.
+2. Aktuelle Templates mit Zeitstempel sichern: Host /srv/coneza-backend/backend/templates/index.html und Container coneza-backend-server:/app/backend/templates/index.html. Backuppfade dokumentieren.
+3. Den Diff fuer backend/templates/index.html gegen beide aktuellen Dateien pruefen und gezielt anwenden. Falls Host und Container unterschiedliche Staende haben, deren Aenderungen beim Patchen erhalten. Bei Konflikten erst aufloesen und pruefen.
+4. Nur die gepatchten Portal-Templates auf Host und im laufenden Container ersetzen. Das bestehende scripts/deploy_document_delete.py uebertraegt das gesamte Backend und ist fuer diesen Auftrag zu breit. backend/main.py liest das HTML bei jedem Aufruf; fuer diese Template-Aenderung ist kein Container-Neustart erforderlich.
+5. http://localhost:9080/api/health auf dem Server und https://www.coneza.de/portal/ pruefen. Ausgeliefertes HTML auf den neuen Smartphone-CSS-Block kontrollieren. Im Browser bei 320, 360, 390 und 414 px Header, Navigation, Dashboard-Auswahl, Formulare/Assistent, Modals und Chat pruefen; seitliches Ueberlaufen nur innerhalb der vorgesehenen Tabellen-/Navigationsbereiche.
+6. Bei Fehlern die beiden gesicherten Templates zurueckspielen. Ergebnis, deployed Code-Commit, Backuppfade und mobile Pruefung hier dokumentieren.
+
+Vorliegende Pruefung: Dashboard-Frontendtest, Draft-Editor-Assertions, Inline-JavaScript-Syntax und git diff --check bestanden. Script-Bodies, Element-IDs und Event-Handler sind unveraendert. Die visuelle Browserpruefung war in der Cloud-Sandbox blockiert und ist vor Abschluss des Serverupdates nachzuholen.
