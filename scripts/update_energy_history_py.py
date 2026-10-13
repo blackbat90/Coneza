@@ -1,0 +1,279 @@
+# -*- coding: utf-8 -*-
+with open('backend/energy_history.py', 'r', encoding='utf-8') as f:
+    code = f.read()
+
+target_start = 'def get_plant_energy_history(plant_id: str, days: int = 30) -> Dict[str, Any]:'
+pos = code.find(target_start)
+if pos == -1:
+    print("Error: target_start not found")
+    exit(1)
+
+new_func = '''def get_plant_energy_history(plant_id: str, days: int = 30, target_date: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Returns the energy flow history for a plant over 1, 7, or 30 days.
+    If plant_id == 'ALL', aggregates the data across all registered plants.
+    If target_date is given (YYYY-MM-DD), returns the 24 hourly points for that specific day.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Resolve plant metadata
+    plant_name = "Gesamtflotte (Alle Standorte)"
+    capacity_kw = 2200.0
+    site_type = "HYBRID"
+
+    if plant_id == "ALL":
+        cursor.execute("SELECT id, name, installed_capacity_kw, site_type FROM plants")
+        plants = cursor.fetchall()
+        if plants:
+            capacity_kw = sum(float(p["installed_capacity_kw"] or 0) for p in plants)
+            plant_name = f"Gesamtflotte ({len(plants)} Standorte)"
+            for p in plants:
+                ensure_plant_history_seeded(p["id"], float(p["installed_capacity_kw"] or 1500), p["site_type"])
+        else:
+            ensure_plant_history_seeded("ALL", 2200.0, "HYBRID")
+    else:
+        cursor.execute("SELECT * FROM plants WHERE id = ?", (plant_id,))
+        p = cursor.fetchone()
+        if p:
+            plant_name = p["name"]
+            capacity_kw = float(p["installed_capacity_kw"] or 1500.0)
+            site_type = p["site_type"]
+            ensure_plant_history_seeded(plant_id, capacity_kw, site_type)
+        else:
+            # Fallback if plant_id is not in plants table
+            plant_name = f"Anlage ({plant_id})"
+            capacity_kw = 2200.0
+            site_type = "HYBRID"
+            ensure_plant_history_seeded(plant_id, capacity_kw, site_type)
+
+    now = datetime.now()
+    start_date = (now - timedelta(days=days)).strftime("%Y-%m-%d")
+
+    # Fetch daily aggregates
+    if plant_id == "ALL":
+        query = """
+            SELECT date,
+                   SUM(pv_energy_kwh) as pv_kwh,
+                   MAX(pv_peak_kw) as pv_peak_kw,
+                   SUM(bat_charge_kwh) as bat_charge_kwh,
+                   SUM(bat_discharge_kwh) as bat_discharge_kwh,
+                   SUM(load_energy_kwh) as load_kwh,
+                   SUM(grid_feedin_kwh) as grid_feedin_kwh,
+                   SUM(grid_import_kwh) as grid_import_kwh
+            FROM plant_energy_history
+            WHERE date >= ?
+            GROUP BY date
+            ORDER BY date ASC
+        """
+        cursor.execute(query, (start_date,))
+    else:
+        query = """
+            SELECT date,
+                   SUM(pv_energy_kwh) as pv_kwh,
+                   MAX(pv_peak_kw) as pv_peak_kw,
+                   SUM(bat_charge_kwh) as bat_charge_kwh,
+                   SUM(bat_discharge_kwh) as bat_discharge_kwh,
+                   SUM(load_energy_kwh) as load_kwh,
+                   SUM(grid_feedin_kwh) as grid_feedin_kwh,
+                   SUM(grid_import_kwh) as grid_import_kwh
+            FROM plant_energy_history
+            WHERE plant_id = ? AND date >= ?
+            GROUP BY date
+            ORDER BY date ASC
+        """
+        cursor.execute(query, (plant_id, start_date))
+
+    daily_rows = cursor.fetchall()
+
+    # Fetch 24 hourly values for target date (defaults to today)
+    today_str = now.strftime("%Y-%m-%d")
+    selected_date_str = target_date if (target_date and len(target_date) == 10) else today_str
+
+    if plant_id == "ALL":
+        cursor.execute("""
+            SELECT hour,
+                   SUM(pv_energy_kwh) as pv_kw,
+                   SUM(bat_charge_kwh) as bat_charge_kw,
+                   SUM(bat_discharge_kwh) as bat_discharge_kw,
+                   SUM(load_energy_kwh) as load_kw,
+                   SUM(grid_feedin_kwh) as grid_feedin_kw
+            FROM plant_energy_history
+            WHERE date = ?
+            GROUP BY hour
+            ORDER BY hour ASC
+        """, (selected_date_str,))
+    else:
+        cursor.execute("""
+            SELECT hour,
+                   pv_energy_kwh as pv_kw,
+                   bat_charge_kwh as bat_charge_kw,
+                   bat_discharge_kwh as bat_discharge_kw,
+                   load_energy_kwh as load_kw,
+                   grid_feedin_kwh as grid_feedin_kw
+            FROM plant_energy_history
+            WHERE plant_id = ? AND date = ?
+            ORDER BY hour ASC
+        """, (plant_id, selected_date_str))
+
+    hourly_rows = cursor.fetchall()
+
+    # If target date had no records, fallback to today
+    if not hourly_rows and selected_date_str != today_str:
+        selected_date_str = today_str
+        if plant_id == "ALL":
+            cursor.execute("""
+                SELECT hour,
+                       SUM(pv_energy_kwh) as pv_kw,
+                       SUM(bat_charge_kwh) as bat_charge_kw,
+                       SUM(bat_discharge_kwh) as bat_discharge_kw,
+                       SUM(load_energy_kwh) as load_kw,
+                       SUM(grid_feedin_kwh) as grid_feedin_kw
+                FROM plant_energy_history
+                WHERE date = ?
+                GROUP BY hour
+                ORDER BY hour ASC
+            """, (today_str,))
+        else:
+            cursor.execute("""
+                SELECT hour,
+                       pv_energy_kwh as pv_kw,
+                       bat_charge_kwh as bat_charge_kw,
+                       bat_discharge_kwh as bat_discharge_kw,
+                       load_energy_kwh as load_kw,
+                       grid_feedin_kwh as grid_feedin_kw
+                FROM plant_energy_history
+                WHERE plant_id = ? AND date = ?
+                ORDER BY hour ASC
+            """, (plant_id, today_str))
+        hourly_rows = cursor.fetchall()
+
+    conn.close()
+
+    # Format hourly array (24 entries)
+    hourly_map = {r["hour"]: dict(r) for r in hourly_rows}
+    hourly_today = []
+    day_pv_kwh = 0.0
+    day_grid_kwh = 0.0
+    day_bat_dis_kwh = 0.0
+    day_bat_chg_kwh = 0.0
+    day_load_kwh = 0.0
+
+    for h in range(24):
+        h_data = hourly_map.get(h, {})
+        pv_val = round(float(h_data.get("pv_kw") or 0), 1)
+        bat_dis = round(float(h_data.get("bat_discharge_kw") or 0), 1)
+        bat_chg = round(float(h_data.get("bat_charge_kw") or 0), 1)
+        load_val = round(float(h_data.get("load_kw") or 0), 1)
+        grid_fi = round(float(h_data.get("grid_feedin_kw") or 0), 1)
+
+        day_pv_kwh += pv_val
+        day_grid_kwh += grid_fi
+        day_bat_dis_kwh += bat_dis
+        day_bat_chg_kwh += bat_chg
+        day_load_kwh += load_val
+
+        p_nap = max(0.0, round(pv_val + bat_dis - bat_chg - load_val, 1))
+        hourly_today.append({
+            "hour": h,
+            "pv_kw": pv_val,
+            "bat_kw": bat_dis if bat_dis > 0 else (-bat_chg if bat_chg > 0 else 0.0),
+            "load_kw": load_val,
+            "p_nap_kw": grid_fi if grid_fi > 0 else p_nap
+        })
+
+    # Format daily series and totals
+    daily_series = []
+    total_pv_kwh = 0.0
+    total_grid_kwh = 0.0
+    total_bat_dis_kwh = 0.0
+    total_load_kwh = 0.0
+
+    for r in daily_rows:
+        d_pv = round(float(r["pv_kwh"] or 0), 1)
+        d_peak = round(float(r["pv_peak_kw"] or 0), 1)
+        d_dis = round(float(r["bat_discharge_kwh"] or 0), 1)
+        d_chg = round(float(r["bat_charge_kwh"] or 0), 1)
+        d_load = round(float(r["load_kwh"] or 0), 1)
+        d_grid = round(float(r["grid_feedin_kwh"] or 0), 1)
+
+        total_pv_kwh += d_pv
+        total_grid_kwh += d_grid
+        total_bat_dis_kwh += d_dis
+        total_load_kwh += d_load
+
+        try:
+            d_obj = datetime.strptime(r["date"], "%Y-%m-%d")
+            day_label = d_obj.strftime("%d.%m")
+        except Exception:
+            day_label = r["date"]
+
+        daily_series.append({
+            "date": r["date"],
+            "label": day_label,
+            "pv_kwh": d_pv,
+            "pv_peak_kw": d_peak,
+            "bat_discharge_kwh": d_dis,
+            "bat_charge_kwh": d_chg,
+            "load_kwh": d_load,
+            "grid_feedin_kwh": d_grid
+        })
+
+    days_count = max(1, len(daily_series))
+
+    # German formatting for selected date
+    weekday_de = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+    is_today = (selected_date_str == today_str)
+    try:
+        dt_obj = datetime.strptime(selected_date_str, "%Y-%m-%d")
+        w_name = weekday_de[dt_obj.weekday()]
+        selected_date_label = f"{'Heute · ' if is_today else ''}{w_name}, {dt_obj.strftime('%d.%m.%Y')}"
+    except Exception:
+        selected_date_label = selected_date_str
+
+    available_dates = [r["date"] for r in daily_rows]
+    if today_str not in available_dates:
+        available_dates.append(today_str)
+    available_dates.sort()
+
+    return {
+        "plant_id": plant_id,
+        "plant_name": plant_name,
+        "installed_capacity_kw": capacity_kw,
+        "site_type": site_type,
+        "days": days,
+        "selected_date": selected_date_str,
+        "selected_date_label": selected_date_label,
+        "is_today": is_today,
+        "available_dates": available_dates,
+        "day_summary": {
+            "total_pv_kwh": round(day_pv_kwh, 1),
+            "total_pv_mwh": round(day_pv_kwh / 1000.0, 2),
+            "total_grid_feedin_kwh": round(day_grid_kwh, 1),
+            "total_grid_feedin_mwh": round(day_grid_kwh / 1000.0, 2),
+            "total_bat_throughput_kwh": round(day_bat_dis_kwh, 1),
+            "total_bat_throughput_mwh": round(day_bat_dis_kwh / 1000.0, 2),
+            "total_load_kwh": round(day_load_kwh, 1),
+            "total_load_mwh": round(day_load_kwh / 1000.0, 2)
+        },
+        "summary": {
+            "total_pv_mwh": round(total_pv_kwh / 1000.0, 2),
+            "total_pv_kwh": round(total_pv_kwh, 1),
+            "total_grid_feedin_mwh": round(total_grid_kwh / 1000.0, 2),
+            "total_grid_feedin_kwh": round(total_grid_kwh, 1),
+            "total_bat_throughput_mwh": round(total_bat_dis_kwh / 1000.0, 2),
+            "total_load_mwh": round(total_load_kwh / 1000.0, 2),
+            "avg_daily_yield_kwh": round(total_pv_kwh / days_count, 1),
+            "self_consumption_pct": round(min(100.0, (total_load_kwh / max(1.0, total_pv_kwh)) * 100.0), 1)
+        },
+        "daily_series": daily_series,
+        "hourly_today": hourly_today,
+        "hourly_day": hourly_today
+    }
+'''
+
+new_code = code[:pos] + new_func
+with open('backend/energy_history.py', 'w', encoding='utf-8') as f:
+    f.write(new_code)
+
+print("Updated backend/energy_history.py successfully!")

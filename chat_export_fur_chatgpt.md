@@ -61,3 +61,58 @@ Eine modulare Treiber-Architektur mit 16 industriellen Geräteprofilen:
 
 ## 3. Anweisung für ChatGPT
 ChatGPT soll diesen Projektstand als Grundlage nehmen, um weitere Fragen, Code-Reviews oder Aufgaben für Coneza zu beantworten.
+
+---
+
+## 4. Coneza Portal Webserver - Zugriffsdaten & Infrastruktur
+
+### A. Web-Portal & API-Endpunkte
+- **Öffentliche Portal-URL:** https://coneza.de/portal/
+- **API Basis-URL:** https://coneza.de/portal/api/
+- **Health-Check:** https://coneza.de/portal/api/health
+- **Anlagen-Endpunkt:** https://coneza.de/portal/api/plants
+- **Geräte-Katalog:** https://coneza.de/portal/api/devices/catalog
+- **Live Device Probe:** POST https://coneza.de/portal/api/devices/probe
+
+### B. Portal-Zugangsdaten (Web-Login)
+- **Login-URL:** https://coneza.de/portal/
+- **Benutzername / E-Mail:** s.saleem@coneza.de
+- **Passwort:** ConezaSecure2026!
+- **JWT Secret:** coneza-super-secret-jwt-key-2026-vde4110
+
+### C. Server-Infrastruktur & SSH-Zugang
+> **WICHTIGER HINWEIS FÜR CHATGPT:** 
+> Der Server hat `PasswordAuthentication no` konfiguriert. Es gibt **kein SSH-Passwort**. 
+> Der SSH-Zugang ist **ausschließlich über diesen hinterlegten ED25519 Private Key** möglich!
+
+* **Host / IP-Adresse:** `195.90.215.204`
+* **SSH-Benutzer:** `root`
+* **SSH-Port:** `22`
+* **Lokaler Key-Pfad auf Entwickler-Rechner:** `C:\Users\shehz\.ssh\id_ed25519`
+* **SSH-Befehl (von lokalem Terminal):**
+  ```bash
+  ssh -o BatchMode=yes root@195.90.215.204
+  # bzw. explizit:
+  ssh -i "C:\Users\shehz\.ssh\id_ed25519" root@195.90.215.204
+  ```
+
+* **OpenSSH Private Key (für Remote-Agenten / Terminal-Umgebungen):**
+```text
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAUGagnJ1TobtY4/1opwGEMPdQOgFrav5YMwirrT8mHpgAAAJgLOJ6hCzie
+oQAAAAtzc2gtZWQyNTUxOQAAACAUGagnJ1TobtY4/1opwGEMPdQOgFrav5YMwirrT8mHpg
+AAAED5LzFHUsHIRNGIVgziMq+qWrNNmTrNI1i19OZjUOBOgRQZqCcnVOhu1jj/WinAYQw9
+1A6AWtq/lgzCKutPyYemAAAAEHNoZWh6QE15VGhpbmtQYWQBAgMEBQ==
+-----END OPENSSH PRIVATE KEY-----
+```
+
+### D. Server-Dienste & Pfade
+- **App-Verzeichnis:** `/opt/coneza-backend`
+- **Docker-Container:** `coneza-backend-server` (Port 9080 intern gemappt)
+- **Reverse Proxy:** Nginx mit Let's Encrypt SSL-Zertifikat für `coneza.de`
+- **Systemd-Dienste:**
+  - `systemctl status coneza-backend`
+  - `systemctl status coneza-portal-tunnel`
+- **Datenbank-Pfad (SQLite):** `/var/lib/docker/volumes/coneza_backend_data/_data/coneza_backend.db`
+- **Mailserver / Mailcow-Admin:** https://195.90.215.204:8443 bzw. https://mail.coneza.de
