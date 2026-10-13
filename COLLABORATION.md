@@ -165,3 +165,8 @@ Result: both bounded upload buffers validated before OCR. Invalid PDF header or 
 Codex claims clean document_draft_routes.py and existing route tests. Other tasks idle; two unrelated staged scripts must remain staged and excluded from commit. Baseline confirms synchronous page/line extraction in build_draft runs on request event loop. Reuse existing threadpool helper; no new dependency.
 
 Result: build_draft reuses run_in_threadpool, like OCR, so synchronous extraction does not run on request event loop. Regression fails on baseline and passes after fix; 13 focused tests pass. No throughput/latency benchmark claim. No production deployment or hardware access. Files released after path-limited commit; unrelated staged scripts retained.
+
+## 2026-10-13 EEP-92 draft review filter
+Codex claims clean backend/static/pcu-draft.html only. Other local tasks idle at coordination check; prior claims released. Live Jira EEP-92 parent EEP-38 verified. Two unrelated staged scripts preserved. Add status filter to focus document review; no deployment or hardware access.
+
+Result: status filter narrows table to missing, conflicting or unreviewed document values, with visible count and empty-state message. Rows are hidden in place so manual inputs and full export remain preserved. New draft resets filter to all. Inline script syntax and mocked DOM filter checks passed, all Node editor/import assertions and 13 Python tests pass. No browser interaction verification, deployment or hardware access. Files released after path-limited commit.
